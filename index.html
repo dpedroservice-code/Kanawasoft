@@ -128,6 +128,17 @@
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e5e7eb; }
         .divider span { padding: 0 1rem; color: #9ca3af; font-size: 0.875rem; }
         @media (max-width: 480px) { .input-field { padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 16px; } .text-3xl { font-size: 1.5rem; } }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .role-badge.admin { background: #dbeafe; color: #1e40af; }
+        .role-badge.seller { background: #d1fae5; color: #065f46; }
+        .role-badge.user { background: #fef3c7; color: #92400e; }
     </style>
 </head>
 <body>
@@ -348,7 +359,8 @@
                 isAuthenticated: false,
                 supabase: supabase,
                 session: null,
-                user: null
+                user: null,
+                userRole: null
             };
 
             // ==================== DOM REFS ====================
@@ -367,6 +379,40 @@
                 registerSubmitBtn: document.getElementById('registerSubmitBtn'),
                 recoverySubmitBtn: document.getElementById('recoverySubmitBtn'),
                 rememberMe: document.getElementById('rememberMe')
+            };
+
+            // ==================== ROLES E PERMISSÕES ====================
+            const ROLES = {
+                ADMIN: 'admin',
+                SELLER: 'vendedor',
+                USER: 'user'
+            };
+
+            const ROLE_PERMISSIONS = {
+                [ROLES.ADMIN]: {
+                    pages: ['dashboard.html', 'pdv.html', 'produtos.html', 'clientes.html', 'vendas.html', 'relatorios.html', 'usuarios.html', 'configuracoes.html'],
+                    canManageUsers: true,
+                    canManageProducts: true,
+                    canManageSales: true,
+                    canViewReports: true,
+                    canAccessPDV: true
+                },
+                [ROLES.SELLER]: {
+                    pages: ['dashboard.html', 'pdv.html'],
+                    canManageUsers: false,
+                    canManageProducts: false,
+                    canManageSales: true,
+                    canViewReports: false,
+                    canAccessPDV: true
+                },
+                [ROLES.USER]: {
+                    pages: ['dashboard.html'],
+                    canManageUsers: false,
+                    canManageProducts: false,
+                    canManageSales: false,
+                    canViewReports: false,
+                    canAccessPDV: false
+                }
             };
 
             // ==================== TOAST ====================
@@ -440,20 +486,21 @@
                     email: user.email,
                     phone: user.telefone || '',
                     photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=667eea&color=fff`,
-                    role: user.role || 'user',
+                    role: user.role || ROLES.USER,
                     lastLogin: new Date().toISOString()
                 };
                 
                 localStorage.setItem('user', JSON.stringify(userData));
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('loginTime', new Date().toISOString());
+                localStorage.setItem('userRole', userData.role);
+                state.userRole = userData.role;
                 return userData;
             }
 
             async function createUserInSupabase(userData) {
                 if (!supabase) return null;
                 try {
-                    // Verificar se usuário já existe
                     const { data: existing } = await supabase
                         .from('usuarios')
                         .select('*')
@@ -464,14 +511,13 @@
                         return existing;
                     }
 
-                    // Criar novo usuário
                     const { data, error } = await supabase
                         .from('usuarios')
                         .insert([{
                             nome: userData.name,
                             email: userData.email,
                             telefone: userData.phone || '',
-                            role: 'user',
+                            role: ROLES.USER,
                             created_at: new Date().toISOString()
                         }])
                         .select();
@@ -484,6 +530,24 @@
                 }
             }
 
+            // ==================== REDIRECIONAR POR ROLE ====================
+            function redirectByRole(role) {
+                const rolePerm = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS[ROLES.USER];
+                
+                // Se for admin, vai para dashboard completo
+                if (role === ROLES.ADMIN) {
+                    return 'dashboard.html';
+                }
+                
+                // Se for vendedor, vai para PDV
+                if (role === ROLES.SELLER) {
+                    return 'pdv.html';
+                }
+                
+                // Usuário comum vai para dashboard limitado
+                return 'dashboard.html';
+            }
+
             // ==================== VERIFICAR SESSÃO ====================
             async function checkExistingSession() {
                 const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -491,8 +555,9 @@
                     const loginTime = localStorage.getItem('loginTime');
                     const hoursSinceLogin = (new Date() - new Date(loginTime)) / (1000 * 60 * 60);
                     if (hoursSinceLogin < 24) {
-                        // Verificar se o usuário ainda existe no Supabase
                         const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                        const role = localStorage.getItem('userRole') || ROLES.USER;
+                        
                         if (userData.email && supabase) {
                             try {
                                 const { data } = await supabase
@@ -501,12 +566,14 @@
                                     .eq('email', userData.email)
                                     .maybeSingle();
                                 if (data) {
-                                    window.location.href = 'index.html';
+                                    state.userRole = data.role || ROLES.USER;
+                                    localStorage.setItem('userRole', state.userRole);
+                                    window.location.href = redirectByRole(state.userRole);
                                     return;
                                 }
                             } catch (e) {
-                                // Fallback - permitir acesso
-                                window.location.href = 'dashboard.html';
+                                // Fallback - permitir acesso com base no papel salvo
+                                window.location.href = redirectByRole(role);
                                 return;
                             }
                         }
@@ -527,7 +594,6 @@
             async function loginWithEmail(email, password) {
                 if (!supabase) throw new Error('Supabase não inicializado');
                 
-                // Buscar usuário pelo email
                 const { data: user, error: findError } = await supabase
                     .from('usuarios')
                     .select('*')
@@ -537,16 +603,11 @@
                 if (findError) throw new Error('Erro ao buscar usuário');
                 if (!user) throw new Error('Usuário não encontrado');
 
-                // Verificar senha (em produção, usar hash)
-                // Para este exemplo, estamos usando uma verificação simples
-                // Em produção, use bcrypt ou similar
                 if (user.senha && user.senha !== password) {
                     throw new Error('Senha incorreta');
                 }
 
-                // Se não tiver senha salva, é um usuário criado via social login
                 if (!user.senha) {
-                    // Tentar criar uma senha para o usuário
                     const { error: updateError } = await supabase
                         .from('usuarios')
                         .update({ senha: password })
@@ -564,7 +625,6 @@
             async function registerUser(name, email, phone, password) {
                 if (!supabase) throw new Error('Supabase não inicializado');
 
-                // Verificar se usuário já existe
                 const { data: existing } = await supabase
                     .from('usuarios')
                     .select('*')
@@ -573,7 +633,6 @@
 
                 if (existing) throw new Error('Email já cadastrado');
 
-                // Criar novo usuário
                 const { data, error } = await supabase
                     .from('usuarios')
                     .insert([{
@@ -581,7 +640,7 @@
                         email: email,
                         telefone: phone || '',
                         senha: password,
-                        role: 'user',
+                        role: ROLES.USER,
                         created_at: new Date().toISOString()
                     }])
                     .select();
@@ -594,7 +653,6 @@
             async function resetPassword(email) {
                 if (!supabase) throw new Error('Supabase não inicializado');
 
-                // Verificar se usuário existe
                 const { data: user } = await supabase
                     .from('usuarios')
                     .select('*')
@@ -603,9 +661,7 @@
 
                 if (!user) throw new Error('Usuário não encontrado');
 
-                // Em produção, enviar email com link de recuperação
-                // Para este exemplo, simulamos o envio
-                console.log(`Email de recuperação enviado para ${email}`);
+                console.log(`📧 Email de recuperação enviado para ${email}`);
                 return true;
             }
 
@@ -613,9 +669,19 @@
             async function handleSuccessfulLogin(user) {
                 showLoading('Entrando no sistema...');
                 try {
-                    await saveUserToLocal(user);
-                    showToast(`Bem-vindo, ${user.nome || user.email}!`, 'success');
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                    const userRole = user.role || ROLES.USER;
+                    state.userRole = userRole;
+                    await saveUserToLocal({ ...user, role: userRole });
+                    
+                    const redirectPage = redirectByRole(userRole);
+                    const roleNames = {
+                        [ROLES.ADMIN]: 'Administrador',
+                        [ROLES.SELLER]: 'Vendedor',
+                        [ROLES.USER]: 'Usuário'
+                    };
+                    
+                    showToast(`Bem-vindo, ${user.nome || user.email}! (${roleNames[userRole] || 'Usuário'})`, 'success');
+                    setTimeout(() => { window.location.href = redirectPage; }, 1500);
                 } catch (error) {
                     console.error('Erro:', error);
                     showToast('Erro ao carregar dados do usuário', 'error');
@@ -652,10 +718,11 @@
                             
                             await handleSuccessfulLogin(user);
                         } else {
-                            // Modo offline - usar credenciais de demonstração
+                            // Modo offline - usuários de demonstração com roles
                             const demoUsers = {
-                                'admin@kanawasoft.com': { password: 'admin123', nome: 'Administrador', role: 'admin' },
-                                'user@kanawasoft.com': { password: 'user123', nome: 'Usuário', role: 'user' }
+                                'admin@kanawasoft.com': { password: 'admin123', nome: 'Administrador', role: ROLES.ADMIN },
+                                'vendedor@kanawasoft.com': { password: 'vender123', nome: 'Vendedor', role: ROLES.SELLER },
+                                'user@kanawasoft.com': { password: 'user123', nome: 'Usuário', role: ROLES.USER }
                             };
                             
                             if (demoUsers[email] && demoUsers[email].password === password) {
@@ -719,7 +786,6 @@
                             const user = await registerUser(name, email, phone, password);
                             if (user) {
                                 showToast('Conta criada com sucesso!', 'success');
-                                // Preencher campos de login e redirecionar
                                 DOM.loginEmail.value = email;
                                 DOM.loginPassword.value = password;
                                 showLoginCard();
@@ -732,11 +798,12 @@
                                 nome: name,
                                 email: email,
                                 telefone: phone,
-                                role: 'user'
+                                role: ROLES.USER
                             };
                             localStorage.setItem('user', JSON.stringify(userData));
                             localStorage.setItem('isLoggedIn', 'true');
                             localStorage.setItem('loginTime', new Date().toISOString());
+                            localStorage.setItem('userRole', ROLES.USER);
                             showToast('Conta criada com sucesso! (Modo offline)', 'success');
                             setTimeout(() => window.location.href = 'dashboard.html', 1500);
                         }
@@ -797,7 +864,6 @@
 
                 showLoading('Conectando com Google...');
                 try {
-                    // OAuth com Supabase - Google
                     const { data, error } = await supabase.auth.signInWithOAuth({
                         provider: 'google',
                         options: {
@@ -806,8 +872,6 @@
                     });
                     
                     if (error) throw error;
-                    
-                    // Após redirecionamento, o usuário será autenticado
                     showToast('Redirecionando para autenticação...', 'info');
                 } catch (error) {
                     console.error('Erro Google:', error);
@@ -838,7 +902,6 @@
                     });
                     
                     if (error) throw error;
-                    
                     showToast('Redirecionando para autenticação...', 'info');
                 } catch (error) {
                     console.error('Erro GitHub:', error);
@@ -855,7 +918,6 @@
                     if (error) throw error;
                     
                     if (session) {
-                        // Verificar se o usuário existe na tabela usuarios
                         const { data: user } = await supabase
                             .from('usuarios')
                             .select('*')
@@ -865,13 +927,12 @@
                         if (user) {
                             await handleSuccessfulLogin(user);
                         } else if (session.user) {
-                            // Criar usuário se não existir
                             const { data: newUser, error: createError } = await supabase
                                 .from('usuarios')
                                 .insert([{
                                     nome: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
                                     email: session.user.email,
-                                    role: 'user',
+                                    role: ROLES.USER,
                                     created_at: new Date().toISOString()
                                 }])
                                 .select();
@@ -888,13 +949,9 @@
 
             // ==================== INICIAR ====================
             async function init() {
-                // Verificar sessão do Supabase
                 await checkSupabaseSession();
-                
-                // Verificar sessão local
                 await checkExistingSession();
                 
-                // Adicionar listener para autenticação OAuth
                 if (supabase) {
                     supabase.auth.onAuthStateChange((event, session) => {
                         if (event === 'SIGNED_IN' && session) {
@@ -904,7 +961,6 @@
                 }
             }
 
-            // ==================== INICIAR ====================
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
