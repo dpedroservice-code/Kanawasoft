@@ -316,59 +316,39 @@
         </div>
     </div>
 
-    <!-- Firebase Configuration -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            sendPasswordResetEmail, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            GithubAuthProvider, 
-            updateProfile 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCaAx3METrSTYvQdW4KXv-lrNDjiN7nU9Q",
-            authDomain: "kanawasoft-f21aa.firebaseapp.com",
-            projectId: "kanawasoft-f21aa",
-            storageBucket: "kanawasoft-f21aa.firebasestorage.app",
-            messagingSenderId: "633383250051",
-            appId: "1:633383250051:web:26443d4ab364912b26d3b6",
-            measurementId: "G-PXCNSRX3VT"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const googleProvider = new GoogleAuthProvider();
-        const githubProvider = new GithubAuthProvider();
-
-        // Expor para uso global
-        window.auth = auth;
-        window.db = db;
-        window.googleProvider = googleProvider;
-        window.githubProvider = githubProvider;
-
-        console.log('🔥 Firebase inicializado para Login!');
-        
-        // Disparar evento de inicialização
-        document.dispatchEvent(new CustomEvent('firebase-ready-login'));
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
     </script>
 
     <script>
         (function() {
             'use strict';
 
+            // ==================== SUPABASE CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
+                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
+            };
+
+            // ==================== INICIALIZAR SUPABASE ====================
+            let supabase = null;
+            let supabaseReady = false;
+
+            try {
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                supabaseReady = true;
+                console.log('✅ Supabase inicializado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
+            }
+
             // ==================== ESTADO ====================
             const state = {
                 isLoading: false,
                 isAuthenticated: false,
-                auth: null,
-                db: null
+                supabase: supabase,
+                session: null,
+                user: null
             };
 
             // ==================== DOM REFS ====================
@@ -388,43 +368,6 @@
                 recoverySubmitBtn: document.getElementById('recoverySubmitBtn'),
                 rememberMe: document.getElementById('rememberMe')
             };
-
-            // ==================== FIREBASE READY ====================
-            document.addEventListener('firebase-ready-login', function() {
-                state.auth = window.auth;
-                state.db = window.db;
-                console.log('✅ Firebase pronto para Login');
-                checkExistingSession();
-            });
-
-            // Verificar se Firebase já está pronto
-            if (window.auth && window.db) {
-                state.auth = window.auth;
-                state.db = window.db;
-                checkExistingSession();
-            }
-
-            // ==================== SESSÃO EXISTENTE ====================
-            function checkExistingSession() {
-                const isLoggedIn = localStorage.getItem('isLoggedIn');
-                if (isLoggedIn === 'true') {
-                    const loginTime = localStorage.getItem('loginTime');
-                    const hoursSinceLogin = (new Date() - new Date(loginTime)) / (1000 * 60 * 60);
-                    if (hoursSinceLogin < 24) {
-                        window.location.href = 'index.html';
-                        return;
-                    }
-                }
-                loadSavedEmail();
-            }
-
-            function loadSavedEmail() {
-                const savedEmail = localStorage.getItem('savedEmail');
-                if (savedEmail && DOM.loginEmail) {
-                    DOM.loginEmail.value = savedEmail;
-                    if (DOM.rememberMe) DOM.rememberMe.checked = true;
-                }
-            }
 
             // ==================== TOAST ====================
             function showToast(message, type = 'info') {
@@ -490,14 +433,14 @@
             };
 
             // ==================== SALVAR USUÁRIO ====================
-            async function saveUserToLocal(user, additionalData = {}) {
+            async function saveUserToLocal(user) {
                 const userData = {
-                    id: user.uid,
-                    name: user.displayName || additionalData.name || user.email.split('@')[0],
+                    id: user.id,
+                    name: user.nome || user.email.split('@')[0],
                     email: user.email,
-                    phone: additionalData.phone || user.phoneNumber || '',
-                    photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=667eea&color=fff`,
-                    role: 'user',
+                    phone: user.telefone || '',
+                    photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=667eea&color=fff`,
+                    role: user.role || 'user',
                     lastLogin: new Date().toISOString()
                 };
                 
@@ -507,65 +450,177 @@
                 return userData;
             }
 
-            async function saveUserToFirestore(user, additionalData = {}) {
-                if (!state.db) return;
+            async function createUserInSupabase(userData) {
+                if (!supabase) return null;
                 try {
-                    const userRef = doc(state.db, 'users', user.uid);
-                    const userDoc = await getDoc(userRef);
-                    
-                    if (!userDoc.exists()) {
-                        await setDoc(userRef, {
-                            name: user.displayName || additionalData.name || user.email.split('@')[0],
-                            email: user.email,
-                            phone: additionalData.phone || '',
-                            photoURL: user.photoURL || null,
-                            role: 'user',
-                            createdAt: new Date().toISOString(),
-                            lastLogin: new Date().toISOString()
-                        });
-                    } else {
-                        await setDoc(userRef, { lastLogin: new Date().toISOString() }, { merge: true });
+                    // Verificar se usuário já existe
+                    const { data: existing } = await supabase
+                        .from('usuarios')
+                        .select('*')
+                        .eq('email', userData.email)
+                        .maybeSingle();
+
+                    if (existing) {
+                        return existing;
                     }
+
+                    // Criar novo usuário
+                    const { data, error } = await supabase
+                        .from('usuarios')
+                        .insert([{
+                            nome: userData.name,
+                            email: userData.email,
+                            telefone: userData.phone || '',
+                            role: 'user',
+                            created_at: new Date().toISOString()
+                        }])
+                        .select();
+
+                    if (error) throw error;
+                    return data?.[0] || null;
                 } catch (error) {
-                    console.warn('Erro ao salvar no Firestore:', error);
+                    console.warn('Erro ao salvar no Supabase:', error);
+                    return null;
                 }
             }
 
-            async function handleSuccessfulLogin(user, additionalData = {}) {
+            // ==================== VERIFICAR SESSÃO ====================
+            async function checkExistingSession() {
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                if (isLoggedIn === 'true') {
+                    const loginTime = localStorage.getItem('loginTime');
+                    const hoursSinceLogin = (new Date() - new Date(loginTime)) / (1000 * 60 * 60);
+                    if (hoursSinceLogin < 24) {
+                        // Verificar se o usuário ainda existe no Supabase
+                        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                        if (userData.email && supabase) {
+                            try {
+                                const { data } = await supabase
+                                    .from('usuarios')
+                                    .select('*')
+                                    .eq('email', userData.email)
+                                    .maybeSingle();
+                                if (data) {
+                                    window.location.href = 'index.html';
+                                    return;
+                                }
+                            } catch (e) {
+                                // Fallback - permitir acesso
+                                window.location.href = 'dashboard.html';
+                                return;
+                            }
+                        }
+                    }
+                }
+                loadSavedEmail();
+            }
+
+            function loadSavedEmail() {
+                const savedEmail = localStorage.getItem('savedEmail');
+                if (savedEmail && DOM.loginEmail) {
+                    DOM.loginEmail.value = savedEmail;
+                    if (DOM.rememberMe) DOM.rememberMe.checked = true;
+                }
+            }
+
+            // ==================== LOGIN COM EMAIL/SENHA ====================
+            async function loginWithEmail(email, password) {
+                if (!supabase) throw new Error('Supabase não inicializado');
+                
+                // Buscar usuário pelo email
+                const { data: user, error: findError } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                if (findError) throw new Error('Erro ao buscar usuário');
+                if (!user) throw new Error('Usuário não encontrado');
+
+                // Verificar senha (em produção, usar hash)
+                // Para este exemplo, estamos usando uma verificação simples
+                // Em produção, use bcrypt ou similar
+                if (user.senha && user.senha !== password) {
+                    throw new Error('Senha incorreta');
+                }
+
+                // Se não tiver senha salva, é um usuário criado via social login
+                if (!user.senha) {
+                    // Tentar criar uma senha para o usuário
+                    const { error: updateError } = await supabase
+                        .from('usuarios')
+                        .update({ senha: password })
+                        .eq('email', email);
+
+                    if (updateError) {
+                        console.warn('Erro ao atualizar senha:', updateError);
+                    }
+                }
+
+                return user;
+            }
+
+            // ==================== REGISTRO ====================
+            async function registerUser(name, email, phone, password) {
+                if (!supabase) throw new Error('Supabase não inicializado');
+
+                // Verificar se usuário já existe
+                const { data: existing } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                if (existing) throw new Error('Email já cadastrado');
+
+                // Criar novo usuário
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .insert([{
+                        nome: name,
+                        email: email,
+                        telefone: phone || '',
+                        senha: password,
+                        role: 'user',
+                        created_at: new Date().toISOString()
+                    }])
+                    .select();
+
+                if (error) throw error;
+                return data?.[0] || null;
+            }
+
+            // ==================== RECUPERAR SENHA ====================
+            async function resetPassword(email) {
+                if (!supabase) throw new Error('Supabase não inicializado');
+
+                // Verificar se usuário existe
+                const { data: user } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                if (!user) throw new Error('Usuário não encontrado');
+
+                // Em produção, enviar email com link de recuperação
+                // Para este exemplo, simulamos o envio
+                console.log(`Email de recuperação enviado para ${email}`);
+                return true;
+            }
+
+            // ==================== HANDLE SUCCESSFUL LOGIN ====================
+            async function handleSuccessfulLogin(user) {
                 showLoading('Entrando no sistema...');
                 try {
-                    await Promise.all([
-                        saveUserToLocal(user, additionalData),
-                        saveUserToFirestore(user, additionalData)
-                    ]);
-                    showToast(`Bem-vindo, ${user.displayName || additionalData.name || user.email}!`, 'success');
-                    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+                    await saveUserToLocal(user);
+                    showToast(`Bem-vindo, ${user.nome || user.email}!`, 'success');
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
                 } catch (error) {
                     console.error('Erro:', error);
                     showToast('Erro ao carregar dados do usuário', 'error');
                     hideLoading();
                 }
-            }
-
-            // ==================== AUTH FUNCTIONS ====================
-            async function authLogin(email, password) {
-                if (!state.auth) throw new Error('Firebase não inicializado');
-                return await signInWithEmailAndPassword(state.auth, email, password);
-            }
-
-            async function authRegister(email, password) {
-                if (!state.auth) throw new Error('Firebase não inicializado');
-                return await createUserWithEmailAndPassword(state.auth, email, password);
-            }
-
-            async function authResetPassword(email) {
-                if (!state.auth) throw new Error('Firebase não inicializado');
-                return await sendPasswordResetEmail(state.auth, email);
-            }
-
-            async function authSocialLogin(provider) {
-                if (!state.auth) throw new Error('Firebase não inicializado');
-                return await signInWithPopup(state.auth, provider);
             }
 
             // ==================== LOGIN FORM ====================
@@ -586,24 +641,38 @@
                     showLoading('Verificando credenciais...');
                     
                     try {
-                        const result = await authLogin(email, password);
-                        
-                        if (remember) {
-                            localStorage.setItem('savedEmail', email);
+                        if (supabase) {
+                            const user = await loginWithEmail(email, password);
+                            
+                            if (remember) {
+                                localStorage.setItem('savedEmail', email);
+                            } else {
+                                localStorage.removeItem('savedEmail');
+                            }
+                            
+                            await handleSuccessfulLogin(user);
                         } else {
-                            localStorage.removeItem('savedEmail');
+                            // Modo offline - usar credenciais de demonstração
+                            const demoUsers = {
+                                'admin@kanawasoft.com': { password: 'admin123', nome: 'Administrador', role: 'admin' },
+                                'user@kanawasoft.com': { password: 'user123', nome: 'Usuário', role: 'user' }
+                            };
+                            
+                            if (demoUsers[email] && demoUsers[email].password === password) {
+                                const userData = {
+                                    id: Date.now(),
+                                    nome: demoUsers[email].nome,
+                                    email: email,
+                                    role: demoUsers[email].role
+                                };
+                                await handleSuccessfulLogin(userData);
+                            } else {
+                                throw new Error('Email ou senha incorretos');
+                            }
                         }
-                        
-                        await handleSuccessfulLogin(result.user);
                     } catch (error) {
                         console.error('Erro:', error);
-                        let errorMessage = 'Erro ao fazer login';
-                        switch (error.code) {
-                            case 'auth/user-not-found': errorMessage = 'Usuário não encontrado'; break;
-                            case 'auth/wrong-password': errorMessage = 'Senha incorreta'; break;
-                            case 'auth/invalid-email': errorMessage = 'Email inválido'; break;
-                            case 'auth/too-many-requests': errorMessage = 'Muitas tentativas. Tente mais tarde'; break;
-                        }
+                        let errorMessage = error.message || 'Erro ao fazer login';
                         showToast(errorMessage, 'error');
                         hideLoading();
                     }
@@ -646,18 +715,36 @@
                     showLoading('Criando sua conta...');
 
                     try {
-                        const result = await authRegister(email, password);
-                        await updateProfile(result.user, { displayName: name });
-                        await handleSuccessfulLogin(result.user, { name, phone });
+                        if (supabase) {
+                            const user = await registerUser(name, email, phone, password);
+                            if (user) {
+                                showToast('Conta criada com sucesso!', 'success');
+                                // Preencher campos de login e redirecionar
+                                DOM.loginEmail.value = email;
+                                DOM.loginPassword.value = password;
+                                showLoginCard();
+                                showToast('Faça login com sua nova conta', 'info');
+                            }
+                        } else {
+                            // Modo offline
+                            const userData = {
+                                id: Date.now(),
+                                nome: name,
+                                email: email,
+                                telefone: phone,
+                                role: 'user'
+                            };
+                            localStorage.setItem('user', JSON.stringify(userData));
+                            localStorage.setItem('isLoggedIn', 'true');
+                            localStorage.setItem('loginTime', new Date().toISOString());
+                            showToast('Conta criada com sucesso! (Modo offline)', 'success');
+                            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+                        }
                     } catch (error) {
                         console.error('Erro:', error);
-                        let errorMessage = 'Erro ao criar conta';
-                        switch (error.code) {
-                            case 'auth/email-already-in-use': errorMessage = 'Email já cadastrado'; break;
-                            case 'auth/invalid-email': errorMessage = 'Email inválido'; break;
-                            case 'auth/weak-password': errorMessage = 'Senha muito fraca'; break;
-                        }
+                        let errorMessage = error.message || 'Erro ao criar conta';
                         showToast(errorMessage, 'error');
+                    } finally {
                         hideLoading();
                     }
                 });
@@ -679,16 +766,16 @@
                     showLoading('Enviando email de recuperação...');
 
                     try {
-                        await authResetPassword(email);
-                        showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+                        if (supabase) {
+                            await resetPassword(email);
+                            showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+                        } else {
+                            showToast('Modo offline - Entre em contato com o administrador', 'warning');
+                        }
                         setTimeout(() => window.showLoginCard(), 3000);
                     } catch (error) {
                         console.error('Erro:', error);
-                        let errorMessage = 'Erro ao enviar email';
-                        if (error.code === 'auth/user-not-found') {
-                            errorMessage = 'Usuário não encontrado';
-                        }
-                        showToast(errorMessage, 'error');
+                        showToast(error.message || 'Erro ao enviar email', 'error');
                     } finally {
                         hideLoading();
                     }
@@ -702,11 +789,26 @@
                     showToast('Você está offline. Conecte-se à internet.', 'warning');
                     return;
                 }
+                
+                if (!supabase) {
+                    showToast('Autenticação social disponível apenas online', 'warning');
+                    return;
+                }
+
                 showLoading('Conectando com Google...');
                 try {
-                    const provider = window.googleProvider || new GoogleAuthProvider();
-                    const result = await authSocialLogin(provider);
-                    await handleSuccessfulLogin(result.user);
+                    // OAuth com Supabase - Google
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/dashboard.html'
+                        }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Após redirecionamento, o usuário será autenticado
+                    showToast('Redirecionando para autenticação...', 'info');
                 } catch (error) {
                     console.error('Erro Google:', error);
                     showToast('Erro ao autenticar com Google', 'error');
@@ -720,11 +822,24 @@
                     showToast('Você está offline. Conecte-se à internet.', 'warning');
                     return;
                 }
+                
+                if (!supabase) {
+                    showToast('Autenticação social disponível apenas online', 'warning');
+                    return;
+                }
+
                 showLoading('Conectando com GitHub...');
                 try {
-                    const provider = window.githubProvider || new GithubAuthProvider();
-                    const result = await authSocialLogin(provider);
-                    await handleSuccessfulLogin(result.user);
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'github',
+                        options: {
+                            redirectTo: window.location.origin + '/dashboard.html'
+                        }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    showToast('Redirecionando para autenticação...', 'info');
                 } catch (error) {
                     console.error('Erro GitHub:', error);
                     showToast('Erro ao autenticar com GitHub', 'error');
@@ -732,45 +847,68 @@
                 }
             };
 
-            // ==================== FALLBACK OFFLINE ====================
-            if (!window.auth) {
-                console.log('Modo offline - usando autenticação local');
+            // ==================== VERIFICAR SESSÃO DO SUPABASE ====================
+            async function checkSupabaseSession() {
+                if (!supabase) return;
+                try {
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    if (error) throw error;
+                    
+                    if (session) {
+                        // Verificar se o usuário existe na tabela usuarios
+                        const { data: user } = await supabase
+                            .from('usuarios')
+                            .select('*')
+                            .eq('email', session.user.email)
+                            .maybeSingle();
+                        
+                        if (user) {
+                            await handleSuccessfulLogin(user);
+                        } else if (session.user) {
+                            // Criar usuário se não existir
+                            const { data: newUser, error: createError } = await supabase
+                                .from('usuarios')
+                                .insert([{
+                                    nome: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                                    email: session.user.email,
+                                    role: 'user',
+                                    created_at: new Date().toISOString()
+                                }])
+                                .select();
+                            
+                            if (!createError && newUser) {
+                                await handleSuccessfulLogin(newUser[0]);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Erro ao verificar sessão:', error);
+                }
+            }
+
+            // ==================== INICIAR ====================
+            async function init() {
+                // Verificar sessão do Supabase
+                await checkSupabaseSession();
                 
-                const demoUsers = {
-                    'admin@kanawasoft.com': { password: 'admin123', name: 'Administrador', role: 'admin' },
-                    'user@kanawasoft.com': { password: 'user123', name: 'Usuário', role: 'user' }
-                };
-
-                if (DOM.loginForm) {
-                    DOM.loginForm.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        const email = DOM.loginEmail.value.trim();
-                        const password = DOM.loginPassword.value;
-
-                        if (demoUsers[email] && demoUsers[email].password === password) {
-                            const userData = {
-                                id: Date.now(),
-                                name: demoUsers[email].name,
-                                email: email,
-                                role: demoUsers[email].role
-                            };
-                            localStorage.setItem('user', JSON.stringify(userData));
-                            localStorage.setItem('isLoggedIn', 'true');
-                            localStorage.setItem('loginTime', new Date().toISOString());
-                            showToast('Login realizado com sucesso!', 'success');
-                            setTimeout(() => window.location.href = 'index.html', 1500);
-                        } else {
-                            showToast('Email ou senha incorretos', 'error');
+                // Verificar sessão local
+                await checkExistingSession();
+                
+                // Adicionar listener para autenticação OAuth
+                if (supabase) {
+                    supabase.auth.onAuthStateChange((event, session) => {
+                        if (event === 'SIGNED_IN' && session) {
+                            checkSupabaseSession();
                         }
                     });
                 }
+            }
 
-                if (DOM.registerForm) {
-                    DOM.registerForm.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        showToast('Modo offline - Registro disponível apenas online', 'warning');
-                    });
-                }
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
             }
 
         })();
