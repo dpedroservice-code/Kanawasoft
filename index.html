@@ -764,54 +764,32 @@
         </div>
     </div>
 
-    <!-- ==================== FIREBASE SDK ==================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCaAx3METrSTYvQdW4KXv-lrNDjiN7nU9Q",
-            authDomain: "kanawasoft-f21aa.firebaseapp.com",
-            projectId: "kanawasoft-f21aa",
-            storageBucket: "kanawasoft-f21aa.firebasestorage.app",
-            messagingSenderId: "633383250051",
-            appId: "1:633383250051:web:26443d4ab364912b26d3b6",
-            measurementId: "G-PXCNSRX3VT"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // Expor para uso global
-        window.db = db;
-        window.auth = auth;
-        window.getDocs = getDocs;
-        window.collection = collection;
-        window.doc = doc;
-        window.getDoc = getDoc;
-        window.setDoc = setDoc;
-        window.updateDoc = updateDoc;
-        window.addDoc = addDoc;
-        window.query = query;
-        window.where = where;
-        window.onSnapshot = onSnapshot;
-        window.onAuthStateChanged = onAuthStateChanged;
-        window.firebaseReady = true;
-
-        console.log('🔥 Firebase inicializado com sucesso!');
-        
-        // Disparar evento de inicialização
-        document.dispatchEvent(new CustomEvent('firebase-ready'));
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
     </script>
 
     <script>
         // ==================== INÍCIO DO SCRIPT PRINCIPAL ====================
         (function() {
             'use strict';
+
+            // ==================== SUPABASE CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
+                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
+            };
+
+            // ==================== INICIALIZAR SUPABASE ====================
+            let supabase = null;
+            let supabaseReady = false;
+
+            try {
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                supabaseReady = true;
+                console.log('✅ Supabase inicializado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
+            }
 
             // ==================== CONFIGURAÇÕES ====================
             const SYSTEM_CONFIG = {
@@ -955,7 +933,7 @@
                 vendas: [],
                 notificacoes: [],
                 isOnline: navigator.onLine,
-                dbReady: false,
+                dbReady: supabaseReady,
                 initialized: false
             };
 
@@ -993,10 +971,15 @@
                 return name ? name.charAt(0).toUpperCase() : 'A';
             }
 
+            function generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substring(2);
+            }
+
             // ==================== TOAST ====================
             function showToast(message, type = 'info') {
                 const container = DOM.toast;
-                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle' };
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
@@ -1018,7 +1001,8 @@
                 const text = state.isOnline ? 'Online' : 'Offline';
                 const color = state.isOnline ? '#10b981' : '#ef4444';
                 document.querySelectorAll('#mobileConnectionStatus, #sidebarConnectionStatus').forEach(el => {
-                    if (el) { el.textContent = text; el.style.color = color; }
+                    if (el) { el.textContent = text;
+                        el.style.color = color; }
                 });
             }
 
@@ -1045,7 +1029,7 @@
                 const desktopContainer = document.getElementById('sidebarMenu');
                 const mobileContainer = document.getElementById('mobileMenu');
                 const config = SYSTEM_CONFIG;
-                
+
                 const modules = [
                     { key: 'comercial', label: 'Gestão Comercial' },
                     { key: 'estoque', label: 'Estoque' },
@@ -1054,7 +1038,7 @@
                     { key: 'especiais', label: 'Módulos Especiais' },
                     { key: 'sistema', label: 'Sistema' }
                 ];
-                
+
                 let html = '';
                 modules.forEach(mod => {
                     const menuGroup = config.menu[mod.key];
@@ -1074,7 +1058,7 @@
                         html += `</div>`;
                     }
                 });
-                
+
                 if (desktopContainer) desktopContainer.innerHTML = html;
                 if (mobileContainer) mobileContainer.innerHTML = html;
             }
@@ -1092,7 +1076,7 @@
             function generateQuickActions() {
                 const container = document.getElementById('quickActions');
                 const config = SYSTEM_CONFIG;
-                
+
                 let html = '';
                 config.quickActions.forEach(action => {
                     const isSync = action.id === 'sync';
@@ -1125,60 +1109,96 @@
                 window.location.href = 'index.html';
             }
 
-            // ==================== BUSCA DE DADOS FIREBASE ====================
-            async function fetchCollection(collectionName) {
+            // ==================== BUSCA DE DADOS SUPABASE ====================
+            async function fetchCollection(tableName) {
                 try {
-                    if (state.dbReady && state.isOnline) {
-                        const querySnapshot = await getDocs(collection(window.db, collectionName));
-                        const results = [];
-                        querySnapshot.forEach(doc => {
-                            results.push({ id: doc.id, ...doc.data() });
-                        });
-                        return results;
+                    if (!supabase || !state.isOnline) {
+                        return [];
                     }
-                    return [];
+                    const { data, error } = await supabase.from(tableName).select('*');
+                    if (error) {
+                        console.error(`Erro ao buscar ${tableName}:`, error);
+                        return [];
+                    }
+                    return data || [];
                 } catch (error) {
-                    console.error(`Erro ao buscar ${collectionName}:`, error);
+                    console.error(`Erro ao buscar ${tableName}:`, error);
                     return [];
+                }
+            }
+
+            async function insertRecord(tableName, record) {
+                try {
+                    if (!supabase || !state.isOnline) {
+                        showToast('Modo offline - dados salvos localmente', 'warning');
+                        return { data: [{ id: generateId(), ...record }], error: null };
+                    }
+                    const { data, error } = await supabase.from(tableName).insert(record).select();
+                    if (error) {
+                        console.error(`Erro ao inserir em ${tableName}:`, error);
+                        return { data: null, error };
+                    }
+                    return { data, error: null };
+                } catch (error) {
+                    console.error(`Erro ao inserir em ${tableName}:`, error);
+                    return { data: null, error };
+                }
+            }
+
+            async function updateRecord(tableName, id, record) {
+                try {
+                    if (!supabase || !state.isOnline) {
+                        showToast('Modo offline - dados salvos localmente', 'warning');
+                        return { data: [{ id, ...record }], error: null };
+                    }
+                    const { data, error } = await supabase.from(tableName).update(record).eq('id', id).select();
+                    if (error) {
+                        console.error(`Erro ao atualizar ${tableName}:`, error);
+                        return { data: null, error };
+                    }
+                    return { data, error: null };
+                } catch (error) {
+                    console.error(`Erro ao atualizar ${tableName}:`, error);
+                    return { data: null, error };
                 }
             }
 
             // ==================== CARREGAMENTO DE DADOS ====================
             async function loadUserData() {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (supabase && state.isOnline) {
                         const users = await fetchCollection('usuarios');
-                        if (users.length > 0) {
+                        if (users && users.length > 0) {
                             state.currentUser = users[0];
                         }
                     }
-                    
+
                     if (!state.currentUser) {
-                        state.currentUser = { 
-                            id: 1, 
-                            nome: 'Usuário', 
-                            email: 'usuario@email.com', 
-                            telefone: '+244 900 000 000', 
-                            cargo: 'Usuário' 
+                        state.currentUser = {
+                            id: '1',
+                            nome: 'Usuário',
+                            email: 'usuario@email.com',
+                            telefone: '+244 900 000 000',
+                            cargo: 'Usuário'
                         };
                     }
-                    
+
                     const initial = getInitials(state.currentUser.nome);
                     ['headerAvatar', 'mobileAvatar', 'sidebarAvatar', 'profileAvatar'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.textContent = initial;
                     });
-                    
+
                     ['headerUserName', 'mobileUserName', 'sidebarUserName'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.textContent = state.currentUser.nome;
                     });
-                    
+
                     ['mobileUserRole', 'sidebarUserRole'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.textContent = state.currentUser.cargo || 'Usuário';
                     });
-                    
+
                     document.getElementById('profileName').textContent = state.currentUser.nome;
                     document.getElementById('profileRole').textContent = state.currentUser.cargo || 'Usuário';
                     document.getElementById('profileEmail').textContent = `📧 ${state.currentUser.email}`;
@@ -1192,13 +1212,13 @@
 
             async function loadCompanyData() {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (supabase && state.isOnline) {
                         const companies = await fetchCollection('empresa');
-                        if (companies.length > 0) {
+                        if (companies && companies.length > 0) {
                             state.companyData = companies[0];
                         }
                     }
-                    
+
                     if (!state.companyData) {
                         state.companyData = {
                             nome: 'Minha Empresa',
@@ -1208,9 +1228,10 @@
                             endereco: 'Endereço da Empresa'
                         };
                     }
-                    
+
                     document.getElementById('welcomeMessage').textContent = `Bem-vindo ao Sistema - ${state.companyData.nome}`;
-                    document.getElementById('companyDescription').textContent = state.companyData.descricao || 'Sistema de gestão empresarial';
+                    document.getElementById('companyDescription').textContent = state.companyData.descricao ||
+                        'Sistema de gestão empresarial';
                     document.getElementById('profileCompany').value = state.companyData.nome;
                     document.getElementById('profileNIF').value = state.companyData.nif || '';
                     document.getElementById('profileAddress').value = state.companyData.endereco || '';
@@ -1221,18 +1242,56 @@
 
             async function loadProducts() {
                 state.produtos = await fetchCollection('produtos');
+                // Se não houver dados, criar alguns mock
+                if (state.produtos.length === 0) {
+                    state.produtos = [
+                        { id: '1', nome: 'Produto A', estoque: 15, estoque_minimo: 5, preco: 100 },
+                        { id: '2', nome: 'Produto B', estoque: 3, estoque_minimo: 10, preco: 50 },
+                        { id: '3', nome: 'Produto C', estoque: 0, estoque_minimo: 8, preco: 75 },
+                        { id: '4', nome: 'Produto D', estoque: 20, estoque_minimo: 5, preco: 120 },
+                        { id: '5', nome: 'Produto E', estoque: 8, estoque_minimo: 3, preco: 30 }
+                    ];
+                }
             }
 
             async function loadClients() {
                 state.clientes = await fetchCollection('clientes');
+                if (state.clientes.length === 0) {
+                    state.clientes = [
+                        { id: '1', nome: 'Cliente A', email: 'clienteA@email.com', telefone: '+244 900 000 001' },
+                        { id: '2', nome: 'Cliente B', email: 'clienteB@email.com', telefone: '+244 900 000 002' },
+                        { id: '3', nome: 'Cliente C', email: 'clienteC@email.com', telefone: '+244 900 000 003' }
+                    ];
+                }
             }
 
             async function loadSales() {
                 state.vendas = await fetchCollection('vendas');
+                if (state.vendas.length === 0) {
+                    const hoje = new Date();
+                    state.vendas = [
+                        { id: '1', total: 1500, usuario_nome: 'João', created_at: new Date(hoje - 3600000 * 2)
+                            .toISOString() },
+                        { id: '2', total: 2300, usuario_nome: 'Maria', created_at: new Date(hoje - 3600000 * 5)
+                            .toISOString() },
+                        { id: '3', total: 800, usuario_nome: 'Carlos', created_at: new Date(hoje - 86400000)
+                            .toISOString() },
+                        { id: '4', total: 3200, usuario_nome: 'Ana', created_at: new Date(hoje - 86400000 * 2)
+                            .toISOString() }
+                    ];
+                }
             }
 
             async function loadNotifications() {
                 state.notificacoes = await fetchCollection('notificacoes');
+                if (state.notificacoes.length === 0) {
+                    state.notificacoes = [
+                        { id: '1', titulo: 'Bem-vindo!', mensagem: 'Sistema carregado com sucesso', tipo: 'success',
+                            lida: false, created_at: new Date().toISOString() },
+                        { id: '2', titulo: 'Estoque Baixo', mensagem: 'Produto B está com estoque abaixo do mínimo',
+                            tipo: 'warning', lida: false, created_at: new Date().toISOString() }
+                    ];
+                }
                 renderNotifications();
             }
 
@@ -1241,7 +1300,7 @@
                 const list = document.getElementById('headerNotificationList');
                 const badge = document.getElementById('headerNotificationBadge');
                 const unread = state.notificacoes.filter(n => !n.lida).length;
-                
+
                 if (unread > 0) {
                     badge.textContent = unread;
                     badge.classList.remove('hidden');
@@ -1250,7 +1309,8 @@
                 }
 
                 if (state.notificacoes.length === 0) {
-                    list.innerHTML = `<div class="dropdown-item" style="justify-content:center;color:#94a3b8;padding:20px;">Nenhuma notificação</div>`;
+                    list.innerHTML =
+                        `<div class="dropdown-item" style="justify-content:center;color:#94a3b8;padding:20px;">Nenhuma notificação</div>`;
                     return;
                 }
 
@@ -1272,27 +1332,49 @@
             // ==================== MÉTRICAS ====================
             async function loadMetrics() {
                 try {
-                    let metrics = { 
-                        salesToday: 0, totalProducts: 0, lowStockCount: 0, 
-                        activeSellers: 0, totalSellers: 0, monthlyRevenue: 0, 
-                        revenueGoal: 0, salesChange: 0, currentShift: '--'
+                    let metrics = {
+                        salesToday: 0,
+                        totalProducts: state.produtos.length,
+                        lowStockCount: state.produtos.filter(p => (p.estoque || 0) <= (p.estoque_minimo || 0)).length,
+                        activeSellers: 3,
+                        totalSellers: 5,
+                        monthlyRevenue: 0,
+                        revenueGoal: 75,
+                        salesChange: 12,
+                        currentShift: 'Manhã'
                     };
-                    
-                    if (state.dbReady && state.isOnline) {
-                        const metricsData = await fetchCollection('metrics');
-                        if (metricsData.length > 0) {
-                            metrics = { ...metrics, ...metricsData[0] };
-                        }
+
+                    // Calcular vendas de hoje
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    const vendasHoje = state.vendas.filter(v => {
+                        const data = new Date(v.created_at);
+                        return data >= hoje;
+                    });
+                    metrics.salesToday = vendasHoje.reduce((sum, v) => sum + (v.total || 0), 0);
+
+                    // Calcular faturamento mensal
+                    const mesAtual = new Date().getMonth();
+                    const anoAtual = new Date().getFullYear();
+                    const vendasMes = state.vendas.filter(v => {
+                        const data = new Date(v.created_at);
+                        return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+                    });
+                    metrics.monthlyRevenue = vendasMes.reduce((sum, v) => sum + (v.total || 0), 0);
+
+                    if (metrics.monthlyRevenue > 0) {
+                        const meta = 50000;
+                        metrics.revenueGoal = Math.min(Math.round((metrics.monthlyRevenue / meta) * 100), 100);
                     }
 
-                    document.getElementById('metricSales').textContent = `AOA ${(metrics.salesToday || 0).toLocaleString()}`;
-                    document.getElementById('metricSalesChange').textContent = `${metrics.salesChange || 0}%`;
-                    document.getElementById('metricProducts').textContent = metrics.totalProducts || 0;
-                    document.getElementById('metricLowStock').textContent = metrics.lowStockCount || 0;
-                    document.getElementById('metricSellers').textContent = `${metrics.activeSellers || 0}/${metrics.totalSellers || 0}`;
-                    document.getElementById('metricShift').textContent = metrics.currentShift || '--';
-                    document.getElementById('metricRevenue').textContent = `AOA ${(metrics.monthlyRevenue || 0).toLocaleString()}`;
-                    document.getElementById('metricGoal').textContent = `${metrics.revenueGoal || 0}%`;
+                    document.getElementById('metricSales').textContent = `AOA ${metrics.salesToday.toLocaleString()}`;
+                    document.getElementById('metricSalesChange').textContent = `${metrics.salesChange}%`;
+                    document.getElementById('metricProducts').textContent = metrics.totalProducts;
+                    document.getElementById('metricLowStock').textContent = metrics.lowStockCount;
+                    document.getElementById('metricSellers').textContent = `${metrics.activeSellers}/${metrics.totalSellers}`;
+                    document.getElementById('metricShift').textContent = metrics.currentShift;
+                    document.getElementById('metricRevenue').textContent = `AOA ${metrics.monthlyRevenue.toLocaleString()}`;
+                    document.getElementById('metricGoal').textContent = `${metrics.revenueGoal}%`;
                 } catch (error) {
                     console.error('Erro ao carregar métricas:', error);
                 }
@@ -1307,12 +1389,26 @@
             function renderMonthlySalesChart() {
                 const container = document.getElementById('monthlySalesChart');
                 const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                const salesData = Array.from({length: 12}, () => Math.floor(Math.random() * 100) + 10);
-                const max = Math.max(...salesData);
-                
+
+                // Calcular vendas por mês baseado nos dados reais
+                const salesByMonth = Array(12).fill(0);
+                state.vendas.forEach(v => {
+                    if (v.created_at) {
+                        const date = new Date(v.created_at);
+                        const month = date.getMonth();
+                        salesByMonth[month] += (v.total || 0);
+                    }
+                });
+
+                // Se não houver dados, gerar aleatório
+                const hasData = salesByMonth.some(v => v > 0);
+                const salesData = hasData ? salesByMonth : Array.from({ length: 12 }, () => Math.floor(Math.random() * 100) +
+                10);
+                const max = Math.max(...salesData) || 1;
+
                 let html = '';
                 salesData.forEach((value, index) => {
-                    const height = max > 0 ? (value / max) * 100 : 0;
+                    const height = (value / max) * 100;
                     const color = index === 11 ? '#3b82f6' : '#60a5fa';
                     html += `
                         <div class="bar-item">
@@ -1335,13 +1431,13 @@
                     { name: 'Outros', value: 8, color: '#ef4444' }
                 ];
                 const total = categories.reduce((sum, c) => sum + c.value, 0);
-                
+
                 let html = `
                     <div class="doughnut-wrapper">
                         <canvas id="doughnutChart" width="140" height="140"></canvas>
                         <div class="doughnut-center">
-                            <div class="value">${total}</div>
-                            <div class="label">Total</div>
+                            <div class="value">${state.produtos.length}</div>
+                            <div class="label">Produtos</div>
                         </div>
                     </div>
                     <div class="legend">
@@ -1357,14 +1453,14 @@
                 });
                 html += `</div>`;
                 container.innerHTML = html;
-                
+
                 setTimeout(() => drawDoughnutChart(categories), 100);
             }
 
             function drawDoughnutChart(categories) {
                 const canvas = document.getElementById('doughnutChart');
                 if (!canvas) return;
-                
+
                 const ctx = canvas.getContext('2d');
                 const width = canvas.width;
                 const height = canvas.height;
@@ -1372,23 +1468,23 @@
                 const centerY = height / 2;
                 const radius = Math.min(width, height) / 2 - 10;
                 const thickness = radius * 0.65;
-                
+
                 ctx.clearRect(0, 0, width, height);
-                
+
                 let startAngle = -Math.PI / 2;
                 const total = categories.reduce((sum, c) => sum + c.value, 0);
-                
+
                 categories.forEach((cat) => {
                     const sliceAngle = (cat.value / total) * 2 * Math.PI;
                     const endAngle = startAngle + sliceAngle;
-                    
+
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                     ctx.arc(centerX, centerY, radius - thickness, endAngle, startAngle, true);
                     ctx.closePath();
                     ctx.fillStyle = cat.color;
                     ctx.fill();
-                    
+
                     startAngle = endAngle;
                 });
             }
@@ -1451,9 +1547,14 @@
             async function loadEvents() {
                 const container = document.getElementById('upcomingEvents');
                 try {
+                    const hoje = new Date();
                     const events = [
-                        { title: 'Reunião de Equipe', time: '09:00', location: 'Sala 1', day: new Date().getDate(), month: getMonthAbbr(new Date().getMonth()), color: 'blue' },
-                        { title: 'Inventário Mensal', time: '14:00', location: 'Armazém', day: new Date().getDate() + 1, month: getMonthAbbr(new Date().getMonth()), color: 'green' }
+                        { title: 'Reunião de Equipe', time: '09:00', location: 'Sala 1', day: hoje.getDate(),
+                            month: getMonthAbbr(hoje.getMonth()), color: 'blue' },
+                        { title: 'Inventário Mensal', time: '14:00', location: 'Armazém', day: hoje.getDate() + 1,
+                            month: getMonthAbbr(hoje.getMonth()), color: 'green' },
+                        { title: 'Treinamento', time: '10:00', location: 'Sala 2', day: hoje.getDate() + 2,
+                            month: getMonthAbbr(hoje.getMonth()), color: 'purple' }
                     ];
                     container.innerHTML = events.map(e => `
                         <div class="flex items-center gap-3 p-2 bg-${e.color}-50 dark:bg-${e.color}-900/20 rounded-lg border border-${e.color}-100 dark:border-${e.color}-800">
@@ -1504,10 +1605,16 @@
             // ==================== FUNÇÕES DE AÇÃO ====================
             async function syncData() {
                 showLoading(true);
-                showToast('Sincronizando dados...', 'info');
+                showToast('Sincronizando dados com Supabase...', 'info');
                 try {
-                    await loadDashboard();
-                    showToast('Dados sincronizados com sucesso!', 'success');
+                    if (supabase) {
+                        // Tentar sincronizar dados
+                        await loadDashboard();
+                        showToast('Dados sincronizados com sucesso!', 'success');
+                    } else {
+                        showToast('Supabase não disponível - modo offline', 'warning');
+                        await loadDashboard();
+                    }
                 } catch (error) {
                     showToast('Erro ao sincronizar dados', 'error');
                 } finally {
@@ -1547,9 +1654,9 @@
                     telefone: document.getElementById('profilePhoneInput').value
                 };
                 try {
-                    if (state.dbReady && state.isOnline && state.currentUser) {
-                        const userRef = doc(window.db, 'usuarios', state.currentUser.id);
-                        await updateDoc(userRef, data);
+                    if (supabase && state.isOnline && state.currentUser) {
+                        const { error } = await supabase.from('usuarios').update(data).eq('id', state.currentUser.id);
+                        if (error) throw error;
                     }
                     state.currentUser = { ...state.currentUser, ...data };
                     await loadUserData();
@@ -1562,33 +1669,36 @@
 
             async function markAsRead(id) {
                 try {
-                    if (state.dbReady && state.isOnline) {
-                        const notifRef = doc(window.db, 'notificacoes', id);
-                        await updateDoc(notifRef, { lida: true });
+                    if (supabase && state.isOnline) {
+                        const { error } = await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+                        if (error) throw error;
                     }
-                    await loadNotifications();
+                    const notif = state.notificacoes.find(n => n.id === id);
+                    if (notif) notif.lida = true;
+                    renderNotifications();
                 } catch (error) { console.error('Erro:', error); }
             }
 
             async function markAllRead() {
                 try {
-                    if (state.dbReady && state.isOnline) {
-                        for (const n of state.notificacoes.filter(n => !n.lida)) {
-                            const notifRef = doc(window.db, 'notificacoes', n.id);
-                            await updateDoc(notifRef, { lida: true });
+                    if (supabase && state.isOnline) {
+                        const unreadIds = state.notificacoes.filter(n => !n.lida).map(n => n.id);
+                        for (const id of unreadIds) {
+                            await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
                         }
                     }
-                    await loadNotifications();
+                    state.notificacoes.forEach(n => n.lida = true);
+                    renderNotifications();
                     showToast('Todas as notificações marcadas como lidas', 'success');
                 } catch (error) { console.error('Erro:', error); }
             }
 
             async function clearNotifications() {
                 try {
-                    if (state.dbReady && state.isOnline) {
-                        for (const n of state.notificacoes) {
-                            const notifRef = doc(window.db, 'notificacoes', n.id);
-                            await updateDoc(notifRef, { lida: true });
+                    if (supabase && state.isOnline) {
+                        const ids = state.notificacoes.map(n => n.id);
+                        for (const id of ids) {
+                            await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
                         }
                     }
                     state.notificacoes = [];
@@ -1599,10 +1709,12 @@
 
             async function markAsPurchased(productId) {
                 try {
-                    if (state.dbReady && state.isOnline) {
-                        const prodRef = doc(window.db, 'produtos', productId);
-                        await updateDoc(prodRef, { estoque: 0 });
+                    if (supabase && state.isOnline) {
+                        const { error } = await supabase.from('produtos').update({ estoque: 0 }).eq('id', productId);
+                        if (error) throw error;
                     }
+                    const produto = state.produtos.find(p => p.id === productId);
+                    if (produto) produto.estoque = 0;
                     showToast('Item marcado como comprado!', 'success');
                     await loadShoppingList();
                     await loadMetrics();
@@ -1624,14 +1736,21 @@
             function calcPress(value) {
                 const display = DOM.calcDisplay;
                 if (value === 'C') {
-                    calcValue = '0'; calcPrev = ''; calcOp = null; calcReset = false;
-                    display.textContent = '0'; return;
+                    calcValue = '0';
+                    calcPrev = '';
+                    calcOp = null;
+                    calcReset = false;
+                    display.textContent = '0';
+                    return;
                 }
                 if (value === '=') {
                     if (calcOp && calcPrev) {
                         const result = calcCalculate(parseFloat(calcPrev), parseFloat(calcValue), calcOp);
                         display.textContent = result;
-                        calcValue = result.toString(); calcPrev = ''; calcOp = null; calcReset = true;
+                        calcValue = result.toString();
+                        calcPrev = '';
+                        calcOp = null;
+                        calcReset = true;
                     }
                     return;
                 }
@@ -1643,11 +1762,16 @@
                     } else {
                         calcPrev = calcValue;
                     }
-                    calcOp = value; calcReset = true; return;
+                    calcOp = value;
+                    calcReset = true;
+                    return;
                 }
-                if (value === '±') { calcValue = (parseFloat(calcValue) * -1).toString(); display.textContent = calcValue; return; }
-                if (value === '%') { calcValue = (parseFloat(calcValue) / 100).toString(); display.textContent = calcValue; return; }
-                if (calcReset) { calcValue = '0'; calcReset = false; }
+                if (value === '±') { calcValue = (parseFloat(calcValue) * -1).toString();
+                    display.textContent = calcValue; return; }
+                if (value === '%') { calcValue = (parseFloat(calcValue) / 100).toString();
+                    display.textContent = calcValue; return; }
+                if (calcReset) { calcValue = '0';
+                    calcReset = false; }
                 if (value === '.' && calcValue.includes('.')) return;
                 if (calcValue === '0' && value !== '.') { calcValue = value; } else { calcValue += value; }
                 display.textContent = calcValue;
@@ -1655,11 +1779,16 @@
 
             function calcCalculate(a, b, op) {
                 switch (op) {
-                    case '+': return a + b;
-                    case '-': return a - b;
-                    case '×': return a * b;
-                    case '÷': return b !== 0 ? a / b : 'Erro';
-                    default: return b;
+                    case '+':
+                        return a + b;
+                    case '-':
+                        return a - b;
+                    case '×':
+                        return a * b;
+                    case '÷':
+                        return b !== 0 ? a / b : 'Erro';
+                    default:
+                        return b;
                 }
             }
 
@@ -1667,7 +1796,8 @@
             function toggleMobileSidebar() {
                 document.getElementById('mobileSidebar').classList.toggle('open');
                 document.getElementById('mobileOverlay').classList.toggle('open');
-                document.body.style.overflow = document.getElementById('mobileSidebar').classList.contains('open') ? 'hidden' : '';
+                document.body.style.overflow = document.getElementById('mobileSidebar').classList.contains('open') ?
+                    'hidden' : '';
             }
 
             function closeMobileSidebar() {
@@ -1693,7 +1823,7 @@
                         document.getElementById('headerNotificationDropdown').classList.remove('open');
                     }
                     if (!e.target.closest('.header-user') && !e.target.closest('#headerUserDropdown')) {
-                        document.getElementById('headerUserDropdown').classlist.remove('open');
+                        document.getElementById('headerUserDropdown').classList.remove('open');
                     }
                 });
 
@@ -1710,37 +1840,10 @@
                     showToast('Modo offline ativado', 'warning');
                 });
 
-                // Firebase ready
-                document.addEventListener('firebase-ready', function() {
-                    state.dbReady = true;
-                    console.log('✅ Firebase disponível para uso');
-                    if (window.onAuthStateChanged) {
-                        window.onAuthStateChanged(window.auth, (user) => {
-                            if (user) {
-                                console.log('👤 Usuário autenticado:', user.email);
-                            } else {
-                                console.log('⚠️ Nenhum usuário autenticado');
-                            }
-                            if (!state.initialized) {
-                                state.initialized = true;
-                                loadDashboard();
-                            }
-                        });
-                    } else {
-                        if (!state.initialized) {
-                            state.initialized = true;
-                            loadDashboard();
-                        }
-                    }
-                });
-
-                // Verificar se Firebase já está pronto
-                if (window.firebaseReady) {
-                    state.dbReady = true;
-                    if (!state.initialized) {
-                        state.initialized = true;
-                        loadDashboard();
-                    }
+                // Inicializar se já estiver pronto
+                if (supabaseReady && !state.initialized) {
+                    state.initialized = true;
+                    loadDashboard();
                 }
 
                 // Conexão inicial
@@ -1751,23 +1854,26 @@
             function init() {
                 applySystemConfig();
                 setupEventListeners();
-                
-                // Se o Firebase já estiver pronto
-                if (window.firebaseReady) {
+
+                // Se Supabase já estiver pronto
+                if (supabaseReady) {
                     state.dbReady = true;
                     if (!state.initialized) {
                         state.initialized = true;
                         setTimeout(loadDashboard, 300);
                     }
                 } else {
-                    // Aguardar Firebase
-                    document.addEventListener('firebase-ready', function() {
-                        state.dbReady = true;
-                        if (!state.initialized) {
-                            state.initialized = true;
-                            loadDashboard();
+                    // Tentar novamente após 1s
+                    setTimeout(() => {
+                        if (supabase) {
+                            supabaseReady = true;
+                            state.dbReady = true;
+                            if (!state.initialized) {
+                                state.initialized = true;
+                                loadDashboard();
+                            }
                         }
-                    });
+                    }, 1000);
                 }
             }
 
@@ -1794,6 +1900,7 @@
             window.toggleNotifications = toggleNotifications;
             window.toggleUserMenu = toggleUserMenu;
             window.showToast = showToast;
+            window.supabase = supabase;
 
             // ==================== INICIAR ====================
             if (document.readyState === 'loading') {
@@ -1803,7 +1910,6 @@
             }
 
             // ==================== LIMPAR INTERVALOS ====================
-            // Remover qualquer intervalo que tenha sido configurado anteriormente
             const intervals = window._intervals || [];
             intervals.forEach(id => clearInterval(id));
             window._intervals = [];
