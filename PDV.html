@@ -649,18 +649,32 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- ==================== SUPABASE SDK ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
+    </script>
     
     <script>
         (function() {
             'use strict';
 
-            // ==================== CONFIG ====================
+            // ==================== SUPABASE CONFIG ====================
             const SUPABASE_CONFIG = {
-                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
+                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
             };
 
+            // ==================== INICIALIZAR SUPABASE ====================
+            let supabase = null;
+            let supabaseReady = false;
+
+            try {
+                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                supabaseReady = true;
+                console.log('✅ Supabase inicializado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
+            }
+
+            // ==================== CONFIG ====================
             const SYSTEM_CONFIG = {
                 systemName: 'Kanawa Soft',
                 companyName: 'Nome da Empresa',
@@ -677,7 +691,7 @@
             // ==================== ESTADO ====================
             const state = {
                 initialized: false,
-                supabase: null,
+                supabase: supabase,
                 cart: [],
                 products: [],
                 customers: [],
@@ -725,10 +739,15 @@
                 if (state.initialized) return;
                 state.initialized = true;
 
-                state.supabase = window.supabase.createClient(
-                    SUPABASE_CONFIG.url,
-                    SUPABASE_CONFIG.anonKey
-                );
+                if (!supabase) {
+                    try {
+                        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                        state.supabase = supabase;
+                        supabaseReady = true;
+                    } catch (e) {
+                        console.error('Erro ao criar cliente Supabase:', e);
+                    }
+                }
 
                 checkConnectivity();
                 loadData();
@@ -788,8 +807,13 @@
 
             async function loadUserData() {
                 try {
-                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
-                    state.currentUser = data?.[0] || { id: 1, nome: 'Usuário', email: 'usuario@email.com', cargo: 'Vendedor' };
+                    if (supabase) {
+                        const { data } = await supabase.from('usuarios').select('*').limit(1);
+                        state.currentUser = data?.[0] || { id: 1, nome: 'Usuário', email: 'usuario@email.com',
+                            cargo: 'Vendedor' };
+                    } else {
+                        state.currentUser = { id: 1, nome: 'Usuário Offline', cargo: 'Vendedor' };
+                    }
                     updateUserUI();
                 } catch (e) {
                     state.currentUser = { id: 1, nome: 'Usuário Offline', cargo: 'Vendedor' };
@@ -801,15 +825,21 @@
                 document.getElementById('userName').textContent = u.nome;
                 document.getElementById('headerUserName').textContent = u.nome;
                 document.getElementById('userRole').textContent = u.cargo || 'Vendedor';
-                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                const avatar =
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
                 document.getElementById('userAvatar').src = avatar;
                 document.getElementById('headerUserAvatar').src = avatar;
             }
 
             async function loadProducts() {
                 try {
-                    const { data } = await state.supabase.from('produtos').select('*').order('nome');
-                    state.products = data || [];
+                    if (supabase) {
+                        const { data } = await supabase.from('produtos').select('*').order('nome');
+                        state.products = data || [];
+                    } else {
+                        const local = localStorage.getItem('pdv_products');
+                        state.products = local ? JSON.parse(local) : getSampleProducts();
+                    }
                     renderProducts(state.products);
                     DOM.loadingProducts.classList.add('hidden');
                     DOM.productsGrid.classList.remove('hidden');
@@ -825,33 +855,44 @@
 
             function getSampleProducts() {
                 return [
-                    { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-1001', preco: 2500, current_stock: 10, categoria_id: 1 },
-                    { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-1002', preco: 3500, current_stock: 8, categoria_id: 1 },
-                    { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-1003', preco: 1800, current_stock: 5, categoria_id: 2 },
-                    { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-1004', preco: 1200, current_stock: 15, categoria_id: 1 },
+                    { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-1001', preco: 2500, current_stock: 10,
+                    categoria_id: 1 },
+                    { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-1002', preco: 3500, current_stock: 8,
+                    categoria_id: 1 },
+                    { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-1003', preco: 1800, current_stock: 5,
+                    categoria_id: 2 },
+                    { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-1004', preco: 1200, current_stock: 15,
+                    categoria_id: 1 },
                     { id: 5, nome: 'Café em Pó 500g', codigo: 'P-1005', preco: 4500, current_stock: 3, categoria_id: 2 }
                 ];
             }
 
             async function loadCategories() {
                 try {
-                    const { data } = await state.supabase.from('categorias').select('*').order('nome');
-                    const categories = data || [];
-                    const filter = DOM.categoryFilter;
-                    filter.innerHTML = '<option value="">Todas Categorias</option>';
-                    categories.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.id;
-                        opt.textContent = c.nome;
-                        filter.appendChild(opt);
-                    });
+                    if (supabase) {
+                        const { data } = await supabase.from('categorias').select('*').order('nome');
+                        const categories = data || [];
+                        const filter = DOM.categoryFilter;
+                        filter.innerHTML = '<option value="">Todas Categorias</option>';
+                        categories.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.nome;
+                            filter.appendChild(opt);
+                        });
+                    }
                 } catch (e) { /* ignore */ }
             }
 
             async function loadCustomers() {
                 try {
-                    const { data } = await state.supabase.from('clientes').select('*').order('nome');
-                    state.customers = data || [];
+                    if (supabase) {
+                        const { data } = await supabase.from('clientes').select('*').order('nome');
+                        state.customers = data || [];
+                    } else {
+                        const local = localStorage.getItem('pdv_customers');
+                        state.customers = local ? JSON.parse(local) : [];
+                    }
                     updateCustomerSelect();
                     localStorage.setItem('pdv_customers', JSON.stringify(state.customers));
                 } catch (e) {
@@ -876,39 +917,57 @@
 
             async function loadStatistics() {
                 try {
-                    const { data } = await state.supabase.from('metrics').select('*').limit(1);
-                    const metrics = data?.[0] || { salesToday: 0, salesCount: 0 };
-                    document.getElementById('cashAmount').textContent = `AOA ${(metrics.salesToday || 0).toLocaleString('pt-BR')}`;
-                    document.getElementById('salesToday').textContent = `Vendas: ${metrics.salesCount || 0} hoje`;
+                    if (supabase) {
+                        const { data } = await supabase.from('metrics').select('*').limit(1);
+                        const metrics = data?.[0] || { salesToday: 0, salesCount: 0 };
+                        document.getElementById('cashAmount').textContent =
+                            `AOA ${(metrics.salesToday || 0).toLocaleString('pt-BR')}`;
+                        document.getElementById('salesToday').textContent = `Vendas: ${metrics.salesCount || 0} hoje`;
+                    }
                 } catch (e) { /* ignore */ }
             }
 
             async function loadCompanyData() {
                 try {
-                    const { data } = await state.supabase.from('empresa').select('*').limit(1);
-                    const company = data?.[0] || {};
-                    document.getElementById('faturaCompanyName').textContent = company.nome || SYSTEM_CONFIG.companyName;
-                    document.getElementById('faturaCompanyNIF').textContent = `NIF: ${company.nif || SYSTEM_CONFIG.companyNIF}`;
-                    document.getElementById('faturaCompanyAddress').textContent = company.endereco || SYSTEM_CONFIG.companyAddress;
-                    document.getElementById('faturaCompanyPhone').textContent = company.telefone || SYSTEM_CONFIG.companyPhone;
-                    document.getElementById('faturaCompanyEmail').textContent = company.email || SYSTEM_CONFIG.companyEmail;
+                    if (supabase) {
+                        const { data } = await supabase.from('empresa').select('*').limit(1);
+                        const company = data?.[0] || {};
+                        document.getElementById('faturaCompanyName').textContent = company.nome || SYSTEM_CONFIG
+                        .companyName;
+                        document.getElementById('faturaCompanyNIF').textContent = `NIF: ${company.nif || SYSTEM_CONFIG.companyNIF}`;
+                        document.getElementById('faturaCompanyAddress').textContent = company.endereco || SYSTEM_CONFIG
+                            .companyAddress;
+                        document.getElementById('faturaCompanyPhone').textContent = company.telefone || SYSTEM_CONFIG
+                            .companyPhone;
+                        document.getElementById('faturaCompanyEmail').textContent = company.email || SYSTEM_CONFIG
+                            .companyEmail;
+                    }
                 } catch (e) { /* ignore */ }
             }
 
             async function loadShiftData() {
                 try {
-                    const { data } = await state.supabase.from('shifts').select('*').eq('active', true).limit(1);
-                    state.currentShift = data?.[0] || null;
-                    const shift = state.currentShift;
-                    document.getElementById('currentShift').textContent = shift ? `${shift.start_time} - ${shift.end_time}` : '08:00 - 16:00';
-                    document.getElementById('headerShift').textContent = shift ? `Turno: ${shift.start_time}-${shift.end_time}` : 'Turno: 08:00-16:00';
+                    if (supabase) {
+                        const { data } = await supabase.from('shifts').select('*').eq('active', true).limit(1);
+                        state.currentShift = data?.[0] || null;
+                        const shift = state.currentShift;
+                        document.getElementById('currentShift').textContent = shift ? `${shift.start_time} - ${shift.end_time}` :
+                            '08:00 - 16:00';
+                        document.getElementById('headerShift').textContent = shift ?
+                            `Turno: ${shift.start_time}-${shift.end_time}` : 'Turno: 08:00-16:00';
+                    }
                 } catch (e) { /* ignore */ }
             }
 
             async function loadHeldSales() {
                 try {
-                    const { data } = await state.supabase.from('held_sales').select('*').eq('status', 'held').order('created_at', { ascending: false });
-                    state.heldSales = data || [];
+                    if (supabase) {
+                        const { data } = await supabase.from('held_sales').select('*').eq('status', 'held').order(
+                        'created_at', { ascending: false });
+                        state.heldSales = data || [];
+                    } else {
+                        state.heldSales = [];
+                    }
                 } catch (e) {
                     state.heldSales = [];
                 }
@@ -937,7 +996,7 @@
 
                 let filtered = productsToRender;
                 if (searchTerm) {
-                    filtered = filtered.filter(p => 
+                    filtered = filtered.filter(p =>
                         (p.nome?.toLowerCase().includes(searchTerm)) ||
                         (p.codigo?.toLowerCase().includes(searchTerm)) ||
                         (p.descricao?.toLowerCase().includes(searchTerm))
@@ -1164,14 +1223,16 @@
 
                 DOM.paymentMethods.querySelectorAll('.payment-method').forEach(el => {
                     el.addEventListener('click', function() {
-                        DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                        DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove(
+                        'selected'));
                         this.classList.add('selected');
                         state.selectedPaymentMethod = this.dataset.method;
                         if (this.dataset.method === 'cash') {
                             setTimeout(() => DOM.amountReceived.focus(), 100);
                         } else {
                             const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '')
+                                .replace(',', '.')) || 0;
                             DOM.amountReceived.value = (subtotal - discount).toFixed(2);
                             calculateChange();
                         }
@@ -1201,7 +1262,8 @@
                 const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
                 const total = subtotal - discount;
                 const change = Math.max(0, received - total);
-                DOM.changeAmount.textContent = `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                DOM.changeAmount.textContent =
+                    `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
 
             // ==================== FINALIZAR VENDA ====================
@@ -1227,7 +1289,8 @@
             async function processSale(total, received) {
                 try {
                     const customerId = DOM.customerSelect.value;
-                    const customerName = customerId ? DOM.customerSelect.options[DOM.customerSelect.selectedIndex].text : 'Cliente Avulso';
+                    const customerName = customerId ? DOM.customerSelect.options[DOM.customerSelect.selectedIndex].text :
+                        'Cliente Avulso';
                     const saleData = {
                         code: `V-${Date.now()}`,
                         date: new Date().toISOString().split('T')[0],
@@ -1238,7 +1301,8 @@
                         customerName: customerName,
                         total: total,
                         subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
-                        discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
+                        discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) ||
+                            0,
                         paymentMethod: state.selectedPaymentMethod,
                         amountReceived: received,
                         change: Math.max(0, received - total),
@@ -1256,7 +1320,7 @@
                     };
 
                     state.currentSale = await saveSale(saleData);
-                    
+
                     // Atualizar stock
                     for (const item of state.cart) {
                         const newStock = item.product.current_stock - item.quantity;
@@ -1277,27 +1341,30 @@
 
             async function saveSale(sale) {
                 try {
-                    const { data, error } = await state.supabase.from('vendas').insert([{
-                        code: sale.code,
-                        date: sale.date,
-                        time: sale.time,
-                        seller_id: sale.sellerId,
-                        seller_name: sale.seller,
-                        customer_id: sale.customerId,
-                        customer_name: sale.customerName,
-                        total: sale.total,
-                        subtotal: sale.subtotal,
-                        discount: sale.discount,
-                        payment_method: sale.paymentMethod,
-                        amount_received: sale.amountReceived,
-                        change_amount: sale.change,
-                        notes: sale.notes,
-                        shift_id: sale.shiftId,
-                        status: 'completed',
-                        items: sale.items
-                    }]).select();
-                    if (error) throw error;
-                    return data?.[0] || { id: Date.now(), code: sale.code, ...sale };
+                    if (supabase) {
+                        const { data, error } = await supabase.from('vendas').insert([{
+                            code: sale.code,
+                            date: sale.date,
+                            time: sale.time,
+                            seller_id: sale.sellerId,
+                            seller_name: sale.seller,
+                            customer_id: sale.customerId,
+                            customer_name: sale.customerName,
+                            total: sale.total,
+                            subtotal: sale.subtotal,
+                            discount: sale.discount,
+                            payment_method: sale.paymentMethod,
+                            amount_received: sale.amountReceived,
+                            change_amount: sale.change,
+                            notes: sale.notes,
+                            shift_id: sale.shiftId,
+                            status: 'completed',
+                            items: sale.items
+                        }]).select();
+                        if (error) throw error;
+                        return data?.[0] || { id: Date.now(), code: sale.code, ...sale };
+                    }
+                    return { id: Date.now(), code: sale.code, ...sale };
                 } catch (e) {
                     return { id: Date.now(), code: sale.code, ...sale };
                 }
@@ -1305,7 +1372,9 @@
 
             async function updateProductStock(productId, newStock) {
                 try {
-                    await state.supabase.from('produtos').update({ current_stock: newStock }).eq('id', productId);
+                    if (supabase) {
+                        await supabase.from('produtos').update({ current_stock: newStock }).eq('id', productId);
+                    }
                     const local = state.products.find(p => p.id === productId);
                     if (local) local.current_stock = newStock;
                 } catch (e) {
@@ -1320,18 +1389,20 @@
                 if (!sale) return;
 
                 const customer = state.customers.find(c => c.id == sale.customerId);
-                
+
                 document.getElementById('faturaNumber').textContent = sale.code || sale.id.toString().padStart(6, '0');
                 const now = new Date();
                 document.getElementById('faturaDate').textContent = now.toLocaleDateString('pt-BR');
-                document.getElementById('faturaHora').textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('faturaHora').textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit',
+                    minute: '2-digit' });
 
                 document.getElementById('faturaClientName').textContent = customer?.nome || 'Cliente Avulso';
                 document.getElementById('faturaClientNIF').textContent = customer?.nif ? `NIF: ${customer.nif}` : '';
                 document.getElementById('faturaClientEndereco').textContent = customer?.endereco || '';
 
                 document.getElementById('faturaSeller').textContent = state.currentUser?.nome || 'Vendedor';
-                document.getElementById('faturaVendedorId').textContent = state.currentUser?.id ? `ID: ${state.currentUser.id}` : '';
+                document.getElementById('faturaVendedorId').textContent = state.currentUser?.id ? `ID: ${state.currentUser.id}` :
+                    '';
 
                 const tbody = document.getElementById('faturaItems');
                 tbody.innerHTML = sale.items.map(item => `
@@ -1347,15 +1418,22 @@
                 const iva = subtotal * SYSTEM_CONFIG.taxRate;
                 const totalComIVA = subtotal - (sale.discount || 0) + iva;
 
-                document.getElementById('faturaSubtotal').textContent = `AOA ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaDesconto').textContent = `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaIVA').textContent = `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaTotal').textContent = `AOA ${totalComIVA.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaSubtotal').textContent =
+                    `AOA ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaDesconto').textContent =
+                    `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaIVA').textContent =
+                    `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaTotal').textContent =
+                    `AOA ${totalComIVA.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
 
                 const methodNames = { cash: 'Dinheiro', card: 'Cartão', transfer: 'Transferência' };
-                document.getElementById('faturaPaymentMethod').textContent = methodNames[sale.paymentMethod] || sale.paymentMethod;
-                document.getElementById('faturaAmountReceived').textContent = `AOA ${(sale.amountReceived || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaChange').textContent = `AOA ${(sale.change || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaPaymentMethod').textContent = methodNames[sale.paymentMethod] || sale
+                    .paymentMethod;
+                document.getElementById('faturaAmountReceived').textContent =
+                    `AOA ${(sale.amountReceived || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('faturaChange').textContent =
+                    `AOA ${(sale.change || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
 
                 document.getElementById('faturaTermos').textContent = SYSTEM_CONFIG.invoiceTerms;
                 document.getElementById('faturaFooterInfo').textContent = SYSTEM_CONFIG.invoiceFooter;
@@ -1432,8 +1510,8 @@
                     timestamp: new Date().toISOString(),
                     subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
                     discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
-                    total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) - 
-                           (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
+                    total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) -
+                        (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
                     seller: state.currentUser?.nome || 'Vendedor',
                     sellerId: state.currentUser?.id || null,
                     customerId: DOM.customerSelect.value,
@@ -1539,7 +1617,7 @@
 
             // ==================== SINCRONIZAÇÃO ====================
             async function syncData() {
-                if (!state.isOnline) return;
+                if (!state.isOnline || !supabase) return;
                 try {
                     await loadProducts();
                     await loadCustomers();
@@ -1553,9 +1631,11 @@
             // ==================== NOTIFICAÇÕES ====================
             function showNotification(message, type = 'info') {
                 const container = DOM.toastContainer;
-                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-                const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
-                
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500',
+                    info: 'bg-blue-500' };
+
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
@@ -1605,10 +1685,14 @@
                 });
 
                 document.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 'f') { e.preventDefault(); DOM.productSearch.focus(); }
-                    if (e.key === 'F2') { e.preventDefault(); newSale(); }
-                    if (e.key === 'F3') { e.preventDefault(); openPaymentModal(); }
-                    if (e.key === 'F4') { e.preventDefault(); holdSale(); }
+                    if (e.ctrlKey && e.key === 'f') { e.preventDefault();
+                        DOM.productSearch.focus(); }
+                    if (e.key === 'F2') { e.preventDefault();
+                        newSale(); }
+                    if (e.key === 'F3') { e.preventDefault();
+                        openPaymentModal(); }
+                    if (e.key === 'F4') { e.preventDefault();
+                        holdSale(); }
                     if (e.key === 'Escape') {
                         if (!DOM.paymentModal.classList.contains('hidden')) closePaymentModal();
                         if (!DOM.receiptModal.classList.contains('hidden')) closeReceiptModal();
