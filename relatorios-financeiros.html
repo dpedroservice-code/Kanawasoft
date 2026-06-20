@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Financeiros | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f9; overflow: hidden; height: 100vh; display: flex; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: 10px; color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease; display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.warning { background: #f59e0b; }
+        .toast.info { background: #3b82f6; }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .chart-container { height: 250px; width: 100%; position: relative; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2" id="sidebarMenu">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-chart-pie mr-3"></i>
+                        <span class="flex-1 font-medium">Relatórios</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="relatorios-financeiros.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-coins mr-2 text-sm"></i>Financeiros</a></li>
+                        <li><a href="relatorios-vendas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-2 text-sm"></i>Vendas</a></li>
+                        <li><a href="relatorios-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-2 text-sm"></i>Estoque</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">RELATÓRIOS FINANCEIROS</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-coins mr-1"></i> <span id="reportCount">0</span> Registos
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Conteúdo carregado via JavaScript -->
+        </main>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                transactions: [],
+                currentPage: 1,
+                itemsPerPage: 15,
+                trendChart: null,
+                expenseChart: null,
+                supabase: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                mainContent: document.getElementById('mainContent'),
+                reportCount: document.getElementById('reportCount'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadTransactions()
+                ]).then(() => {
+                    renderContent();
+                    setupEventListeners();
+                    loadSidebarPreference();
+                });
+            }
+
+            // ==================== CARREGAR DADOS ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            async function loadTransactions() {
+                try {
+                    const { data } = await state.supabase
+                        .from('transacoes_financeiras')
+                        .select('*')
+                        .order('data', { ascending: false });
+                    state.transactions = data || [];
+                } catch (e) {
+                    state.transactions = generateSampleData();
+                }
+            }
+
+            // ==================== DADOS DE EXEMPLO ====================
+            function generateSampleData() {
+                const now = new Date();
+                const result = [];
+                const types = ['receita', 'despesa'];
+                const cats = { receita: ['Vendas', 'Serviços', 'Consultoria'], despesa: ['Aluguel', 'Salários', 'Energia', 'Água', 'Internet'] };
+                const descs = { receita: ['Venda de produtos', 'Serviço prestado', 'Consultoria realizada'], despesa: ['Pagamento aluguel', 'Folha de pagamento', 'Conta de energia', 'Conta de água', 'Internet'] };
+
+                for (let i = 0; i < 30; i++) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - Math.floor(Math.random() * 60));
+                    const type = types[Math.floor(Math.random() * 2)];
+                    const catList = cats[type];
+                    const descList = descs[type];
+                    result.push({
+                        id: i + 1,
+                        data: d.toISOString().split('T')[0],
+                        descricao: descList[Math.floor(Math.random() * descList.length)],
+                        categoria: catList[Math.floor(Math.random() * catList.length)],
+                        tipo: type,
+                        valor: type === 'receita' ? Math.floor(Math.random() * 500000) + 10000 : Math.floor(Math.random() * 300000) + 5000
+                    });
+                }
+                return result.sort((a, b) => new Date(b.data) - new Date(a.data));
+            }
+
+            // ==================== RENDER CONTEÚDO ====================
+            function renderContent() {
+                DOM.mainContent.innerHTML = `
+                    <!-- Filtros -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                                <select id="filterPeriod" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="today">Hoje</option>
+                                    <option value="yesterday">Ontem</option>
+                                    <option value="week" selected>Esta Semana</option>
+                                    <option value="month">Este Mês</option>
+                                    <option value="lastMonth">Mês Passado</option>
+                                    <option value="quarter">Este Trimestre</option>
+                                    <option value="year">Este Ano</option>
+                                    <option value="custom">Personalizado</option>
+                                </select>
+                            </div>
+                            <div id="dateRangeContainer" style="display:none;" class="col-span-3">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
+                                        <input type="date" id="filterDateStart" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
+                                        <input type="date" id="filterDateEnd" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button onclick="window.applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-filter mr-2"></i> Filtrar
+                                </button>
+                                <button onclick="window.resetFilters()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6 stat-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Receita Total</p>
+                                    <h3 class="text-2xl font-bold text-green-600" id="totalRevenue">Kz 0</h3>
+                                    <p class="text-sm text-gray-500" id="revenueChange">+0% vs período anterior</p>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-arrow-up text-green-600 text-xl"></i></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 stat-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Despesas</p>
+                                    <h3 class="text-2xl font-bold text-red-600" id="totalExpenses">Kz 0</h3>
+                                    <p class="text-sm text-gray-500" id="expensesChange">+0% vs período anterior</p>
+                                </div>
+                                <div class="bg-red-100 p-3 rounded-full"><i class="fas fa-arrow-down text-red-600 text-xl"></i></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 stat-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Lucro Líquido</p>
+                                    <h3 class="text-2xl font-bold text-blue-600" id="netProfit">Kz 0</h3>
+                                    <p class="text-sm text-gray-500" id="profitChange">+0% vs período anterior</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-wallet text-blue-600 text-xl"></i></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 stat-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Margem</p>
+                                    <h3 class="text-2xl font-bold text-purple-600" id="profitMargin">0%</h3>
+                                    <p class="text-sm text-gray-500">Lucro / Receita</p>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-percent text-purple-600 text-xl"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="font-bold text-gray-700 mb-4">Evolução Financeira</h3>
+                            <div class="chart-container"><canvas id="trendChart"></canvas></div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="font-bold text-gray-700 mb-4">Distribuição de Despesas</h3>
+                            <div class="chart-container"><canvas id="expenseChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Top Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="font-bold text-gray-700 mb-4">Top Receitas por Categoria</h3>
+                            <div id="topRevenueCategories" class="space-y-3"></div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="font-bold text-gray-700 mb-4">Top Despesas por Categoria</h3>
+                            <div id="topExpenseCategories" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Histórico de Transações</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="window.exportReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                    <i class="fas fa-file-export mr-2"></i> Exportar
+                                </button>
+                                <button onclick="window.printReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                    <i class="fas fa-print mr-2"></i> Imprimir
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactionsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                                <span class="text-sm text-gray-500" id="transactionInfo">0 registos</span>
+                                <div class="flex gap-2">
+                                    <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>Anterior</button>
+                                    <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>Próximo</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Inicializar após renderizar
+                setTimeout(() => {
+                    setupFilterListeners();
+                    updateStats();
+                    updateCharts();
+                    updateTopCategories();
+                    renderTransactions();
+                    changePeriod();
+                }, 100);
+            }
+
+            // ==================== FILTROS ====================
+            function setupFilterListeners() {
+                document.getElementById('filterPeriod').addEventListener('change', changePeriod);
+                document.getElementById('filterDateStart').addEventListener('change', applyFilters);
+                document.getElementById('filterDateEnd').addEventListener('change', applyFilters);
+                document.getElementById('prevPage').addEventListener('click', () => {
+                    if (state.currentPage > 1) { state.currentPage--; renderTransactions(); }
+                });
+                document.getElementById('nextPage').addEventListener('click', () => {
+                    const total = Math.ceil(state.transactions.length / state.itemsPerPage);
+                    if (state.currentPage < total) { state.currentPage++; renderTransactions(); }
+                });
+            }
+
+            function changePeriod() {
+                const period = document.getElementById('filterPeriod').value;
+                const dateStart = document.getElementById('filterDateStart');
+                const dateEnd = document.getElementById('filterDateEnd');
+                const container = document.getElementById('dateRangeContainer');
+                
+                if (period === 'custom') {
+                    container.style.display = 'grid';
+                    return;
+                }
+                container.style.display = 'none';
+
+                const today = new Date();
+                let start = new Date(today);
+                let end = new Date(today);
+
+                switch (period) {
+                    case 'today': break;
+                    case 'yesterday': start.setDate(start.getDate() - 1); end.setDate(end.getDate() - 1); break;
+                    case 'week': start.setDate(start.getDate() - 7); break;
+                    case 'month': start.setMonth(start.getMonth() - 1); break;
+                    case 'lastMonth': start.setMonth(start.getMonth() - 1); end.setMonth(end.getMonth() - 1); start.setDate(1); end.setMonth(end.getMonth() + 1); end.setDate(0); break;
+                    case 'quarter': start.setMonth(start.getMonth() - 3); break;
+                    case 'year': start.setFullYear(start.getFullYear() - 1); break;
+                    default: break;
+                }
+
+                dateStart.value = start.toISOString().split('T')[0];
+                dateEnd.value = end.toISOString().split('T')[0];
+                applyFilters();
+            }
+
+            function applyFilters() {
+                state.currentPage = 1;
+                renderTransactions();
+                updateStats();
+                updateCharts();
+                updateTopCategories();
+                showToast('Filtros aplicados', 'success');
+            }
+
+            function resetFilters() {
+                document.getElementById('filterPeriod').value = 'week';
+                document.getElementById('filterDateStart').value = '';
+                document.getElementById('filterDateEnd').value = '';
+                document.getElementById('dateRangeContainer').style.display = 'none';
+                changePeriod();
+            }
+
+            // ==================== RENDER TRANSACTIONS ====================
+            function renderTransactions() {
+                const tbody = document.getElementById('transactionsTableBody');
+                const start = (state.currentPage - 1) * state.itemsPerPage;
+                const pageItems = state.transactions.slice(start, start + state.itemsPerPage);
+
+                if (pageItems.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-coins text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhuma transação encontrada</p>
+                    </td></tr>`;
+                    document.getElementById('transactionInfo').textContent = '0 registos';
+                    DOM.reportCount.textContent = '0';
+                    return;
+                }
+
+                tbody.innerHTML = pageItems.map(t => {
+                    const isReceita = t.tipo === 'receita';
+                    const cls = isReceita ? 'text-green-600' : 'text-red-600';
+                    const bg = isReceita ? 'bg-green-50' : 'bg-red-50';
+                    const icon = isReceita ? 'fa-arrow-up' : 'fa-arrow-down';
+                    return `<tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(t.data)}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${t.descricao}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.categoria}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${bg} ${cls}">
+                                <i class="fas ${icon} mr-1"></i>${t.tipo}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${cls}">
+                            ${isReceita ? '+' : '-'} ${formatCurrency(t.valor)}
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                document.getElementById('transactionInfo').textContent = `${state.transactions.length} registos`;
+                DOM.reportCount.textContent = state.transactions.length;
+
+                const totalPages = Math.ceil(state.transactions.length / state.itemsPerPage);
+                document.getElementById('prevPage').disabled = state.currentPage <= 1;
+                document.getElementById('nextPage').disabled = state.currentPage >= totalPages;
+            }
+
+            // ==================== STATS ====================
+            function updateStats() {
+                const revenue = state.transactions.filter(t => t.tipo === 'receita').reduce((s, t) => s + t.valor, 0);
+                const expenses = state.transactions.filter(t => t.tipo === 'despesa').reduce((s, t) => s + t.valor, 0);
+                const profit = revenue - expenses;
+                const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+                document.getElementById('totalRevenue').textContent = formatCurrency(revenue);
+                document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
+                document.getElementById('netProfit').textContent = formatCurrency(profit);
+                document.getElementById('profitMargin').textContent = margin.toFixed(1) + '%';
+            }
+
+            // ==================== CHARTS ====================
+            function updateCharts() {
+                const dateMap = {};
+                state.transactions.forEach(t => {
+                    if (!dateMap[t.data]) dateMap[t.data] = { receita: 0, despesa: 0 };
+                    if (t.tipo === 'receita') dateMap[t.data].receita += t.valor;
+                    else dateMap[t.data].despesa += t.valor;
+                });
+
+                const dates = Object.keys(dateMap).sort();
+                const labels = dates.map(d => formatDate(d));
+                const revenueData = dates.map(d => dateMap[d].receita);
+                const expenseData = dates.map(d => dateMap[d].despesa);
+
+                // Trend Chart
+                const ctx1 = document.getElementById('trendChart');
+                if (ctx1) {
+                    if (state.trendChart) state.trendChart.destroy();
+                    state.trendChart = new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: 'Receitas', data: revenueData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 },
+                                { label: 'Despesas', data: expenseData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { y: { beginAtZero: true, ticks: { callback: v => formatCurrency(v) } } }
+                        }
+                    });
+                }
+
+                // Expense Chart
+                const expenseCats = {};
+                state.transactions.filter(t => t.tipo === 'despesa').forEach(t => {
+                    expenseCats[t.categoria] = (expenseCats[t.categoria] || 0) + t.valor;
+                });
+                const catLabels = Object.keys(expenseCats);
+                const catData = Object.values(expenseCats);
+                const colors = ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+                const ctx2 = document.getElementById('expenseChart');
+                if (ctx2) {
+                    if (state.expenseChart) state.expenseChart.destroy();
+                    state.expenseChart = new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: {
+                            labels: catLabels,
+                            datasets: [{ data: catData, backgroundColor: colors.slice(0, catLabels.length), borderWidth: 2 }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'right', labels: { font: { size: 10 } } } }
+                        }
+                    });
+                }
+            }
+
+            // ==================== TOP CATEGORIES ====================
+            function updateTopCategories() {
+                const revCats = {};
+                state.transactions.filter(t => t.tipo === 'receita').forEach(t => {
+                    revCats[t.categoria] = (revCats[t.categoria] || 0) + t.valor;
+                });
+                const sortedRev = Object.entries(revCats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                const maxRev = sortedRev.length > 0 ? sortedRev[0][1] : 1;
+                document.getElementById('topRevenueCategories').innerHTML = sortedRev.length === 0 ? 
+                    '<p class="text-gray-500 text-sm">Nenhuma receita registada</p>' :
+                    sortedRev.map(([cat, val]) => `
+                        <div>
+                            <div class="flex justify-between text-sm"><span>${cat}</span><span class="font-semibold text-green-600">${formatCurrency(val)}</span></div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-green-500 h-2 rounded-full" style="width:${(val/maxRev)*100}%"></div></div>
+                        </div>
+                    `).join('');
+
+                const expCats = {};
+                state.transactions.filter(t => t.tipo === 'despesa').forEach(t => {
+                    expCats[t.categoria] = (expCats[t.categoria] || 0) + t.valor;
+                });
+                const sortedExp = Object.entries(expCats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                const maxExp = sortedExp.length > 0 ? sortedExp[0][1] : 1;
+                document.getElementById('topExpenseCategories').innerHTML = sortedExp.length === 0 ?
+                    '<p class="text-gray-500 text-sm">Nenhuma despesa registada</p>' :
+                    sortedExp.map(([cat, val]) => `
+                        <div>
+                            <div class="flex justify-between text-sm"><span>${cat}</span><span class="font-semibold text-red-600">${formatCurrency(val)}</span></div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-red-500 h-2 rounded-full" style="width:${(val/maxExp)*100}%"></div></div>
+                        </div>
+                    `).join('');
+            }
+
+            // ==================== EXPORT ====================
+            function exportReport() {
+                if (state.transactions.length === 0) { showToast('Não há dados para exportar', 'warning'); return; }
+                const headers = ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'];
+                const rows = state.transactions.map(t => [t.data, t.descricao, t.categoria, t.tipo, t.valor]);
+                const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `relatorio_financeiro_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showToast('Relatório exportado com sucesso!', 'success');
+            }
+
+            function printReport() { window.print(); }
+
+            // ==================== UTILITÁRIOS ====================
+            function formatCurrency(v) {
+                return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v).replace('AOA', 'Kz');
+            }
+
+            function formatDate(d) {
+                if (!d) return '-';
+                const dt = new Date(d + 'T00:00:00');
+                return dt.toLocaleDateString('pt-BR');
+            }
+
+            function showToast(msg, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const t = document.createElement('div');
+                t.className = `toast ${type}`;
+                t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${msg}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+                container.appendChild(t);
+                setTimeout(() => { if (t.parentElement) t.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const s = document.querySelector('.sidebar');
+                s.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', s.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('sidebar-hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const sub = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (sub) { sub.classList.toggle('submenu-open'); if (arrow) arrow.style.transform = sub.classList.contains('submenu-open') ? 'rotate(180deg)' : ''; }
+            }
+
+            function loadSidebarPreference() {
+                const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const s = document.querySelector('.sidebar');
+                if (s && collapsed) s.classList.add('sidebar-collapsed');
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                // Fechar modais com ESC
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        // Fechar modais se existirem
+                    }
+                });
+            }
+
+            // ==================== EXPORT GLOBAL ====================
+            window.applyFilters = applyFilters;
+            window.resetFilters = resetFilters;
+            window.changePeriod = changePeriod;
+            window.exportReport = exportReport;
+            window.printReport = printReport;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

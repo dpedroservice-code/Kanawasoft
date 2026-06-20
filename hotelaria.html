@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Hoteleira | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== ROOM STATUS ==================== */
+        .room-available { border-left: 4px solid #10B981; }
+        .room-occupied { border-left: 4px solid #EF4444; }
+        .room-maintenance { border-left: 4px solid #F59E0B; }
+        .room-cleaning { border-left: 4px solid #3B82F6; }
+        .room-reserved { border-left: 4px solid #8B5CF6; }
+
+        .room-card {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .room-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-hotel mr-3"></i>
+                        <span class="flex-1 font-medium">Hotelaria</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="gestao-hoteleira.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-bed mr-2 text-sm"></i>Gestão Hoteleira</a></li>
+                        <li><a href="reservas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-calendar-check mr-2 text-sm"></i>Reservas</a></li>
+                        <li><a href="checkin.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-sign-in-alt mr-2 text-sm"></i>Check-in/out</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">GESTÃO HOTELEIRA</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-hotel mr-1"></i> <span id="ocupacaoHeader">0/0</span> Quartos Ocupados
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Métricas do Hotel -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Ocupação Actual</p>
+                            <h3 class="text-2xl font-bold text-blue-600" id="ocupacaoPercent">0%</h3>
+                            <p class="text-sm text-gray-500" id="ocupacaoDetalhes">0/0 quartos</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-bed text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Check-ins Hoje</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="checkinsHoje">0</h3>
+                            <p class="text-sm text-gray-500" id="checkinsPendentes">0 pendentes</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-sign-in-alt text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Check-outs Hoje</p>
+                            <h3 class="text-2xl font-bold text-red-600" id="checkoutsHoje">0</h3>
+                            <p class="text-sm text-gray-500" id="checkoutsRealizados">0 realizados</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <i class="fas fa-sign-out-alt text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Receita Diária</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="receitaDiaria">AOA 0</h3>
+                            <p class="text-sm text-gray-500" id="receitaEstimada">Estimada</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-money-bill-wave text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Mapa de Quartos -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Mapa de Quartos</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="filterFloor" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Todos os Andares</option>
+                                </select>
+                                <select id="filterRoomStatus" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Todos os Status</option>
+                                    <option value="available">Disponível</option>
+                                    <option value="occupied">Ocupado</option>
+                                    <option value="reserved">Reservado</option>
+                                    <option value="cleaning">Limpeza</option>
+                                    <option value="maintenance">Manutenção</option>
+                                </select>
+                                <button onclick="openReservationModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                                    <i class="fas fa-plus mr-2"></i> Nova Reserva
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div id="roomsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservas do Dia -->
+                    <div class="bg-white rounded-lg shadow mt-6">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold text-gray-800">Reservas de Hoje</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quarto</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hóspede</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reservationsTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Carregado via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controlo -->
+                <div class="space-y-6">
+                    <!-- Status dos Quartos -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status dos Quartos</h3>
+                        <div id="roomStatusList" class="space-y-3">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Check-in Rápido -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Check-in Rápido</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nº Reserva</label>
+                                <input type="text" id="quickCheckinInput" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Digite o número">
+                            </div>
+                            <button onclick="quickCheckIn()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Fazer Check-in
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tarefas de Limpeza -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Limpeza</h3>
+                        <div id="cleaningTasks" class="space-y-2">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Taxa de Ocupação:</span>
+                                <span class="font-semibold" id="taxaOcupacao">0%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">ADR:</span>
+                                <span class="font-semibold" id="adr">AOA 0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">RevPAR:</span>
+                                <span class="font-semibold" id="revpar">AOA 0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Hóspedes Activos:</span>
+                                <span class="font-semibold" id="hospedesAtivos">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== RESERVATION MODAL ==================== -->
+    <div class="modal-overlay" id="reservationModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="reservationModalTitle">Nova Reserva</h3>
+                <button onclick="closeReservationModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="reservationForm" onsubmit="saveReservation(event)">
+                    <input type="hidden" id="reservation_id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hóspede *</label>
+                            <select id="res_hospede" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione o hóspede...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Quarto *</label>
+                            <select id="res_tipo_quarto" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="single">Single</option>
+                                <option value="double">Double</option>
+                                <option value="suite">Suite</option>
+                                <option value="deluxe">Deluxe</option>
+                                <option value="presidential">Presidencial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Check-in *</label>
+                            <input type="date" id="res_checkin" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Check-out *</label>
+                            <input type="date" id="res_checkout" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nº Adultos *</label>
+                            <input type="number" id="res_adultos" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" min="1" value="2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nº Crianças</label>
+                            <input type="number" id="res_criancas" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Valor por Noite (AOA)</label>
+                            <input type="number" id="res_valor" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" value="25000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Forma de Pagamento</label>
+                            <select id="res_pagamento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="cash">Dinheiro</option>
+                                <option value="card">Cartão</option>
+                                <option value="transfer">Transferência</option>
+                                <option value="invoice">Factura</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="res_observacoes" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeReservationModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="saveReservation()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Gestão Hoteleira!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let rooms = [];
+        let reservations = [];
+        let guests = [];
+        let currentUser = null;
+        let editingReservationId = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadRooms();
+            await loadGuests();
+            await loadReservations();
+            setupEventListeners();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadRooms() {
+            try {
+                const floorFilter = document.getElementById('filterFloor')?.value || '';
+                const statusFilter = document.getElementById('filterRoomStatus')?.value || '';
+                
+                let query = supabase
+                    .from('quartos')
+                    .select('*')
+                    .order('numero');
+                
+                if (floorFilter) {
+                    query = query.eq('andar', floorFilter);
+                }
+                if (statusFilter) {
+                    query = query.eq('status', statusFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                rooms = data || [];
+                renderRooms();
+                updateRoomStats();
+                updateCleaningTasks();
+                updateFloors();
+                
+            } catch (error) {
+                console.error('Erro ao carregar quartos:', error);
+                rooms = getSampleRooms();
+                renderRooms();
+                updateRoomStats();
+                updateCleaningTasks();
+                updateFloors();
+            }
+        }
+
+        async function loadGuests() {
+            try {
+                const { data, error } = await supabase
+                    .from('clientes')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                guests = data || [];
+                updateGuestSelect();
+                
+            } catch (error) {
+                console.error('Erro ao carregar hóspedes:', error);
+                guests = getSampleGuests();
+                updateGuestSelect();
+            }
+        }
+
+        async function loadReservations() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                const { data, error } = await supabase
+                    .from('reservas')
+                    .select('*, clientes(nome, email, telefone), quartos(numero, tipo)')
+                    .eq('data_reserva', today)
+                    .order('checkin');
+                
+                if (error) throw error;
+                
+                reservations = data || [];
+                renderReservations();
+                updateMetrics();
+                
+            } catch (error) {
+                console.error('Erro ao carregar reservas:', error);
+                reservations = getSampleReservations();
+                renderReservations();
+                updateMetrics();
+            }
+        }
+
+        async function saveReservationToDB(reservationData) {
+            try {
+                if (editingReservationId) {
+                    const { data, error } = await supabase
+                        .from('reservas')
+                        .update(reservationData)
+                        .eq('id', editingReservationId)
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Reserva atualizada com sucesso!', 'success');
+                    return data;
+                } else {
+                    const { data, error } = await supabase
+                        .from('reservas')
+                        .insert([reservationData])
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Reserva criada com sucesso!', 'success');
+                    return data;
+                }
+            } catch (error) {
+                console.error('Erro ao salvar reserva:', error);
+                showToast('Erro ao salvar reserva', 'error');
+                throw error;
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleRooms() {
+            return [
+                { id: 1, numero: '101', tipo: 'single', status: 'available', preco: 15000, andar: '1', descricao: 'Quarto single com vista para o jardim' },
+                { id: 2, numero: '102', tipo: 'double', status: 'occupied', preco: 25000, andar: '1', descricao: 'Quarto double com varanda' },
+                { id: 3, numero: '103', tipo: 'suite', status: 'occupied', preco: 45000, andar: '1', descricao: 'Suite com sala de estar' },
+                { id: 4, numero: '104', tipo: 'single', status: 'cleaning', preco: 15000, andar: '1', descricao: 'Quarto single em limpeza' },
+                { id: 5, numero: '105', tipo: 'double', status: 'reserved', preco: 25000, andar: '1', descricao: 'Quarto double reservado' },
+                { id: 6, numero: '201', tipo: 'deluxe', status: 'maintenance', preco: 35000, andar: '2', descricao: 'Quarto deluxe em manutenção' },
+                { id: 7, numero: '202', tipo: 'double', status: 'occupied', preco: 25000, andar: '2', descricao: 'Quarto double ocupado' },
+                { id: 8, numero: '203', tipo: 'single', status: 'available', preco: 15000, andar: '2', descricao: 'Quarto single disponível' },
+                { id: 9, numero: '204', tipo: 'suite', status: 'occupied', preco: 45000, andar: '2', descricao: 'Suite ocupada' },
+                { id: 10, numero: '205', tipo: 'double', status: 'cleaning', preco: 25000, andar: '2', descricao: 'Quarto double em limpeza' }
+            ];
+        }
+
+        function getSampleGuests() {
+            return [
+                { id: 1, nome: 'João Silva', email: 'joao@email.com', telefone: '+244 923 456 789', documento: 'BI: 123456789LA' },
+                { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '+244 934 567 890', documento: 'Passaporte: AB123456' },
+                { id: 3, nome: 'Carlos Mendes', email: 'carlos@email.com', telefone: '+244 945 678 901', documento: 'BI: 987654321LA' }
+            ];
+        }
+
+        function getSampleReservations() {
+            const today = new Date().toISOString().split('T')[0];
+            return [
+                { id: 1, quarto_id: 2, cliente_id: 1, checkin: today, checkout: '2024-09-27', adultos: 2, criancas: 0, valor_total: 50000, status: 'checked_in', forma_pagamento: 'cash', observacoes: 'Preferência andar baixo', data_reserva: today, clientes: { nome: 'João Silva', email: 'joao@email.com', telefone: '+244 923 456 789' }, quartos: { numero: '102', tipo: 'double' } },
+                { id: 2, quarto_id: 3, cliente_id: 2, checkin: today, checkout: '2024-09-26', adultos: 2, criancas: 1, valor_total: 90000, status: 'checked_in', forma_pagamento: 'card', observacoes: '', data_reserva: today, clientes: { nome: 'Maria Santos', email: 'maria@email.com', telefone: '+244 934 567 890' }, quartos: { numero: '103', tipo: 'suite' } }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderRooms() {
+            const grid = document.getElementById('roomsGrid');
+            
+            if (rooms.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-bed text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhum quarto encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const statusClasses = {
+                'available': 'room-available',
+                'occupied': 'room-occupied',
+                'maintenance': 'room-maintenance',
+                'cleaning': 'room-cleaning',
+                'reserved': 'room-reserved'
+            };
+            
+            const statusLabels = {
+                'available': 'Disponível',
+                'occupied': 'Ocupado',
+                'maintenance': 'Manutenção',
+                'cleaning': 'Limpeza',
+                'reserved': 'Reservado'
+            };
+            
+            const statusColors = {
+                'available': 'bg-green-100 text-green-800',
+                'occupied': 'bg-red-100 text-red-800',
+                'maintenance': 'bg-yellow-100 text-yellow-800',
+                'cleaning': 'bg-blue-100 text-blue-800',
+                'reserved': 'bg-purple-100 text-purple-800'
+            };
+            
+            grid.innerHTML = rooms.map(room => {
+                const statusClass = statusClasses[room.status] || 'room-available';
+                const statusLabel = statusLabels[room.status] || room.status;
+                const statusColor = statusColors[room.status] || 'bg-gray-100 text-gray-800';
+                
+                return `
+                    <div class="room-card bg-white border rounded-lg p-4 text-center ${statusClass} hover:shadow-md transition-shadow">
+                        <div class="text-2xl font-bold text-gray-800 mb-1">${room.numero}</div>
+                        <div class="text-sm text-gray-600 mb-2">${room.tipo}</div>
+                        <div class="text-lg font-semibold text-blue-600 mb-3">AOA ${(room.preco || 0).toLocaleString('pt-BR')}</div>
+                        <div class="text-xs px-2 py-1 rounded-full ${statusColor}">
+                            ${statusLabel}
+                        </div>
+                        <button onclick="viewRoom('${room.id}')" class="mt-3 text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-info-circle mr-1"></i> Detalhes
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderReservations() {
+            const tbody = document.getElementById('reservationsTableBody');
+            
+            if (reservations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-calendar-check text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhuma reserva para hoje</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const statusLabels = {
+                'confirmed': 'Confirmada',
+                'checked_in': 'Check-in Realizado',
+                'checked_out': 'Check-out Realizado',
+                'cancelled': 'Cancelada'
+            };
+            
+            const statusColors = {
+                'confirmed': 'bg-blue-100 text-blue-800',
+                'checked_in': 'bg-green-100 text-green-800',
+                'checked_out': 'bg-gray-100 text-gray-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            
+            tbody.innerHTML = reservations.map(res => {
+                const guest = res.clientes || {};
+                const room = res.quartos || {};
+                const statusLabel = statusLabels[res.status] || res.status;
+                const statusColor = statusColors[res.status] || 'bg-gray-100 text-gray-800';
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${room.numero || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${guest.nome || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(res.checkin)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(res.checkout)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(res.valor_total || 0)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColor}">${statusLabel}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            ${res.status === 'confirmed' ? `
+                                <button onclick="doCheckIn('${res.id}')" class="text-green-600 hover:text-green-900 mr-3" title="Check-in">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </button>
+                            ` : ''}
+                            ${res.status === 'checked_in' ? `
+                                <button onclick="doCheckOut('${res.id}')" class="text-red-600 hover:text-red-900 mr-3" title="Check-out">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="viewReservation('${res.id}')" class="text-blue-600 hover:text-blue-900" title="Ver detalhes">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateRoomStats() {
+            const total = rooms.length;
+            const occupied = rooms.filter(r => r.status === 'occupied').length;
+            const available = rooms.filter(r => r.status === 'available').length;
+            const cleaning = rooms.filter(r => r.status === 'cleaning').length;
+            const maintenance = rooms.filter(r => r.status === 'maintenance').length;
+            const reserved = rooms.filter(r => r.status === 'reserved').length;
+            
+            const ocupacao = total > 0 ? Math.round((occupied / total) * 100) : 0;
+            
+            document.getElementById('ocupacaoHeader').textContent = `${occupied}/${total}`;
+            document.getElementById('ocupacaoPercent').textContent = `${ocupacao}%`;
+            document.getElementById('ocupacaoDetalhes').textContent = `${occupied}/${total} quartos`;
+            document.getElementById('taxaOcupacao').textContent = `${ocupacao}%`;
+            
+            const container = document.getElementById('roomStatusList');
+            container.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span class="text-sm">Disponíveis</span>
+                    </div>
+                    <span class="font-semibold">${available}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                        <span class="text-sm">Ocupados</span>
+                    </div>
+                    <span class="font-semibold">${occupied}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span class="text-sm">Reservados</span>
+                    </div>
+                    <span class="font-semibold">${reserved}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="text-sm">Limpeza</span>
+                    </div>
+                    <span class="font-semibold">${cleaning}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                        <span class="text-sm">Manutenção</span>
+                    </div>
+                    <span class="font-semibold">${maintenance}</span>
+                </div>
+            `;
+            
+            // Estatísticas ADR e RevPAR
+            const totalRevenue = rooms.reduce((sum, r) => sum + (r.preco || 0), 0);
+            const adr = total > 0 ? totalRevenue / total : 0;
+            const revpar = total > 0 ? (totalRevenue * occupied) / total : 0;
+            
+            document.getElementById('adr').textContent = formatCurrency(adr);
+            document.getElementById('revpar').textContent = formatCurrency(revpar);
+        }
+
+        function updateCleaningTasks() {
+            const container = document.getElementById('cleaningTasks');
+            const cleaningRooms = rooms.filter(r => r.status === 'cleaning');
+            
+            if (cleaningRooms.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-4 text-sm">
+                        <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
+                        <p>Todos os quartos limpos</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = cleaningRooms.map(room => `
+                <div class="flex justify-between items-center p-2 bg-blue-50 rounded">
+                    <span class="text-sm">Quarto ${room.numero}</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Pendente</span>
+                </div>
+            `).join('');
+        }
+
+        function updateFloors() {
+            const select = document.getElementById('filterFloor');
+            const currentValue = select.value;
+            const floors = [...new Set(rooms.map(r => r.andar))].sort();
+            
+            select.innerHTML = '<option value="">Todos os Andares</option>';
+            floors.forEach(floor => {
+                const option = document.createElement('option');
+                option.value = floor;
+                option.textContent = `${floor}º Andar`;
+                select.appendChild(option);
+            });
+            
+            if (currentValue) select.value = currentValue;
+        }
+
+        function updateGuestSelect() {
+            const select = document.getElementById('res_hospede');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Selecione o hóspede...</option>';
+            
+            guests.forEach(g => {
+                const option = document.createElement('option');
+                option.value = g.id;
+                const doc = g.documento ? ` - ${g.documento}` : '';
+                option.textContent = `${g.nome}${doc}`;
+                select.appendChild(option);
+            });
+            
+            if (currentValue) select.value = currentValue;
+        }
+
+        function updateMetrics() {
+            const today = new Date().toISOString().split('T')[0];
+            const hojeReservas = reservations.filter(r => r.data_reserva === today);
+            
+            const checkins = hojeReservas.filter(r => r.status === 'confirmed' || r.status === 'checked_in');
+            const checkouts = hojeReservas.filter(r => r.status === 'checked_in' && r.checkout === today);
+            
+            document.getElementById('checkinsHoje').textContent = checkins.length;
+            document.getElementById('checkinsPendentes').textContent = `${checkins.filter(r => r.status === 'confirmed').length} pendentes`;
+            document.getElementById('checkoutsHoje').textContent = checkouts.length;
+            document.getElementById('checkoutsRealizados').textContent = `${checkouts.filter(r => r.status === 'checked_out').length} realizados`;
+            
+            const receita = hojeReservas.reduce((sum, r) => sum + (r.valor_total || 0), 0);
+            document.getElementById('receitaDiaria').textContent = formatCurrency(receita);
+            document.getElementById('receitaEstimada').textContent = receita > 0 ? 'Confirmada' : 'Estimada';
+            
+            const ativos = reservations.filter(r => r.status === 'checked_in').length;
+            document.getElementById('hospedesAtivos').textContent = ativos;
+        }
+
+        // ==================== CRUD RESERVAS ====================
+        function openReservationModal(reservation = null) {
+            const modal = document.getElementById('reservationModal');
+            const title = document.getElementById('reservationModalTitle');
+            
+            updateGuestSelect();
+            
+            if (reservation) {
+                title.textContent = 'Editar Reserva';
+                document.getElementById('reservation_id').value = reservation.id;
+                document.getElementById('res_hospede').value = reservation.cliente_id || '';
+                document.getElementById('res_tipo_quarto').value = reservation.quartos?.tipo || '';
+                document.getElementById('res_checkin').value = reservation.checkin || '';
+                document.getElementById('res_checkout').value = reservation.checkout || '';
+                document.getElementById('res_adultos').value = reservation.adultos || 2;
+                document.getElementById('res_criancas').value = reservation.criancas || 0;
+                document.getElementById('res_valor').value = reservation.valor_total || 0;
+                document.getElementById('res_pagamento').value = reservation.forma_pagamento || 'cash';
+                document.getElementById('res_observacoes').value = reservation.observacoes || '';
+                editingReservationId = reservation.id;
+            } else {
+                title.textContent = 'Nova Reserva';
+                document.getElementById('reservation_id').value = '';
+                document.getElementById('res_hospede').value = '';
+                document.getElementById('res_tipo_quarto').value = '';
+                document.getElementById('res_checkin').value = new Date().toISOString().split('T')[0];
+                document.getElementById('res_checkout').value = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                document.getElementById('res_adultos').value = 2;
+                document.getElementById('res_criancas').value = 0;
+                document.getElementById('res_valor').value = 25000;
+                document.getElementById('res_pagamento').value = 'cash';
+                document.getElementById('res_observacoes').value = '';
+                editingReservationId = null;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservationModal').classList.remove('active');
+            editingReservationId = null;
+        }
+
+        async function saveReservation(event) {
+            if (event) event.preventDefault();
+            
+            const reservationData = {
+                cliente_id: parseInt(document.getElementById('res_hospede').value),
+                quarto_id: null, // Será atribuído automaticamente pelo sistema
+                tipo_quarto: document.getElementById('res_tipo_quarto').value,
+                checkin: document.getElementById('res_checkin').value,
+                checkout: document.getElementById('res_checkout').value,
+                adultos: parseInt(document.getElementById('res_adultos').value) || 2,
+                criancas: parseInt(document.getElementById('res_criancas').value) || 0,
+                valor_total: parseFloat(document.getElementById('res_valor').value) || 0,
+                forma_pagamento: document.getElementById('res_pagamento').value,
+                observacoes: document.getElementById('res_observacoes').value.trim() || null,
+                status: 'confirmed',
+                data_reserva: new Date().toISOString().split('T')[0]
+            };
+            
+            if (!reservationData.cliente_id || !reservationData.tipo_quarto || !reservationData.checkin || !reservationData.checkout) {
+                showToast('Preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+            
+            // Buscar quarto disponível do tipo solicitado
+            const availableRoom = rooms.find(r => r.tipo === reservationData.tipo_quarto && r.status === 'available');
+            if (!availableRoom) {
+                showToast('Não há quartos disponíveis deste tipo', 'error');
+                return;
+            }
+            
+            reservationData.quarto_id = availableRoom.id;
+            
+            try {
+                await saveReservationToDB(reservationData);
+                closeReservationModal();
+                await loadRooms();
+                await loadReservations();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        async function viewReservation(id) {
+            const res = reservations.find(r => r.id == id);
+            if (!res) {
+                showToast('Reserva não encontrada', 'error');
+                return;
+            }
+            
+            const guest = res.clientes || {};
+            const room = res.quartos || {};
+            const statusLabels = {
+                'confirmed': 'Confirmada',
+                'checked_in': 'Check-in Realizado',
+                'checked_out': 'Check-out Realizado',
+                'cancelled': 'Cancelada'
+            };
+            
+            alert(`Reserva #${res.id}\n\n` +
+                  `Hóspede: ${guest.nome || 'N/A'}\n` +
+                  `Email: ${guest.email || 'N/A'}\n` +
+                  `Telefone: ${guest.telefone || 'N/A'}\n` +
+                  `Quarto: ${room.numero || 'N/A'} (${room.tipo || 'N/A'})\n` +
+                  `Check-in: ${formatDate(res.checkin)}\n` +
+                  `Check-out: ${formatDate(res.checkout)}\n` +
+                  `Adultos: ${res.adultos} | Crianças: ${res.criancas}\n` +
+                  `Valor Total: ${formatCurrency(res.valor_total || 0)}\n` +
+                  `Status: ${statusLabels[res.status] || res.status}\n` +
+                  `Pagamento: ${res.forma_pagamento || 'N/A'}\n\n` +
+                  `Observações: ${res.observacoes || 'Nenhuma'}`);
+        }
+
+        function viewRoom(id) {
+            const room = rooms.find(r => r.id == id);
+            if (!room) {
+                showToast('Quarto não encontrado', 'error');
+                return;
+            }
+            
+            const statusLabels = {
+                'available': 'Disponível',
+                'occupied': 'Ocupado',
+                'maintenance': 'Manutenção',
+                'cleaning': 'Limpeza',
+                'reserved': 'Reservado'
+            };
+            
+            alert(`Quarto ${room.numero}\n\n` +
+                  `Tipo: ${room.tipo}\n` +
+                  `Andar: ${room.andar}º\n` +
+                  `Status: ${statusLabels[room.status] || room.status}\n` +
+                  `Preço: ${formatCurrency(room.preco || 0)}/noite\n\n` +
+                  `Descrição: ${room.descricao || 'Sem descrição'}`);
+        }
+
+        // ==================== CHECK-IN / CHECK-OUT ====================
+        async function doCheckIn(id) {
+            if (!confirm('Deseja realizar o check-in desta reserva?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('reservas')
+                    .update({ status: 'checked_in' })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                // Atualizar status do quarto
+                const res = reservations.find(r => r.id == id);
+                if (res && res.quarto_id) {
+                    await supabase
+                        .from('quartos')
+                        .update({ status: 'occupied' })
+                        .eq('id', res.quarto_id);
+                }
+                
+                showToast('Check-in realizado com sucesso!', 'success');
+                await loadRooms();
+                await loadReservations();
+                
+            } catch (error) {
+                console.error('Erro ao realizar check-in:', error);
+                showToast('Erro ao realizar check-in', 'error');
+            }
+        }
+
+        async function doCheckOut(id) {
+            if (!confirm('Deseja realizar o check-out desta reserva?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('reservas')
+                    .update({ status: 'checked_out' })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                // Atualizar status do quarto para limpeza
+                const res = reservations.find(r => r.id == id);
+                if (res && res.quarto_id) {
+                    await supabase
+                        .from('quartos')
+                        .update({ status: 'cleaning' })
+                        .eq('id', res.quarto_id);
+                }
+                
+                showToast('Check-out realizado com sucesso!', 'success');
+                await loadRooms();
+                await loadReservations();
+                
+            } catch (error) {
+                console.error('Erro ao realizar check-out:', error);
+                showToast('Erro ao realizar check-out', 'error');
+            }
+        }
+
+        function quickCheckIn() {
+            const input = document.getElementById('quickCheckinInput').value;
+            if (!input) {
+                showToast('Digite o número da reserva', 'error');
+                return;
+            }
+            
+            const res = reservations.find(r => r.id == input || r.id == parseInt(input));
+            if (!res) {
+                showToast('Reserva não encontrada', 'error');
+                return;
+            }
+            
+            if (res.status === 'confirmed') {
+                doCheckIn(res.id);
+            } else {
+                showToast('Esta reserva não está pronta para check-in', 'warning');
+            }
+            
+            document.getElementById('quickCheckinInput').value = '';
+        }
+
+        // ==================== FILTROS ====================
+        function filterRooms() {
+            loadRooms();
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== UTILITÁRIOS ====================
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'AOA' }).format(value);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.getElementById('filterFloor').addEventListener('change', filterRooms);
+            document.getElementById('filterRoomStatus').addEventListener('change', filterRooms);
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('reservationModal').classList.contains('active')) {
+                        closeReservationModal();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    openReservationModal();
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.openReservationModal = openReservationModal;
+        window.closeReservationModal = closeReservationModal;
+        window.saveReservation = saveReservation;
+        window.viewReservation = viewReservation;
+        window.viewRoom = viewRoom;
+        window.doCheckIn = doCheckIn;
+        window.doCheckOut = doCheckOut;
+        window.quickCheckIn = quickCheckIn;
+        window.filterRooms = filterRooms;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadRooms = loadRooms;
+        window.loadReservations = loadReservations;
+    </script>
+</body>
+</html>

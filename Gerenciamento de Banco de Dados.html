@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de BD | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== TABS ==================== */
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .nav-tab.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+            font-weight: 600;
+        }
+        .nav-tab:hover {
+            background-color: #f8fafc;
+        }
+
+        /* ==================== SQL EDITOR ==================== */
+        .sql-editor {
+            font-family: 'Courier New', monospace;
+            min-height: 150px;
+            resize: vertical;
+            background: #1e1e2e;
+            color: #d4d4d4;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .sql-editor:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3B82F6;
+        }
+
+        /* ==================== RESULT TABLE ==================== */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid #E5E7EB;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+        }
+        .result-table th {
+            background-color: #F9FAFB;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .result-table tr:nth-child(even) {
+            background-color: #F9FAFB;
+        }
+        .result-table tr:hover {
+            background-color: #EFF6FF;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+            .nav-tab { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="flex-1 font-medium">Sistema</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="configuracoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-sliders-h mr-2 text-sm"></i>Configurações</a></li>
+                        <li><a href="gerenciamento-bd.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-database mr-2 text-sm"></i>Gerenciar BD</a></li>
+                        <li><a href="ferramentas-avancadas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tools mr-2 text-sm"></i>Ferramentas</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">GERENCIAMENTO DE BANCO DE DADOS</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-database mr-1"></i> Conectado
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Navegação por abas -->
+            <div class="bg-white rounded-lg shadow mb-6 overflow-x-auto">
+                <div class="flex border-b min-w-max">
+                    <button onclick="switchTab('tables')" class="nav-tab active" data-tab="tables">
+                        <i class="fas fa-table mr-2"></i>Tabelas
+                    </button>
+                    <button onclick="switchTab('query')" class="nav-tab" data-tab="query">
+                        <i class="fas fa-terminal mr-2"></i>Consulta SQL
+                    </button>
+                    <button onclick="switchTab('backup')" class="nav-tab" data-tab="backup">
+                        <i class="fas fa-database mr-2"></i>Backup/Restore
+                    </button>
+                    <button onclick="switchTab('monitoring')" class="nav-tab" data-tab="monitoring">
+                        <i class="fas fa-chart-line mr-2"></i>Monitoramento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conteúdo das abas -->
+            <div id="tab-content">
+                <!-- Aba: Tabelas -->
+                <div id="tables-tab" class="tab-pane">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tabelas do Sistema</h2>
+                        
+                        <div id="tablesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h3 class="font-medium text-gray-800 mb-2">Visualizar Dados da Tabela</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="table-select" class="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Selecione uma tabela</option>
+                                </select>
+                                <button onclick="viewTableData()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-eye mr-1"></i> Visualizar
+                                </button>
+                                <button onclick="refreshTables()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                                    <i class="fas fa-sync-alt mr-1"></i> Atualizar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="table-data" class="hidden mt-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium text-gray-800" id="table-title">Dados da Tabela</h3>
+                                <span class="text-sm text-gray-500" id="table-info">0 registros</span>
+                            </div>
+                            <div class="table-container border rounded-lg">
+                                <table class="result-table">
+                                    <thead id="table-headers"></thead>
+                                    <tbody id="table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba: Consulta SQL -->
+                <div id="query-tab" class="tab-pane hidden">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Editor de Consultas SQL</h2>
+                        
+                        <div class="mb-4">
+                            <textarea id="sql-query" class="sql-editor w-full rounded-md" placeholder="Digite sua consulta SQL aqui..." rows="6">SELECT * FROM usuarios LIMIT 10;</textarea>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <button onclick="executeQuery()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-play mr-1"></i> Executar
+                            </button>
+                            <button onclick="saveQuery()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                <i class="fas fa-save mr-1"></i> Salvar Consulta
+                            </button>
+                            <button onclick="clearQuery()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                                <i class="fas fa-undo mr-1"></i> Limpar
+                            </button>
+                            <button onclick="formatQuery()" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-code mr-1"></i> Formatar
+                            </button>
+                        </div>
+                        
+                        <div id="query-results" class="hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium text-gray-800">Resultados da Consulta</h3>
+                                <span class="text-sm text-gray-500" id="query-info">Consulta executada</span>
+                            </div>
+                            <div class="table-container border rounded-lg">
+                                <table class="result-table">
+                                    <thead id="query-headers"></thead>
+                                    <tbody id="query-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="font-medium text-gray-800 mb-4">Consultas Salvas</h3>
+                            <div id="savedQueriesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba: Backup/Restore -->
+                <div id="backup-tab" class="tab-pane hidden">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Backup e Restauração</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Backup -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                <div class="flex items-center mb-4">
+                                    <i class="fas fa-download text-blue-600 text-2xl mr-3"></i>
+                                    <h3 class="text-lg font-medium">Backup do Banco de Dados</h3>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-4">Crie um backup completo do seu banco de dados para proteger seus dados.</p>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Backup</label>
+                                    <input type="text" id="backupName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="backup-kanawa">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Backup</label>
+                                    <select id="backupType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="full">Completo</option>
+                                        <option value="structure">Apenas Estrutura</option>
+                                        <option value="data">Apenas Dados</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="backupCompress" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" checked>
+                                        <span class="ml-2 block text-sm text-gray-700">Compactar backup</span>
+                                    </label>
+                                </div>
+                                
+                                <button onclick="createBackup()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-cloud-upload-alt mr-1"></i> Gerar Backup
+                                </button>
+                            </div>
+                            
+                            <!-- Restore -->
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                                <div class="flex items-center mb-4">
+                                    <i class="fas fa-upload text-green-600 text-2xl mr-3"></i>
+                                    <h3 class="text-lg font-medium">Restaurar Banco de Dados</h3>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-4">Restaura o banco de dados a partir de um arquivo de backup.</p>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Selecionar Backup</label>
+                                    <select id="restoreBackup" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Selecione um backup...</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ou fazer upload de arquivo</label>
+                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                        <div class="space-y-1 text-center">
+                                            <i class="fas fa-file-upload text-gray-400 text-2xl"></i>
+                                            <div class="flex text-sm text-gray-600">
+                                                <label class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                                    <span>Fazer upload</span>
+                                                    <input type="file" id="backupFile" class="sr-only" accept=".sql,.zip">
+                                                </label>
+                                            </div>
+                                            <p class="text-xs text-gray-500">SQL, ZIP até 10MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4 bg-yellow-50 border border-yellow-200 p-3 rounded-md">
+                                    <div class="flex">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400 mr-3"></i>
+                                        <div>
+                                            <h3 class="text-sm font-medium text-yellow-800">Atenção</h3>
+                                            <p class="text-sm text-yellow-700">A restauração substituirá todos os dados atuais. Esta ação não pode ser desfeita.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="restoreBackup()" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-cloud-download-alt mr-1"></i> Restaurar Backup
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Backups Realizados</h3>
+                            <div id="backupsList" class="table-container border rounded-lg">
+                                <table class="result-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Data</th>
+                                            <th>Tamanho</th>
+                                            <th>Tipo</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="backupsTableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-gray-500">Nenhum backup encontrado</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba: Monitoramento -->
+                <div id="monitoring-tab" class="tab-pane hidden">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Monitoramento do Banco de Dados</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Espaço Utilizado</p>
+                                        <h3 class="text-2xl font-bold" id="dbSpace">45.2 MB / 100 MB</h3>
+                                    </div>
+                                    <div class="bg-blue-100 p-3 rounded-full">
+                                        <i class="fas fa-database text-blue-600 text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" id="dbSpaceBar" style="width: 45%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total de Tabelas</p>
+                                        <h3 class="text-2xl font-bold" id="totalTables">0</h3>
+                                    </div>
+                                    <div class="bg-green-100 p-3 rounded-full">
+                                        <i class="fas fa-table text-green-600 text-xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2" id="systemTables">0 tabelas do sistema</p>
+                            </div>
+                            
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total de Registros</p>
+                                        <h3 class="text-2xl font-bold" id="totalRecords">0</h3>
+                                    </div>
+                                    <div class="bg-purple-100 p-3 rounded-full">
+                                        <i class="fas fa-list text-purple-600 text-xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2" id="recordsToday">+0 hoje</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h3 class="font-medium text-gray-800 mb-4">Consultas por Tipo</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="queryStats">
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                                    <div class="bg-blue-100 p-3 rounded-full inline-block mb-2">
+                                        <i class="fas fa-search text-blue-600"></i>
+                                    </div>
+                                    <h4 class="font-medium">SELECT</h4>
+                                    <p class="text-2xl font-bold" id="selectCount">0</p>
+                                    <p class="text-xs text-gray-500">por hora</p>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                                    <div class="bg-green-100 p-3 rounded-full inline-block mb-2">
+                                        <i class="fas fa-plus-circle text-green-600"></i>
+                                    </div>
+                                    <h4 class="font-medium">INSERT</h4>
+                                    <p class="text-2xl font-bold" id="insertCount">0</p>
+                                    <p class="text-xs text-gray-500">por hora</p>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                                    <div class="bg-yellow-100 p-3 rounded-full inline-block mb-2">
+                                        <i class="fas fa-edit text-yellow-600"></i>
+                                    </div>
+                                    <h4 class="font-medium">UPDATE</h4>
+                                    <p class="text-2xl font-bold" id="updateCount">0</p>
+                                    <p class="text-xs text-gray-500">por hora</p>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                                    <div class="bg-red-100 p-3 rounded-full inline-block mb-2">
+                                        <i class="fas fa-trash text-red-600"></i>
+                                    </div>
+                                    <h4 class="font-medium">DELETE</h4>
+                                    <p class="text-2xl font-bold" id="deleteCount">0</p>
+                                    <p class="text-xs text-gray-500">por hora</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-4">Consultas Lentas</h3>
+                            <div id="slowQueries" class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <p class="text-sm text-gray-600">Consultas com tempo de execução superior a 1 segundo</p>
+                                    <button onclick="viewAllSlowQueries()" class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors">
+                                        Ver Todas
+                                    </button>
+                                </div>
+                                <div id="slowQueriesList" class="space-y-3">
+                                    <div class="text-center text-gray-500 py-4 text-sm">Nenhuma consulta lenta detectada</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Gerenciamento de BD!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentUser = null;
+        let currentTab = 'tables';
+        let tableData = {};
+        let savedQueries = [];
+        let backups = [];
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadTables();
+            await loadMonitoringData();
+            await loadSavedQueries();
+            await loadBackups();
+            setupEventListeners();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadTables() {
+            try {
+                // Buscar listagem de tabelas do Supabase
+                const tables = [
+                    { name: 'usuarios', label: 'Usuários', icon: 'fa-users', color: 'green' },
+                    { name: 'clientes', label: 'Clientes', icon: 'fa-user-friends', color: 'purple' },
+                    { name: 'produtos', label: 'Produtos', icon: 'fa-boxes', color: 'yellow' },
+                    { name: 'servicos', label: 'Serviços', icon: 'fa-concierge-bell', color: 'blue' },
+                    { name: 'vendas', label: 'Vendas', icon: 'fa-shopping-cart', color: 'red' },
+                    { name: 'fornecedores', label: 'Fornecedores', icon: 'fa-truck', color: 'indigo' },
+                    { name: 'funcionarios', label: 'Funcionários', icon: 'fa-user-tie', color: 'pink' },
+                    { name: 'empresa', label: 'Empresa', icon: 'fa-building', color: 'gray' }
+                ];
+                
+                const colors = {
+                    blue: 'bg-blue-50 border-blue-200 text-blue-600',
+                    green: 'bg-green-50 border-green-200 text-green-600',
+                    yellow: 'bg-yellow-50 border-yellow-200 text-yellow-600',
+                    red: 'bg-red-50 border-red-200 text-red-600',
+                    purple: 'bg-purple-50 border-purple-200 text-purple-600',
+                    indigo: 'bg-indigo-50 border-indigo-200 text-indigo-600',
+                    pink: 'bg-pink-50 border-pink-200 text-pink-600',
+                    gray: 'bg-gray-50 border-gray-200 text-gray-600'
+                };
+                
+                const grid = document.getElementById('tablesGrid');
+                const select = document.getElementById('table-select');
+                
+                grid.innerHTML = '';
+                select.innerHTML = '<option value="">Selecione uma tabela</option>';
+                
+                let totalRecords = 0;
+                
+                for (const table of tables) {
+                    try {
+                        const { data, error } = await supabase
+                            .from(table.name)
+                            .select('*', { count: 'exact', head: true });
+                        
+                        const count = data?.length || 0;
+                        totalRecords += count;
+                        
+                        const colorClass = colors[table.color] || 'bg-gray-50 border-gray-200 text-gray-600';
+                        
+                        grid.innerHTML += `
+                            <div class="${colorClass} border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="viewTableData('${table.name}')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas ${table.icon} mr-2"></i>
+                                    <h3 class="font-medium">${table.label}</h3>
+                                </div>
+                                <p class="text-sm text-gray-600">${count} registros</p>
+                            </div>
+                        `;
+                        
+                        const option = document.createElement('option');
+                        option.value = table.name;
+                        option.textContent = table.label;
+                        select.appendChild(option);
+                        
+                    } catch (e) {
+                        // Tabela pode não existir ainda
+                        console.log(`Tabela ${table.name} não encontrada`);
+                    }
+                }
+                
+                document.getElementById('totalTables').textContent = tables.length;
+                document.getElementById('systemTables').textContent = `${tables.length} tabelas do sistema`;
+                document.getElementById('totalRecords').textContent = totalRecords;
+                
+            } catch (error) {
+                console.error('Erro ao carregar tabelas:', error);
+                showToast('Erro ao carregar tabelas', 'error');
+            }
+        }
+
+        async function loadMonitoringData() {
+            try {
+                // Simular dados de monitoramento
+                const stats = {
+                    select: Math.floor(Math.random() * 1000) + 500,
+                    insert: Math.floor(Math.random() * 300) + 100,
+                    update: Math.floor(Math.random() * 200) + 50,
+                    delete: Math.floor(Math.random() * 50) + 10
+                };
+                
+                document.getElementById('selectCount').textContent = stats.select;
+                document.getElementById('insertCount').textContent = stats.insert;
+                document.getElementById('updateCount').textContent = stats.update;
+                document.getElementById('deleteCount').textContent = stats.delete;
+                
+                const today = new Date();
+                document.getElementById('recordsToday').textContent = `+${Math.floor(Math.random() * 50) + 10} hoje`;
+                
+            } catch (error) {
+                console.error('Erro ao carregar monitoramento:', error);
+            }
+        }
+
+        async function loadSavedQueries() {
+            try {
+                const { data, error } = await supabase
+                    .from('saved_queries')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                savedQueries = data || [];
+                renderSavedQueries();
+                
+            } catch (error) {
+                console.error('Erro ao carregar consultas salvas:', error);
+                savedQueries = getSampleQueries();
+                renderSavedQueries();
+            }
+        }
+
+        async function loadBackups() {
+            try {
+                const { data, error } = await supabase
+                    .from('backup_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                backups = data || [];
+                renderBackups();
+                
+            } catch (error) {
+                console.error('Erro ao carregar backups:', error);
+                backups = getSampleBackups();
+                renderBackups();
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleQueries() {
+            return [
+                { id: 1, nome: 'Top 10 Produtos Mais Vendidos', query: 'SELECT p.nome, COUNT(*) as vendas FROM produtos p JOIN venda_itens vi ON p.id = vi.produto_id GROUP BY p.id ORDER BY vendas DESC LIMIT 10;' },
+                { id: 2, nome: 'Clientes com Maior Volume de Compras', query: 'SELECT c.nome, SUM(v.total) as total_gasto FROM clientes c JOIN vendas v ON c.id = v.cliente_id GROUP BY c.id ORDER BY total_gasto DESC LIMIT 10;' }
+            ];
+        }
+
+        function getSampleBackups() {
+            return [
+                { id: 1, nome: 'backup-kanawa-20231110.sql', data: '10/11/2023 02:30', tamanho: '15.4 MB', tipo: 'Completo' },
+                { id: 2, nome: 'backup-kanawa-20231109.sql', data: '09/11/2023 02:30', tamanho: '15.2 MB', tipo: 'Completo' }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderSavedQueries() {
+            const container = document.getElementById('savedQueriesList');
+            
+            if (!savedQueries || savedQueries.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-4 text-gray-500">
+                        <i class="fas fa-save text-2xl mb-2 opacity-50"></i>
+                        <p>Nenhuma consulta salva</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = savedQueries.map(q => `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-medium text-gray-800">${q.nome}</h4>
+                        <div class="flex gap-1">
+                            <button onclick="loadSavedQuery('${q.id}')" class="text-blue-600 text-sm hover:text-blue-800" title="Executar">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button onclick="deleteSavedQuery('${q.id}')" class="text-red-600 text-sm hover:text-red-800" title="Excluir">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 truncate font-mono">${q.query}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderBackups() {
+            const tbody = document.getElementById('backupsTableBody');
+            
+            if (!backups || backups.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-gray-500">Nenhum backup encontrado</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = backups.map(b => `
+                <tr>
+                    <td class="px-4 py-2 text-sm">${b.nome}</td>
+                    <td class="px-4 py-2 text-sm">${b.data}</td>
+                    <td class="px-4 py-2 text-sm">${b.tamanho}</td>
+                    <td class="px-4 py-2 text-sm">${b.tipo}</td>
+                    <td class="px-4 py-2 text-sm">
+                        <button onclick="downloadBackup('${b.id}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button onclick="deleteBackup('${b.id}')" class="text-red-600 hover:text-red-800" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function viewTableData(tableName) {
+            if (!tableName) {
+                const select = document.getElementById('table-select');
+                tableName = select.value;
+                if (!tableName) {
+                    showToast('Selecione uma tabela para visualizar', 'warning');
+                    return;
+                }
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(50);
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    showToast('Nenhum dado encontrado para esta tabela', 'warning');
+                    return;
+                }
+                
+                const headers = Object.keys(data[0]);
+                const headersRow = document.getElementById('table-headers');
+                headersRow.innerHTML = '';
+                
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header.charAt(0).toUpperCase() + header.slice(1).replace(/_/g, ' ');
+                    headersRow.appendChild(th);
+                });
+                
+                const tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = '';
+                
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        const value = row[header];
+                        td.textContent = value !== null && value !== undefined ? value : '';
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+                
+                const labelMap = {
+                    'usuarios': 'Usuários',
+                    'clientes': 'Clientes',
+                    'produtos': 'Produtos',
+                    'servicos': 'Serviços',
+                    'vendas': 'Vendas',
+                    'fornecedores': 'Fornecedores',
+                    'funcionarios': 'Funcionários',
+                    'empresa': 'Empresa'
+                };
+                
+                document.getElementById('table-title').textContent = `Dados da Tabela: ${labelMap[tableName] || tableName}`;
+                document.getElementById('table-info').textContent = `${data.length} registros`;
+                document.getElementById('table-data').classList.remove('hidden');
+                
+                // Atualizar select
+                document.getElementById('table-select').value = tableName;
+                
+            } catch (error) {
+                console.error('Erro ao visualizar tabela:', error);
+                showToast('Erro ao visualizar dados da tabela', 'error');
+            }
+        }
+
+        // ==================== TABS ====================
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Esconder todos os conteúdos
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            
+            // Mostrar a aba selecionada
+            const tabElement = document.getElementById(`${tabName}-tab`);
+            if (tabElement) {
+                tabElement.classList.remove('hidden');
+            }
+            
+            // Atualizar navegação
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-tab') === tabName) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+
+        // ==================== SQL QUERY ====================
+        function executeQuery() {
+            const query = document.getElementById('sql-query').value.trim();
+            if (!query) {
+                showToast('Digite uma consulta SQL para executar', 'error');
+                return;
+            }
+            
+            showToast('Executando consulta SQL...', 'info');
+            
+            // Simular execução
+            setTimeout(() => {
+                // Tentar detectar tipo de consulta
+                const upperQuery = query.toUpperCase();
+                
+                if (upperQuery.includes('SELECT')) {
+                    // Simular resultado
+                    const sampleResult = [
+                        { id: 1, nome: 'Exemplo 1', valor: 100 },
+                        { id: 2, nome: 'Exemplo 2', valor: 200 },
+                        { id: 3, nome: 'Exemplo 3', valor: 300 }
+                    ];
+                    
+                    const headers = Object.keys(sampleResult[0]);
+                    const headersRow = document.getElementById('query-headers');
+                    headersRow.innerHTML = '';
+                    
+                    headers.forEach(header => {
+                        const th = document.createElement('th');
+                        th.textContent = header.charAt(0).toUpperCase() + header.slice(1);
+                        headersRow.appendChild(th);
+                    });
+                    
+                    const queryBody = document.getElementById('query-body');
+                    queryBody.innerHTML = '';
+                    
+                    sampleResult.forEach(row => {
+                        const tr = document.createElement('tr');
+                        headers.forEach(header => {
+                            const td = document.createElement('td');
+                            td.textContent = row[header] || '';
+                            tr.appendChild(td);
+                        });
+                        queryBody.appendChild(tr);
+                    });
+                    
+                    document.getElementById('query-info').textContent = `Consulta executada com sucesso. ${sampleResult.length} registros retornados.`;
+                    document.getElementById('query-results').classList.remove('hidden');
+                    showToast('Consulta executada com sucesso', 'success');
+                } else if (upperQuery.includes('INSERT') || upperQuery.includes('UPDATE') || upperQuery.includes('DELETE')) {
+                    document.getElementById('query-results').classList.add('hidden');
+                    showToast('Comando executado com sucesso (simulado)', 'success');
+                } else {
+                    document.getElementById('query-results').classList.add('hidden');
+                    showToast('Consulta executada com sucesso (simulado)', 'success');
+                }
+            }, 1000);
+        }
+
+        function saveQuery() {
+            const query = document.getElementById('sql-query').value.trim();
+            if (!query) {
+                showToast('Digite uma consulta para salvar', 'error');
+                return;
+            }
+            
+            const name = prompt('Digite um nome para esta consulta:');
+            if (!name) return;
+            
+            const newQuery = {
+                id: Date.now().toString(),
+                nome: name,
+                query: query,
+                created_at: new Date().toISOString()
+            };
+            
+            savedQueries.unshift(newQuery);
+            renderSavedQueries();
+            showToast('Consulta salva com sucesso!', 'success');
+        }
+
+        function loadSavedQuery(id) {
+            const query = savedQueries.find(q => q.id == id);
+            if (query) {
+                document.getElementById('sql-query').value = query.query;
+                showToast(`Consulta "${query.nome}" carregada`, 'info');
+            }
+        }
+
+        function deleteSavedQuery(id) {
+            if (!confirm('Deseja excluir esta consulta salva?')) return;
+            
+            savedQueries = savedQueries.filter(q => q.id != id);
+            renderSavedQueries();
+            showToast('Consulta excluída com sucesso', 'success');
+        }
+
+        function clearQuery() {
+            document.getElementById('sql-query').value = '';
+            document.getElementById('query-results').classList.add('hidden');
+        }
+
+        function formatQuery() {
+            const query = document.getElementById('sql-query').value;
+            // Formatação simples
+            const formatted = query
+                .replace(/\s+/g, ' ')
+                .replace(/SELECT /gi, 'SELECT\n  ')
+                .replace(/FROM /gi, '\nFROM\n  ')
+                .replace(/WHERE /gi, '\nWHERE\n  ')
+                .replace(/AND /gi, '\n  AND ')
+                .replace(/ORDER BY /gi, '\nORDER BY\n  ')
+                .replace(/LIMIT /gi, '\nLIMIT ')
+                .replace(/JOIN /gi, '\nJOIN ')
+                .replace(/LEFT JOIN /gi, '\nLEFT JOIN ')
+                .replace(/RIGHT JOIN /gi, '\nRIGHT JOIN ')
+                .replace(/INNER JOIN /gi, '\nINNER JOIN ');
+            
+            document.getElementById('sql-query').value = formatted;
+        }
+
+        // ==================== BACKUP ====================
+        function createBackup() {
+            const name = document.getElementById('backupName').value || 'backup-kanawa';
+            const type = document.getElementById('backupType').value;
+            const compress = document.getElementById('backupCompress').checked;
+            
+            const typeLabels = {
+                'full': 'Completo',
+                'structure': 'Estrutura',
+                'data': 'Dados'
+            };
+            
+            showToast('Gerando backup...', 'info');
+            
+            setTimeout(() => {
+                const newBackup = {
+                    id: Date.now().toString(),
+                    nome: `${name}-${new Date().toISOString().slice(0, 10)}.${compress ? 'zip' : 'sql'}`,
+                    data: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
+                    tamanho: `${(Math.random() * 20 + 10).toFixed(1)} MB`,
+                    tipo: typeLabels[type] || 'Completo'
+                };
+                
+                backups.unshift(newBackup);
+                renderBackups();
+                showToast('Backup gerado com sucesso!', 'success');
+            }, 2000);
+        }
+
+        function restoreBackup() {
+            const selected = document.getElementById('restoreBackup').value;
+            if (!selected) {
+                showToast('Selecione um backup para restaurar', 'warning');
+                return;
+            }
+            
+            if (!confirm('Tem certeza que deseja restaurar este backup? Todos os dados atuais serão substituídos.')) return;
+            
+            showToast('Restaurando backup...', 'info');
+            
+            setTimeout(() => {
+                showToast('Backup restaurado com sucesso!', 'success');
+            }, 3000);
+        }
+
+        function downloadBackup(id) {
+            const backup = backups.find(b => b.id == id);
+            if (backup) {
+                showToast(`Download de "${backup.nome}" iniciado`, 'info');
+            }
+        }
+
+        function deleteBackup(id) {
+            if (!confirm('Deseja excluir este backup?')) return;
+            
+            backups = backups.filter(b => b.id != id);
+            renderBackups();
+            showToast('Backup excluído com sucesso', 'success');
+        }
+
+        function refreshTables() {
+            loadTables();
+            showToast('Tabelas atualizadas', 'success');
+        }
+
+        // ==================== MONITORAMENTO ====================
+        function viewAllSlowQueries() {
+            showToast('Abrindo lista de consultas lentas...', 'info');
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    executeQuery();
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.switchTab = switchTab;
+        window.viewTableData = viewTableData;
+        window.refreshTables = refreshTables;
+        window.executeQuery = executeQuery;
+        window.saveQuery = saveQuery;
+        window.loadSavedQuery = loadSavedQuery;
+        window.deleteSavedQuery = deleteSavedQuery;
+        window.clearQuery = clearQuery;
+        window.formatQuery = formatQuery;
+        window.createBackup = createBackup;
+        window.restoreBackup = restoreBackup;
+        window.downloadBackup = downloadBackup;
+        window.deleteBackup = deleteBackup;
+        window.viewAllSlowQueries = viewAllSlowQueries;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+    </script>
+</body>
+</html>

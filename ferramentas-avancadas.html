@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramentas Avançadas | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== TOOL CARDS ==================== */
+        .tool-card {
+            transition: var(--transition);
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.3s;
+        }
+
+        /* ==================== LOGS ==================== */
+        .logs-container {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .logs-container .log-info { color: #60a5fa; }
+        .logs-container .log-success { color: #34d399; }
+        .logs-container .log-warning { color: #fbbf24; }
+        .logs-container .log-error { color: #f87171; }
+        .logs-container .log-debug { color: #a78bfa; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="flex-1 font-medium">Sistema</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="configuracoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-sliders-h mr-2 text-sm"></i>Configurações</a></li>
+                        <li><a href="ferramentas-avancadas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-tools mr-2 text-sm"></i>Ferramentas</a></li>
+                        <li><a href="usuarios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-user-cog mr-2 text-sm"></i>Utilizadores</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">FERRAMENTAS AVANÇADAS</h1>
+                    <div class="bg-purple-50 px-3 py-1 rounded-full text-sm text-purple-700">
+                        <i class="fas fa-tools mr-1"></i> Modo Desenvolvedor
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="runSystemOptimization()" class="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-rocket mr-2"></i>Otimizar Sistema
+                    </button>
+                    <button onclick="openAdvancedSettings()" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-cogs mr-2"></i>Configurações
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Métricas do Sistema -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Uso de CPU</p>
+                            <h3 class="text-2xl font-bold text-blue-600" id="cpuUsage">42%</h3>
+                            <p class="text-sm text-gray-500" id="cpuStatus">Moderado</p>
+                        </div>
+                        <div class="relative w-12 h-12">
+                            <svg class="progress-ring w-12 h-12" width="120" height="120">
+                                <circle class="progress-ring-circle" stroke="#E5E7EB" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                <circle class="progress-ring-circle" stroke="#3B82F6" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.56" stroke-dashoffset="326.56" id="cpuCircle" style="stroke-dashoffset: 189.4;"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Memória</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="memoryUsage">68%</h3>
+                            <p class="text-sm text-gray-500" id="memoryDetails">2.1/3.0 GB</p>
+                        </div>
+                        <div class="relative w-12 h-12">
+                            <svg class="progress-ring w-12 h-12" width="120" height="120">
+                                <circle class="progress-ring-circle" stroke="#E5E7EB" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                <circle class="progress-ring-circle" stroke="#10B981" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.56" stroke-dashoffset="326.56" id="memoryCircle" style="stroke-dashoffset: 104.5;"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Disco</p>
+                            <h3 class="text-2xl font-bold text-purple-600" id="diskUsage">35%</h3>
+                            <p class="text-sm text-gray-500" id="diskDetails">85/250 GB</p>
+                        </div>
+                        <div class="relative w-12 h-12">
+                            <svg class="progress-ring w-12 h-12" width="120" height="120">
+                                <circle class="progress-ring-circle" stroke="#E5E7EB" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                <circle class="progress-ring-circle" stroke="#8B5CF6" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.56" stroke-dashoffset="326.56" id="diskCircle" style="stroke-dashoffset: 212.3;"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Base de Dados</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="dbStatus">Online</h3>
+                            <p class="text-sm text-gray-500" id="dbDetails">24ms</p>
+                        </div>
+                        <div class="relative w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-database text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Ferramentas Principais -->
+                <div class="lg:col-span-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Ferramentas de Sistema -->
+                        <div class="tool-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-database text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Otimização de BD</h3>
+                                    <p class="text-sm text-gray-600">Melhore performance da base de dados</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Tabelas:</span>
+                                    <span class="font-semibold" id="dbTables">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Índices:</span>
+                                    <span class="font-semibold" id="dbIndexes">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Última Otimização:</span>
+                                    <span class="font-semibold" id="lastOptimization">Nunca</span>
+                                </div>
+                            </div>
+                            <button onclick="optimizeDatabase()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                                <i class="fas fa-bolt mr-2"></i> Executar Otimização
+                            </button>
+                        </div>
+
+                        <!-- Ferramentas de Cache -->
+                        <div class="tool-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-bolt text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Gestão de Cache</h3>
+                                    <p class="text-sm text-gray-600">Controle o cache do sistema</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Cache Atual:</span>
+                                    <span class="font-semibold" id="cacheSize">124 MB</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Hit Rate:</span>
+                                    <span class="font-semibold text-green-600" id="cacheHitRate">92%</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Items em Cache:</span>
+                                    <span class="font-semibold" id="cacheItems">2.458</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-4">
+                                <button onclick="clearCache()" class="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-broom mr-1"></i> Limpar
+                                </button>
+                                <button onclick="rebuildCache()" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-sync mr-1"></i> Reconstruir
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ferramentas de Segurança -->
+                        <div class="tool-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-shield-alt text-red-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Auditoria de Segurança</h3>
+                                    <p class="text-sm text-gray-600">Verifique vulnerabilidades</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Última Verificação:</span>
+                                    <span class="font-semibold" id="lastSecurityScan">Nunca</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Problemas Encontrados:</span>
+                                    <span class="font-semibold text-red-600" id="securityIssues">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Nível de Segurança:</span>
+                                    <span class="font-semibold text-green-600" id="securityLevel">Alto</span>
+                                </div>
+                            </div>
+                            <button onclick="runSecurityScan()" class="w-full mt-4 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition-colors">
+                                <i class="fas fa-search mr-2"></i> Executar Verificação
+                            </button>
+                        </div>
+
+                        <!-- Ferramentas de Backup -->
+                        <div class="tool-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-download text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Backup Avançado</h3>
+                                    <p class="text-sm text-gray-600">Backup incremental e diferencial</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Último Backup:</span>
+                                    <span class="font-semibold" id="lastBackup">Nunca</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Tamanho Total:</span>
+                                    <span class="font-semibold" id="backupSize">0 GB</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Próximo Backup:</span>
+                                    <span class="font-semibold" id="nextBackup">--</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-4">
+                                <button onclick="runIncrementalBackup()" class="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-plus mr-1"></i> Incremental
+                                </button>
+                                <button onclick="runFullBackup()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-database mr-1"></i> Completo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs do Sistema -->
+                    <div class="bg-white rounded-lg shadow mt-6">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Logs do Sistema em Tempo Real</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="clearLogs()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors">
+                                    <i class="fas fa-trash mr-1"></i>Limpar
+                                </button>
+                                <button onclick="exportLogs()" class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                                    <i class="fas fa-download mr-1"></i>Exportar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="bg-gray-900 text-green-400 rounded-lg p-4 logs-container h-64 overflow-y-auto" id="systemLogs">
+                                <div class="log-info">[14:30:45] INFO: Sistema inicializado</div>
+                                <div class="log-debug">[14:30:42] DEBUG: Cache carregado - 124MB</div>
+                                <div class="log-info">[14:30:40] INFO: Conexão BD estabelecida</div>
+                                <div class="log-warning">[14:30:38] WARN: Alto uso de memória detectado</div>
+                                <div class="log-info">[14:30:35] INFO: Serviços de background iniciados</div>
+                                <div class="log-debug">[14:30:32] DEBUG: API endpoints carregados</div>
+                                <div class="log-success">[14:30:30] INFO: Sistema pronto para uso</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controlo -->
+                <div class="space-y-6">
+                    <!-- Status dos Serviços -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status dos Serviços</h3>
+                        <div id="servicesStatus" class="space-y-3">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Executor de Comandos -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Executor de Comandos</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-700 mb-2">Comando SQL</label>
+                                <textarea id="sqlQuery" class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500" rows="3" placeholder="SELECT * FROM produtos WHERE..."></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="executeQuery()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-play mr-1"></i> Executar
+                                </button>
+                                <button onclick="explainQuery()" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-search mr-1"></i> Explicar
+                                </button>
+                            </div>
+                            <div id="queryResult" class="hidden mt-2 p-3 bg-gray-100 rounded-lg text-sm max-h-40 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoramento em Tempo Real -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Monitoramento</h3>
+                        <div class="space-y-4" id="monitoringData">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Requisições/min</span>
+                                    <span class="font-semibold" id="requestsPerMin">42</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" id="requestsBar" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Uso de Memória</span>
+                                    <span class="font-semibold" id="memoryPercent">68%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-600 h-2 rounded-full" id="memoryBar" style="width: 68%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Latência BD</span>
+                                    <span class="font-semibold" id="dbLatency">24ms</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" id="latencyBar" style="width: 30%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="restartServices()" class="p-3 border rounded-lg hover:bg-blue-50 text-center transition-colors">
+                                <i class="fas fa-redo text-blue-500 text-lg"></i>
+                                <div class="text-xs mt-1">Reiniciar</div>
+                            </button>
+                            <button onclick="flushDNS()" class="p-3 border rounded-lg hover:bg-green-50 text-center transition-colors">
+                                <i class="fas fa-network-wired text-green-500 text-lg"></i>
+                                <div class="text-xs mt-1">DNS Cache</div>
+                            </button>
+                            <button onclick="repairDatabase()" class="p-3 border rounded-lg hover:bg-purple-50 text-center transition-colors">
+                                <i class="fas fa-wrench text-purple-500 text-lg"></i>
+                                <div class="text-xs mt-1">Reparar BD</div>
+                            </button>
+                            <button onclick="generateReport()" class="p-3 border rounded-lg hover:bg-yellow-50 text-center transition-colors">
+                                <i class="fas fa-chart-bar text-yellow-500 text-lg"></i>
+                                <div class="text-xs mt-1">Relatório</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== CONFIRMATION MODAL ==================== -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div class="p-6 border-b">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Confirmação</h3>
+            </div>
+            <div class="p-6">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2" id="modalMessage">Tem certeza que deseja executar esta ação?</h4>
+                    <p class="text-gray-600" id="modalDescription">Esta operação pode afetar o desempenho do sistema.</p>
+                </div>
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="closeConfirmationModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmAction()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-check mr-2"></i> Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Ferramentas Avançadas!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentUser = null;
+        let currentAction = null;
+        let systemLogs = [];
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadSystemInfo();
+            renderServicesStatus();
+            setupEventListeners();
+            loadSidebarPreference();
+            
+            // Simular logs em tempo real
+            setInterval(addRandomLog, 15000);
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadSystemInfo() {
+            try {
+                // Buscar informações do sistema
+                const { data: configData, error } = await supabase
+                    .from('configuracoes')
+                    .select('*')
+                    .eq('chave', 'sistema')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                // Atualizar informações de BD
+                const { data: tablesData } = await supabase
+                    .from('information_schema.tables')
+                    .select('*')
+                    .limit(1);
+                
+                // Simular dados
+                document.getElementById('dbTables').textContent = '48';
+                document.getElementById('dbIndexes').textContent = '156';
+                document.getElementById('lastOptimization').textContent = new Date().toLocaleDateString('pt-BR');
+                
+                // Atualizar backup
+                document.getElementById('lastBackup').textContent = new Date().toLocaleDateString('pt-BR') + ' 02:00';
+                document.getElementById('backupSize').textContent = '2.4 GB';
+                
+            } catch (error) {
+                console.error('Erro ao carregar informações do sistema:', error);
+            }
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderServicesStatus() {
+            const container = document.getElementById('servicesStatus');
+            const services = [
+                { name: 'Serviço Web', status: 'online', color: 'green' },
+                { name: 'Base de Dados', status: 'online', color: 'green' },
+                { name: 'Serviço de Email', status: 'warning', color: 'yellow' },
+                { name: 'API Externa', status: 'online', color: 'green' },
+                { name: 'Backup Cloud', status: 'offline', color: 'red' }
+            ];
+            
+            container.innerHTML = services.map(s => {
+                const statusColor = {
+                    'online': 'bg-green-500',
+                    'warning': 'bg-yellow-500',
+                    'offline': 'bg-red-500'
+                };
+                const statusText = {
+                    'online': 'Online',
+                    'warning': 'Instável',
+                    'offline': 'Offline'
+                };
+                const bgColor = {
+                    'online': 'bg-green-50',
+                    'warning': 'bg-yellow-50',
+                    'offline': 'bg-red-50'
+                };
+                const textColor = {
+                    'online': 'bg-green-100 text-green-800',
+                    'warning': 'bg-yellow-100 text-yellow-800',
+                    'offline': 'bg-red-100 text-red-800'
+                };
+                
+                return `
+                    <div class="flex items-center justify-between p-2 ${bgColor[s.status]} rounded">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 ${statusColor[s.status]} rounded-full mr-2"></div>
+                            <span class="text-sm">${s.name}</span>
+                        </div>
+                        <span class="text-xs ${textColor[s.status]} px-2 py-1 rounded">${statusText[s.status]}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== FUNÇÕES DE FERRAMENTAS ====================
+        function showConfirmation(title, message, action) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = 'Tem certeza que deseja executar esta ação?';
+            document.getElementById('modalDescription').textContent = message;
+            currentAction = action;
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.remove('active');
+            currentAction = null;
+        }
+
+        function confirmAction() {
+            if (currentAction) {
+                window[currentAction]();
+            }
+            closeConfirmationModal();
+        }
+
+        function addLog(message, type = 'info') {
+            const container = document.getElementById('systemLogs');
+            const timestamp = new Date().toLocaleTimeString('pt-BR', {hour12: false});
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            container.prepend(logEntry);
+            
+            // Manter apenas 100 logs
+            while (container.children.length > 100) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function addRandomLog() {
+            const logs = [
+                { msg: 'Verificação de integridade do sistema', type: 'debug' },
+                { msg: 'Sincronização de cache concluída', type: 'info' },
+                { msg: 'Monitoramento de performance ativo', type: 'debug' },
+                { msg: 'Backup automático agendado', type: 'info' },
+                { msg: 'Alto uso de CPU detectado', type: 'warning' },
+                { msg: 'Conexão com API externa estabelecida', type: 'success' }
+            ];
+            const randomLog = logs[Math.floor(Math.random() * logs.length)];
+            addLog(randomLog.msg, randomLog.type);
+        }
+
+        // ==================== AÇÕES DAS FERRAMENTAS ====================
+        function optimizeDatabase() {
+            showConfirmation(
+                'Otimização de Base de Dados',
+                'Esta operação irá reorganizar índices e otimizar consultas. Pode levar alguns minutos.',
+                'optimizeDatabaseConfirmed'
+            );
+        }
+
+        function optimizeDatabaseConfirmed() {
+            showToast('Otimização da base de dados iniciada...', 'info');
+            addLog('Iniciando otimização da base de dados...', 'info');
+            
+            setTimeout(() => {
+                showToast('Base de dados otimizada com sucesso!', 'success');
+                addLog('Base de dados otimizada com sucesso', 'success');
+                document.getElementById('lastOptimization').textContent = new Date().toLocaleString('pt-BR');
+            }, 3000);
+        }
+
+        function clearCache() {
+            showConfirmation(
+                'Limpar Cache do Sistema',
+                'Todo o cache será removido. Isso pode causar lentidão temporária.',
+                'clearCacheConfirmed'
+            );
+        }
+
+        function clearCacheConfirmed() {
+            showToast('Limpando cache do sistema...', 'info');
+            addLog('Cache do sistema sendo limpo...', 'info');
+            
+            setTimeout(() => {
+                showToast('Cache limpo com sucesso!', 'success');
+                addLog('Cache limpo com sucesso', 'success');
+            }, 2000);
+        }
+
+        function rebuildCache() {
+            showConfirmation(
+                'Reconstruir Cache',
+                'O cache será completamente reconstruído.',
+                'rebuildCacheConfirmed'
+            );
+        }
+
+        function rebuildCacheConfirmed() {
+            showToast('Reconstruindo cache...', 'info');
+            addLog('Reconstruindo cache do sistema...', 'info');
+            
+            setTimeout(() => {
+                showToast('Cache reconstruído com sucesso!', 'success');
+                addLog('Cache reconstruído com sucesso', 'success');
+            }, 2500);
+        }
+
+        function runSecurityScan() {
+            showConfirmation(
+                'Verificação de Segurança',
+                'O sistema será escaneado em busca de vulnerabilidades.',
+                'securityScanConfirmed'
+            );
+        }
+
+        function securityScanConfirmed() {
+            showToast('Executando verificação de segurança...', 'info');
+            addLog('Iniciando verificação de segurança...', 'info');
+            
+            setTimeout(() => {
+                showToast('Verificação de segurança concluída!', 'success');
+                addLog('Verificação de segurança concluída - 3 problemas encontrados', 'warning');
+                document.getElementById('securityIssues').textContent = '3';
+                document.getElementById('lastSecurityScan').textContent = new Date().toLocaleString('pt-BR');
+            }, 4000);
+        }
+
+        function runIncrementalBackup() {
+            showToast('Backup incremental iniciado...', 'info');
+            addLog('Backup incremental em progresso...', 'info');
+            
+            setTimeout(() => {
+                showToast('Backup incremental concluído!', 'success');
+                addLog('Backup incremental concluído com sucesso', 'success');
+                document.getElementById('lastBackup').textContent = new Date().toLocaleString('pt-BR');
+            }, 2000);
+        }
+
+        function runFullBackup() {
+            showToast('Backup completo iniciado...', 'info');
+            addLog('Backup completo em progresso...', 'info');
+            
+            setTimeout(() => {
+                showToast('Backup completo concluído!', 'success');
+                addLog('Backup completo concluído com sucesso', 'success');
+                document.getElementById('lastBackup').textContent = new Date().toLocaleString('pt-BR');
+                document.getElementById('backupSize').textContent = '2.6 GB';
+            }, 4000);
+        }
+
+        function runSystemOptimization() {
+            showToast('Otimização completa do sistema iniciada...', 'info');
+            addLog('Iniciando otimização completa do sistema...', 'info');
+            
+            setTimeout(() => {
+                showToast('Sistema otimizado com sucesso!', 'success');
+                addLog('Sistema otimizado com sucesso', 'success');
+            }, 5000);
+        }
+
+        function openAdvancedSettings() {
+            showToast('Abrindo configurações avançadas...', 'info');
+        }
+
+        function clearLogs() {
+            document.getElementById('systemLogs').innerHTML = '';
+            showToast('Logs limpos', 'success');
+        }
+
+        function exportLogs() {
+            const container = document.getElementById('systemLogs');
+            const logs = container.innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Logs exportados com sucesso', 'success');
+        }
+
+        function executeQuery() {
+            const query = document.getElementById('sqlQuery').value.trim();
+            if (!query) {
+                showToast('Digite uma consulta SQL', 'error');
+                return;
+            }
+            
+            showToast('Executando consulta SQL...', 'info');
+            addLog(`Consulta SQL executada: ${query.substring(0, 50)}...`, 'debug');
+            
+            const result = document.getElementById('queryResult');
+            result.classList.remove('hidden');
+            result.innerHTML = `
+                <div class="text-green-600">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Consulta executada com sucesso. 42 linhas afetadas.
+                </div>
+                <div class="text-xs text-gray-500 mt-2">Tempo de execução: 0.024s</div>
+            `;
+            
+            setTimeout(() => {
+                result.classList.add('hidden');
+            }, 8000);
+        }
+
+        function explainQuery() {
+            const query = document.getElementById('sqlQuery').value.trim();
+            if (!query) {
+                showToast('Digite uma consulta SQL', 'error');
+                return;
+            }
+            
+            showToast('Analisando consulta SQL...', 'info');
+            
+            const result = document.getElementById('queryResult');
+            result.classList.remove('hidden');
+            result.innerHTML = `
+                <div class="text-blue-600">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Plano de execução da consulta:
+                </div>
+                <div class="text-xs text-gray-600 mt-2 font-mono">
+                    Seq Scan on produtos (cost=0.00..42.50 rows=450 width=120)<br>
+                    &nbsp;&nbsp;Filter: (preco > 1000)
+                </div>
+            `;
+            
+            setTimeout(() => {
+                result.classList.add('hidden');
+            }, 8000);
+        }
+
+        function restartServices() {
+            showToast('Reiniciando serviços...', 'info');
+            addLog('Reiniciando serviços do sistema...', 'info');
+            
+            setTimeout(() => {
+                showToast('Serviços reiniciados com sucesso!', 'success');
+                addLog('Serviços reiniciados com sucesso', 'success');
+            }, 3000);
+        }
+
+        function flushDNS() {
+            showToast('Limpando cache DNS...', 'info');
+            addLog('Cache DNS limpo', 'debug');
+            
+            setTimeout(() => {
+                showToast('Cache DNS limpo com sucesso!', 'success');
+            }, 1500);
+        }
+
+        function repairDatabase() {
+            showConfirmation(
+                'Reparar Base de Dados',
+                'Esta operação irá verificar e reparar possíveis corrupções na base de dados.',
+                'repairDatabaseConfirmed'
+            );
+        }
+
+        function repairDatabaseConfirmed() {
+            showToast('Reparando base de dados...', 'info');
+            addLog('Iniciando reparação da base de dados...', 'info');
+            
+            setTimeout(() => {
+                showToast('Base de dados reparada com sucesso!', 'success');
+                addLog('Base de dados reparada com sucesso', 'success');
+            }, 4000);
+        }
+
+        function generateReport() {
+            showToast('Gerando relatório do sistema...', 'info');
+            addLog('Gerando relatório do sistema...', 'info');
+            
+            setTimeout(() => {
+                showToast('Relatório gerado com sucesso!', 'success');
+                addLog('Relatório do sistema gerado', 'success');
+            }, 3000);
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('confirmationModal').classList.contains('active')) {
+                        closeConfirmationModal();
+                    }
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.optimizeDatabase = optimizeDatabase;
+        window.clearCache = clearCache;
+        window.rebuildCache = rebuildCache;
+        window.runSecurityScan = runSecurityScan;
+        window.runIncrementalBackup = runIncrementalBackup;
+        window.runFullBackup = runFullBackup;
+        window.runSystemOptimization = runSystemOptimization;
+        window.openAdvancedSettings = openAdvancedSettings;
+        window.clearLogs = clearLogs;
+        window.exportLogs = exportLogs;
+        window.executeQuery = executeQuery;
+        window.explainQuery = explainQuery;
+        window.restartServices = restartServices;
+        window.flushDNS = flushDNS;
+        window.repairDatabase = repairDatabase;
+        window.generateReport = generateReport;
+        window.showConfirmation = showConfirmation;
+        window.closeConfirmationModal = closeConfirmationModal;
+        window.confirmAction = confirmAction;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.addLog = addLog;
+    </script>
+</body>
+</html>

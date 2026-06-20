@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Generator | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== TABLE ==================== */
+        .table-container {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .table-container::-webkit-scrollbar { width: 5px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .table-selector {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .table-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .table-selector.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-database mr-3"></i>
+                        <span class="flex-1 font-medium">CRUD Generator</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="#" onclick="selectTable('empresas')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-building mr-2 text-sm"></i>Empresas</a></li>
+                        <li><a href="#" onclick="selectTable('usuarios')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-2 text-sm"></i>Usuários</a></li>
+                        <li><a href="#" onclick="selectTable('produtos')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-box mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="#" onclick="selectTable('categorias')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tags mr-2 text-sm"></i>Categorias</a></li>
+                        <li><a href="#" onclick="selectTable('clientes')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-user-friends mr-2 text-sm"></i>Clientes</a></li>
+                        <li><a href="#" onclick="selectTable('fornecedores')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-truck mr-2 text-sm"></i>Fornecedores</a></li>
+                        <li><a href="#" onclick="selectTable('vendas')" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Vendas</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">CRUD GENERATOR</h1>
+                    <div class="bg-purple-50 px-3 py-1 rounded-full text-sm text-purple-700">
+                        <i class="fas fa-database mr-1"></i> <span id="tableCount">0</span> Tabelas
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Seleção de Tabela -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Selecionar Tabela</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4" id="tableSelectors">
+                    <div onclick="selectTable('empresas')" class="table-selector bg-blue-50 border border-blue-200 rounded-lg p-4 text-center hover:bg-blue-100 transition" data-table="empresas">
+                        <i class="fas fa-building text-blue-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Empresas</h3>
+                    </div>
+                    <div onclick="selectTable('usuarios')" class="table-selector bg-green-50 border border-green-200 rounded-lg p-4 text-center hover:bg-green-100 transition" data-table="usuarios">
+                        <i class="fas fa-users text-green-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Usuários</h3>
+                    </div>
+                    <div onclick="selectTable('produtos')" class="table-selector bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center hover:bg-yellow-100 transition" data-table="produtos">
+                        <i class="fas fa-box text-yellow-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Produtos</h3>
+                    </div>
+                    <div onclick="selectTable('categorias')" class="table-selector bg-purple-50 border border-purple-200 rounded-lg p-4 text-center hover:bg-purple-100 transition" data-table="categorias">
+                        <i class="fas fa-tags text-purple-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Categorias</h3>
+                    </div>
+                    <div onclick="selectTable('clientes')" class="table-selector bg-red-50 border border-red-200 rounded-lg p-4 text-center hover:bg-red-100 transition" data-table="clientes">
+                        <i class="fas fa-user-friends text-red-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Clientes</h3>
+                    </div>
+                    <div onclick="selectTable('fornecedores')" class="table-selector bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center hover:bg-indigo-100 transition" data-table="fornecedores">
+                        <i class="fas fa-truck text-indigo-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Fornecedores</h3>
+                    </div>
+                    <div onclick="selectTable('vendas')" class="table-selector bg-pink-50 border border-pink-200 rounded-lg p-4 text-center hover:bg-pink-100 transition" data-table="vendas">
+                        <i class="fas fa-shopping-cart text-pink-600 text-2xl mb-2"></i>
+                        <h3 class="font-medium text-sm">Vendas</h3>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-gray-500" id="selectedTableInfo">Selecione uma tabela para gerenciar</div>
+            </div>
+
+            <!-- CRUD Form -->
+            <div id="crudContainer" class="bg-white rounded-lg shadow hidden">
+                <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                    <h2 class="text-xl font-semibold text-gray-800" id="crudTitle">Gerenciar Registros</h2>
+                    <button onclick="newRecord()" id="btnNew" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                        <i class="fas fa-plus mr-2"></i> Novo Registro
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Formulário -->
+                    <div id="formContainer" class="hidden">
+                        <form id="recordForm" onsubmit="saveRecord(event)" class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <div id="formFields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Campos gerados dinamicamente -->
+                            </div>
+                            <div class="flex flex-wrap justify-end gap-3 mt-4">
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" id="btnSave">
+                                    <i class="fas fa-save mr-2"></i> Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Tabela -->
+                    <div id="tableContainer" class="table-container">
+                        <div class="text-center py-10 text-gray-500">
+                            <i class="fas fa-database text-4xl mb-3 opacity-50"></i>
+                            <p>Carregando registros...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    <div id="paginationContainer" class="mt-4 flex flex-wrap justify-between items-center gap-2 hidden">
+                        <div class="text-sm text-gray-500" id="paginationInfo">Mostrando 1-10 de 0 registros</div>
+                        <div class="flex gap-2">
+                            <button onclick="prevPage()" id="btnPrev" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Anterior
+                            </button>
+                            <button onclick="nextPage()" id="btnNext" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== CONFIRM MODAL ==================== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div class="p-6 border-b">
+                <h3 class="text-xl font-bold text-gray-800" id="confirmTitle">Confirmar Exclusão</h3>
+            </div>
+            <div class="p-6">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2" id="confirmMessage">Tem certeza que deseja excluir este registro?</h4>
+                    <p class="text-gray-600" id="confirmDescription">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="closeConfirmModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i> Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em CRUD Generator!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentTable = null;
+        let currentAction = 'list';
+        let currentRecord = null;
+        let records = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let deleteId = null;
+        let currentUser = null;
+
+        // ==================== SCHEMA DAS TABELAS ====================
+        const TABLE_SCHEMAS = {
+            empresas: {
+                label: 'Empresas',
+                fields: {
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    nif: { type: 'text', label: 'NIF' },
+                    endereco: { type: 'text', label: 'Endereço' },
+                    telefone: { type: 'text', label: 'Telefone' },
+                    email: { type: 'email', label: 'Email' },
+                    website: { type: 'text', label: 'Website' },
+                    descricao: { type: 'textarea', label: 'Descrição' }
+                },
+                displayFields: ['nome', 'nif', 'telefone', 'email']
+            },
+            usuarios: {
+                label: 'Usuários',
+                fields: {
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    email: { type: 'email', label: 'Email', required: true },
+                    telefone: { type: 'text', label: 'Telefone' },
+                    cargo: { type: 'text', label: 'Cargo' },
+                    status: { 
+                        type: 'select', 
+                        label: 'Status',
+                        options: [
+                            { value: 'ativo', label: 'Ativo' },
+                            { value: 'inativo', label: 'Inativo' }
+                        ]
+                    }
+                },
+                displayFields: ['nome', 'email', 'cargo', 'status']
+            },
+            produtos: {
+                label: 'Produtos',
+                fields: {
+                    codigo: { type: 'text', label: 'Código', required: true },
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    descricao: { type: 'textarea', label: 'Descrição' },
+                    categoria: { type: 'text', label: 'Categoria' },
+                    preco: { type: 'number', label: 'Preço (AOA)', required: true, step: '0.01' },
+                    current_stock: { type: 'number', label: 'Stock Atual', min: 0 },
+                    stock_minimo: { type: 'number', label: 'Stock Mínimo', min: 0 },
+                    ativo: { type: 'checkbox', label: 'Ativo', default: true }
+                },
+                displayFields: ['codigo', 'nome', 'preco', 'current_stock']
+            },
+            categorias: {
+                label: 'Categorias',
+                fields: {
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    descricao: { type: 'textarea', label: 'Descrição' },
+                    ativo: { type: 'checkbox', label: 'Ativo', default: true }
+                },
+                displayFields: ['nome', 'descricao', 'ativo']
+            },
+            clientes: {
+                label: 'Clientes',
+                fields: {
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    email: { type: 'email', label: 'Email' },
+                    telefone: { type: 'text', label: 'Telefone' },
+                    nif: { type: 'text', label: 'NIF' },
+                    endereco: { type: 'text', label: 'Endereço' },
+                    ativo: { type: 'checkbox', label: 'Ativo', default: true }
+                },
+                displayFields: ['nome', 'telefone', 'email', 'nif']
+            },
+            fornecedores: {
+                label: 'Fornecedores',
+                fields: {
+                    nome: { type: 'text', label: 'Nome', required: true },
+                    telefone: { type: 'text', label: 'Telefone' },
+                    email: { type: 'email', label: 'Email' },
+                    nif: { type: 'text', label: 'NIF' },
+                    endereco: { type: 'text', label: 'Endereço' },
+                    status: { 
+                        type: 'select',
+                        label: 'Status',
+                        options: [
+                            { value: 'ativo', label: 'Ativo' },
+                            { value: 'inativo', label: 'Inativo' }
+                        ]
+                    }
+                },
+                displayFields: ['nome', 'telefone', 'email', 'status']
+            },
+            vendas: {
+                label: 'Vendas',
+                fields: {
+                    numero: { type: 'text', label: 'Número', required: true },
+                    cliente_nome: { type: 'text', label: 'Cliente' },
+                    data: { type: 'date', label: 'Data', required: true },
+                    total: { type: 'number', label: 'Total (AOA)', required: true, step: '0.01' },
+                    status: {
+                        type: 'select',
+                        label: 'Status',
+                        options: [
+                            { value: 'pendente', label: 'Pendente' },
+                            { value: 'pago', label: 'Pago' },
+                            { value: 'cancelado', label: 'Cancelado' }
+                        ]
+                    }
+                },
+                displayFields: ['numero', 'cliente_nome', 'data', 'total', 'status']
+            }
+        };
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            loadSidebarPreference();
+            document.getElementById('tableCount').textContent = Object.keys(TABLE_SCHEMAS).length;
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadRecords(table) {
+            try {
+                const { data, error } = await supabase
+                    .from(table)
+                    .select('*')
+                    .order('id', { ascending: false });
+                
+                if (error) throw error;
+                
+                records = data || [];
+                renderTable();
+                
+            } catch (error) {
+                console.error(`Erro ao carregar registros da tabela ${table}:`, error);
+                records = [];
+                renderTable();
+                showToast('Erro ao carregar registros', 'error');
+            }
+        }
+
+        async function saveRecordToDB(table, data) {
+            try {
+                if (currentRecord) {
+                    // Update
+                    const { data: result, error } = await supabase
+                        .from(table)
+                        .update(data)
+                        .eq('id', currentRecord)
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Registro atualizado com sucesso!', 'success');
+                    return result;
+                } else {
+                    // Insert
+                    const { data: result, error } = await supabase
+                        .from(table)
+                        .insert([data])
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Registro criado com sucesso!', 'success');
+                    return result;
+                }
+            } catch (error) {
+                console.error('Erro ao salvar registro:', error);
+                showToast('Erro ao salvar registro', 'error');
+                throw error;
+            }
+        }
+
+        async function deleteRecordFromDB(table, id) {
+            try {
+                const { error } = await supabase
+                    .from(table)
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                showToast('Registro excluído com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao excluir registro:', error);
+                showToast('Erro ao excluir registro', 'error');
+                throw error;
+            }
+        }
+
+        // ==================== SELEÇÃO DE TABELA ====================
+        function selectTable(table) {
+            currentTable = table;
+            currentRecord = null;
+            currentAction = 'list';
+            currentPage = 1;
+            
+            // Atualizar seletores
+            document.querySelectorAll('.table-selector').forEach(el => {
+                el.classList.remove('active');
+                if (el.dataset.table === table) {
+                    el.classList.add('active');
+                }
+            });
+            
+            // Mostrar container CRUD
+            document.getElementById('crudContainer').classList.remove('hidden');
+            document.getElementById('crudTitle').textContent = `Gerenciar ${TABLE_SCHEMAS[table].label}`;
+            document.getElementById('selectedTableInfo').textContent = `Gerenciando: ${TABLE_SCHEMAS[table].label}`;
+            
+            // Carregar registros
+            loadRecords(table);
+            renderForm();
+        }
+
+        // ==================== RENDERIZAR FORMULÁRIO ====================
+        function renderForm() {
+            const container = document.getElementById('formFields');
+            const schema = TABLE_SCHEMAS[currentTable];
+            
+            if (!schema) return;
+            
+            let html = '';
+            const recordData = currentRecord ? records.find(r => r.id == currentRecord) : {};
+            
+            for (const [fieldName, fieldConfig] of Object.entries(schema.fields)) {
+                const value = recordData ? recordData[fieldName] : (fieldConfig.default !== undefined ? fieldConfig.default : '');
+                
+                html += `<div class="mb-4">`;
+                html += `<label for="field_${fieldName}" class="block text-sm font-medium text-gray-700 mb-1">${fieldConfig.label}${fieldConfig.required ? ' *' : ''}</label>`;
+                
+                switch (fieldConfig.type) {
+                    case 'text':
+                    case 'email':
+                    case 'date':
+                    case 'number':
+                        html += `<input type="${fieldConfig.type}" id="field_${fieldName}" name="${fieldName}" 
+                                value="${value || ''}" 
+                                ${fieldConfig.required ? 'required' : ''}
+                                ${fieldConfig.step ? `step="${fieldConfig.step}"` : ''}
+                                ${fieldConfig.min !== undefined ? `min="${fieldConfig.min}"` : ''}
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">`;
+                        break;
+                    case 'textarea':
+                        html += `<textarea id="field_${fieldName}" name="${fieldName}" 
+                                ${fieldConfig.required ? 'required' : ''}
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3">${value || ''}</textarea>`;
+                        break;
+                    case 'select':
+                        html += `<select id="field_${fieldName}" name="${fieldName}" 
+                                ${fieldConfig.required ? 'required' : ''}
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">`;
+                        html += `<option value="">Selecione...</option>`;
+                        if (fieldConfig.options) {
+                            fieldConfig.options.forEach(opt => {
+                                html += `<option value="${opt.value}" ${value == opt.value ? 'selected' : ''}>${opt.label}</option>`;
+                            });
+                        }
+                        html += `</select>`;
+                        break;
+                    case 'checkbox':
+                        html += `<div class="flex items-center">`;
+                        html += `<input type="checkbox" id="field_${fieldName}" name="${fieldName}" 
+                                ${value ? 'checked' : ''}
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">`;
+                        html += `<label for="field_${fieldName}" class="ml-2 text-sm text-gray-700">${fieldConfig.label}</label>`;
+                        html += `</div>`;
+                        break;
+                }
+                
+                html += `</div>`;
+            }
+            
+            container.innerHTML = html;
+            document.getElementById('formContainer').classList.remove('hidden');
+            
+            // Atualizar botão salvar
+            document.getElementById('btnSave').innerHTML = `<i class="fas fa-save mr-2"></i> ${currentRecord ? 'Atualizar' : 'Salvar'}`;
+        }
+
+        // ==================== RENDERIZAR TABELA ====================
+        function renderTable() {
+            const container = document.getElementById('tableContainer');
+            const schema = TABLE_SCHEMAS[currentTable];
+            
+            if (!schema) return;
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                        <p>Nenhum registro encontrado</p>
+                        <p class="text-sm">Clique em "Novo Registro" para adicionar</p>
+                    </div>
+                `;
+                document.getElementById('paginationContainer').classList.add('hidden');
+                return;
+            }
+            
+            // Paginação
+            const totalPages = Math.ceil(records.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const pageRecords = records.slice(start, start + itemsPerPage);
+            
+            // Cabeçalhos
+            let html = `<table class="min-w-full divide-y divide-gray-200">`;
+            html += `<thead class="bg-gray-50"><tr>`;
+            
+            const displayFields = schema.displayFields || Object.keys(schema.fields).slice(0, 4);
+            for (const fieldName of displayFields) {
+                const fieldConfig = schema.fields[fieldName];
+                html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${fieldConfig?.label || fieldName}</th>`;
+            }
+            html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>`;
+            html += `</tr></thead>`;
+            
+            // Linhas
+            html += `<tbody class="bg-white divide-y divide-gray-200">`;
+            
+            for (const record of pageRecords) {
+                html += `<tr class="hover:bg-gray-50">`;
+                
+                for (const fieldName of displayFields) {
+                    let value = record[fieldName];
+                    if (value === undefined || value === null) value = '';
+                    if (typeof value === 'boolean') value = value ? 'Sim' : 'Não';
+                    if (typeof value === 'string' && value.length > 50) value = value.substring(0, 50) + '...';
+                    
+                    html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${value}</td>`;
+                }
+                
+                html += `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">`;
+                html += `<button onclick="editRecord('${record.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>`;
+                html += `<button onclick="openConfirmModal('${record.id}')" class="text-red-600 hover:text-red-800" title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>`;
+                html += `</td>`;
+                html += `</tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            
+            container.innerHTML = html;
+            
+            // Paginação
+            document.getElementById('paginationContainer').classList.remove('hidden');
+            document.getElementById('paginationInfo').textContent = `Mostrando ${start + 1}-${Math.min(start + itemsPerPage, records.length)} de ${records.length} registros`;
+            document.getElementById('btnPrev').disabled = currentPage <= 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
+        }
+
+        // ==================== CRUD OPERAÇÕES ====================
+        function newRecord() {
+            currentRecord = null;
+            currentAction = 'create';
+            renderForm();
+            document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function editRecord(id) {
+            currentRecord = id;
+            currentAction = 'edit';
+            renderForm();
+            document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            currentRecord = null;
+            currentAction = 'list';
+            document.getElementById('formContainer').classList.add('hidden');
+            renderTable();
+        }
+
+        async function saveRecord(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('recordForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            const schema = TABLE_SCHEMAS[currentTable];
+            for (const [fieldName, fieldConfig] of Object.entries(schema.fields)) {
+                if (fieldConfig.type === 'checkbox') {
+                    data[fieldName] = formData.get(fieldName) === 'on';
+                } else if (fieldConfig.type === 'number') {
+                    data[fieldName] = parseFloat(formData.get(fieldName)) || 0;
+                } else {
+                    data[fieldName] = formData.get(fieldName) || null;
+                }
+            }
+            
+            try {
+                await saveRecordToDB(currentTable, data);
+                currentRecord = null;
+                document.getElementById('formContainer').classList.add('hidden');
+                await loadRecords(currentTable);
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        function openConfirmModal(id) {
+            deleteId = id;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            deleteId = null;
+        }
+
+        async function confirmDelete() {
+            if (deleteId) {
+                await deleteRecordFromDB(currentTable, deleteId);
+                deleteId = null;
+                closeConfirmModal();
+                await loadRecords(currentTable);
+            }
+        }
+
+        // ==================== PAGINAÇÃO ====================
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(records.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.selectTable = selectTable;
+        window.newRecord = newRecord;
+        window.editRecord = editRecord;
+        window.cancelEdit = cancelEdit;
+        window.saveRecord = saveRecord;
+        window.openConfirmModal = openConfirmModal;
+        window.closeConfirmModal = closeConfirmModal;
+        window.confirmDelete = confirmDelete;
+        window.prevPage = prevPage;
+        window.nextPage = nextPage;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadRecords = loadRecords;
+    </script>
+</body>
+</html>

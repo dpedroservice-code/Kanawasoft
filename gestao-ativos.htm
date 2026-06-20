@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Ativos | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl">
+            <!-- ... mesma sidebar ... -->
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">GESTÃO DE ATIVOS</h1>
+                        <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                            <i class="fas fa-boxes mr-1"></i> 156 Ativos Registados
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <!-- Métricas de Ativos -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Total de Ativos</p>
+                                <h3 class="text-2xl font-bold text-blue-600">156</h3>
+                                <p class="text-sm text-gray-500">+5 este mês</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-boxes text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Em Uso</p>
+                                <h3 class="text-2xl font-bold text-green-600">128</h3>
+                                <p class="text-sm text-gray-500">82% dos ativos</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-laptop text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Em Manutenção</p>
+                                <h3 class="text-2xl font-bold text-yellow-600">12</h3>
+                                <p class="text-sm text-gray-500">8% dos ativos</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-tools text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Fora de Serviço</p>
+                                <h3 class="text-2xl font-bold text-red-600">16</h3>
+                                <p class="text-sm text-gray-500">10% dos ativos</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Lista de Ativos -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <h2 class="text-xl font-bold text-gray-800">Inventário de Ativos</h2>
+                                <div class="flex space-x-2">
+                                    <select class="border rounded-lg px-3 py-2">
+                                        <option>Todos os Estados</option>
+                                        <option>Em Uso</option>
+                                        <option>Em Manutenção</option>
+                                        <option>Fora de Serviço</option>
+                                    </select>
+                                    <button onclick="openNewAssetModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                        <i class="fas fa-plus mr-2"></i> Novo Ativo
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ativo</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localização</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="assetsTable" class="bg-white divide-y divide-gray-200">
+                                            <!-- Ativos carregados via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Histórico de Manutenção -->
+                        <div class="bg-white rounded-lg shadow mt-6">
+                            <div class="p-6 border-b">
+                                <h2 class="text-xl font-bold text-gray-800">Histórico de Manutenção</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ativo</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Técnico</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="maintenanceHistory" class="bg-white divide-y divide-gray-200">
+                                            <!-- Histórico carregado via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Controlo -->
+                    <div class="space-y-6">
+                        <!-- Categorias de Ativos -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Categorias</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-2 bg-blue-50 rounded">
+                                    <span class="text-sm">Equipamentos TI</span>
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">45</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                                    <span class="text-sm">Mobiliário</span>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">38</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-yellow-50 rounded">
+                                    <span class="text-sm">Veículos</span>
+                                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">12</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-purple-50 rounded">
+                                    <span class="text-sm">Equipamentos</span>
+                                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">61</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adicionar Manutenção Rápida -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Registo Rápido</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ativo</label>
+                                    <select class="w-full border rounded-lg px-3 py-2">
+                                        <option>Selecione o ativo...</option>
+                                        <option>Laptop Dell XPS 15</option>
+                                        <option>Projetor Epson EB-X41</option>
+                                        <option>Carro Toyota Corolla</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Manutenção</label>
+                                    <select class="w-full border rounded-lg px-3 py-2">
+                                        <option>Preventiva</option>
+                                        <option>Corretiva</option>
+                                        <option>Preditiva</option>
+                                    </select>
+                                </div>
+                                <button onclick="addMaintenance()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg">
+                                    <i class="fas fa-tools mr-2"></i> Registar Manutenção
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Valor Total:</span>
+                                    <span class="font-semibold">AOA 2.5M</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Depreciação Mensal:</span>
+                                    <span class="font-semibold">AOA 25.000</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Custo Manutenção:</span>
+                                    <span class="font-semibold text-red-600">AOA 45.000</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Próxima Manutenção:</span>
+                                    <span class="font-semibold">5 ativos</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ações Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="generateAssetReport()" class="p-3 border rounded-lg hover:bg-blue-50 text-center">
+                                    <i class="fas fa-chart-bar text-blue-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Relatório</div>
+                                </button>
+                                <button onclick="importAssets()" class="p-3 border rounded-lg hover:bg-green-50 text-center">
+                                    <i class="fas fa-file-import text-green-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Importar</div>
+                                </button>
+                                <button onclick="exportAssets()" class="p-3 border rounded-lg hover:bg-purple-50 text-center">
+                                    <i class="fas fa-file-export text-purple-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Exportar</div>
+                                </button>
+                                <button onclick="openAssetSettings()" class="p-3 border rounded-lg hover:bg-yellow-50 text-center">
+                                    <i class="fas fa-cog text-yellow-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Config</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Novo Ativo -->
+    <div id="newAssetModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Adicionar Novo Ativo</h3>
+                <button onclick="closeNewAssetModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <form id="assetForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Ativo *</label>
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" placeholder="Ex: Laptop Dell XPS 15" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                            <select class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="">Selecione...</option>
+                                <option value="ti">Equipamentos TI</option>
+                                <option value="mobiliario">Mobiliário</option>
+                                <option value="veiculo">Veículos</option>
+                                <option value="equipamento">Equipamentos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Número de Série</label>
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" placeholder="Opcional">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Localização *</label>
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" placeholder="Ex: Sala de Reuniões A" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Aquisição</label>
+                            <input type="date" class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Valor (AOA)</label>
+                            <input type="number" class="w-full border rounded-lg px-3 py-2" placeholder="0.00">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                            <textarea class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="Descrição detalhada do ativo..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="closeNewAssetModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-save mr-2"></i> Guardar Ativo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let assets = [
+            {
+                id: 'AST-001',
+                name: 'Laptop Dell XPS 15',
+                category: 'ti',
+                location: 'Escritório A',
+                status: 'in_use'
+            },
+            {
+                id: 'AST-002',
+                name: 'Projetor Epson EB-X41',
+                category: 'ti',
+                location: 'Sala de Reuniões B',
+                status: 'maintenance'
+            },
+            {
+                id: 'AST-003',
+                name: 'Carro Toyota Corolla',
+                category: 'veiculo',
+                location: 'Garagem',
+                status: 'in_use'
+            },
+            {
+                id: 'AST-004',
+                name: 'Mesa de Reunião',
+                category: 'mobiliario',
+                location: 'Sala de Reuniões A',
+                status: 'in_use'
+            }
+        ];
+
+        let maintenanceHistory = [
+            {
+                date: '2024-09-25',
+                asset: 'Laptop Dell XPS 15',
+                type: 'Preventiva',
+                description: 'Limpeza interna e atualização de software',
+                technician: 'Carlos Silva'
+            },
+            {
+                date: '2024-09-20',
+                asset: 'Projetor Epson EB-X41',
+                type: 'Corretiva',
+                description: 'Substituição da lâmpada',
+                technician: 'Ana Santos'
+            },
+            {
+                date: '2024-09-15',
+                asset: 'Carro Toyota Corolla',
+                type: 'Preventiva',
+                description: 'Mudança de óleo e revisão geral',
+                technician: 'Miguel Costa'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssetsTable();
+            loadMaintenanceHistory();
+            setupAssetForm();
+        });
+
+        function loadAssetsTable() {
+            const tbody = document.getElementById('assetsTable');
+            tbody.innerHTML = '';
+
+            assets.forEach(asset => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${asset.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${asset.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getCategoryName(asset.category)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${asset.location}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            asset.status === 'in_use' ? 'bg-green-100 text-green-800' :
+                            asset.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${getStatusName(asset.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewAsset('${asset.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Ver</button>
+                        <button onclick="editAsset('${asset.id}')" class="text-green-600 hover:text-green-900 mr-3">Editar</button>
+                        <button onclick="deleteAsset('${asset.id}')" class="text-red-600 hover:text-red-900">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadMaintenanceHistory() {
+            const tbody = document.getElementById('maintenanceHistory');
+            tbody.innerHTML = '';
+
+            maintenanceHistory.forEach(maintenance => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${maintenance.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${maintenance.asset}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${maintenance.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${maintenance.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${maintenance.technician}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categories = {
+                'ti': 'Equipamentos TI',
+                'mobiliario': 'Mobiliário',
+                'veiculo': 'Veículos',
+                'equipamento': 'Equipamentos'
+            };
+            return categories[category] || category;
+        }
+
+        function getStatusName(status) {
+            const statuses = {
+                'in_use': 'Em Uso',
+                'maintenance': 'Em Manutenção',
+                'out_of_service': 'Fora de Serviço'
+            };
+            return statuses[status] || status;
+        }
+
+        function openNewAssetModal() {
+            document.getElementById('newAssetModal').classList.remove('hidden');
+        }
+
+        function closeNewAssetModal() {
+            document.getElementById('newAssetModal').classList.add('hidden');
+        }
+
+        function setupAssetForm() {
+            document.getElementById('assetForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewAsset();
+            });
+        }
+
+        function createNewAsset() {
+            const newAsset = {
+                id: `AST-${String(assets.length + 1).padStart(3, '0')}`,
+                name: 'Novo Ativo',
+                category: 'ti',
+                location: 'Nova Localização',
+                status: 'in_use'
+            };
+
+            assets.unshift(newAsset);
+            loadAssetsTable();
+            closeNewAssetModal();
+            showNotification('Ativo criado com sucesso!', 'success');
+        }
+
+        function viewAsset(assetId) {
+            const asset = assets.find(a => a.id === assetId);
+            if (asset) {
+                alert(`Ativo: ${asset.name}\n\nID: ${asset.id}\nCategoria: ${getCategoryName(asset.category)}\nLocalização: ${asset.location}\nStatus: ${getStatusName(asset.status)}`);
+            }
+        }
+
+        function editAsset(assetId) {
+            showNotification(`Editando ativo ${assetId}...`, 'info');
+        }
+
+        function deleteAsset(assetId) {
+            if (confirm(`Tem certeza que deseja eliminar o ativo ${assetId}?`)) {
+                assets = assets.filter(a => a.id !== assetId);
+                loadAssetsTable();
+                showNotification('Ativo eliminado com sucesso!', 'success');
+            }
+        }
+
+        function addMaintenance() {
+            showNotification('Manutenção registada com sucesso!', 'success');
+        }
+
+        function generateAssetReport() {
+            showNotification('Relatório de ativos gerado!', 'success');
+        }
+
+        function importAssets() {
+            showNotification('Importação de ativos iniciada...', 'info');
+        }
+
+        function exportAssets() {
+            showNotification('Exportação de ativos concluída!', 'success');
+        }
+
+        function openAssetSettings() {
+            showNotification('Abrindo configurações...', 'info');
+        }
+
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

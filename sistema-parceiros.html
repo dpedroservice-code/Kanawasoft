@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Parceiros | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl w-64">
+            <div class="p-4 flex items-center justify-center border-b border-blue-700">
+                <h1 class="text-xl font-bold">KANAWA SOFT</h1>
+            </div>
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="dashboard.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="sistema-parceiros.html" class="flex items-center p-3 rounded-lg bg-blue-700">
+                            <i class="fas fa-handshake mr-3"></i>
+                            <span>Parceiros</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span>Vendas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comissoes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-money-bill-wave mr-3"></i>
+                            <span>Comissões</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="configuracoes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="p-4 border-t border-blue-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        A
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">Administrador</p>
+                        <p class="text-xs text-blue-300">admin@kanawasoft.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">SISTEMA DE PARCEIROS</h1>
+                        <div id="activePartnersCount" class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                            <i class="fas fa-handshake mr-1"></i> Carregando...
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openNewPartnerModal()" class="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                            <i class="fas fa-plus mr-2"></i>Novo Parceiro
+                        </button>
+                        <button onclick="runCommissionCalculation()" class="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg">
+                            <i class="fas fa-calculator mr-2"></i>Calcular Comissões
+                        </button>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <!-- Métricas de Parceiros -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Parceiros Activos</p>
+                                <h3 id="activePartners" class="text-2xl font-bold text-blue-600">Carregando...</h3>
+                                <p id="newPartnersThisMonth" class="text-sm text-gray-500">Carregando...</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-users text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Vendas do Mês</p>
+                                <h3 id="monthlySales" class="text-2xl font-bold text-green-600">Carregando...</h3>
+                                <p class="text-sm text-gray-500">Através de parceiros</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Comissões Pendentes</p>
+                                <h3 id="pendingCommissions" class="text-2xl font-bold text-yellow-600">Carregando...</h3>
+                                <p class="text-sm text-gray-500">A pagar este mês</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-money-bill-wave text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Taxa de Conversão</p>
+                                <h3 id="conversionRate" class="text-2xl font-bold text-purple-600">Carregando...</h3>
+                                <p class="text-sm text-gray-500">Leads para vendas</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Lista de Parceiros -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <h2 class="text-xl font-bold text-gray-800">Parceiros Activos</h2>
+                                <div class="flex space-x-2">
+                                    <select id="partnerTypeFilter" class="border rounded-lg px-3 py-2 text-sm">
+                                        <option value="">Todos os Tipos</option>
+                                        <option value="affiliate">Afiliados</option>
+                                        <option value="reseller">Revendedores</option>
+                                        <option value="agency">Agências</option>
+                                        <option value="consultant">Consultores</option>
+                                    </select>
+                                    <input id="partnerSearch" type="text" placeholder="Pesquisar parceiro..." class="border rounded-lg px-3 py-2 text-sm w-48">
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parceiro</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendas Mês</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comissão</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="partnersTable" class="bg-white divide-y divide-gray-200">
+                                            <!-- Parceiros carregados via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance dos Parceiros -->
+                        <div class="bg-white rounded-lg shadow mt-6">
+                            <div class="p-6 border-b">
+                                <h2 class="text-xl font-bold text-gray-800">Performance dos Parceiros</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-blue-600 mb-2">Top Performers</div>
+                                        <div id="topPerformers" class="space-y-2">
+                                            <!-- Carregado via JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600 mb-2">Em Crescimento</div>
+                                        <div id="growingPartners" class="space-y-2">
+                                            <!-- Carregado via JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600 mb-2">Precisa Apoio</div>
+                                        <div id="needsSupport" class="space-y-2">
+                                            <!-- Carregado via JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Controlo -->
+                    <div class="space-y-6">
+                        <!-- Comissões Pendentes -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Comissões Pendentes</h3>
+                            <div id="pendingCommissionsList" class="space-y-3">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                            <button onclick="processCommissions()" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg">
+                                <i class="fas fa-money-bill-wave mr-2"></i> Processar Pagamentos
+                            </button>
+                        </div>
+
+                        <!-- Ferramentas Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Ferramentas</h3>
+                            <div class="space-y-2">
+                                <button onclick="generateReports()" class="w-full text-left p-3 border rounded-lg hover:bg-blue-50 flex items-center">
+                                    <i class="fas fa-chart-bar text-blue-500 mr-3"></i>
+                                    <span>Relatórios de Performance</span>
+                                </button>
+                                <button onclick="sendNewsletter()" class="w-full text-left p-3 border rounded-lg hover:bg-green-50 flex items-center">
+                                    <i class="fas fa-envelope text-green-500 mr-3"></i>
+                                    <span>Newsletter Parceiros</span>
+                                </button>
+                                <button onclick="manageCommissionRates()" class="w-full text-left p-3 border rounded-lg hover:bg-purple-50 flex items-center">
+                                    <i class="fas fa-percentage text-purple-500 mr-3"></i>
+                                    <span>Taxas de Comissão</span>
+                                </button>
+                                <button onclick="partnerPortal()" class="w-full text-left p-3 border rounded-lg hover:bg-yellow-50 flex items-center">
+                                    <i class="fas fa-globe text-yellow-500 mr-3"></i>
+                                    <span>Portal do Parceiro</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                            <div id="quickStats" class="space-y-3 text-sm">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Links Rápidos -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Links Úteis</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <a href="contratos.html" class="p-3 border rounded-lg hover:bg-blue-50 text-center">
+                                    <i class="fas fa-file-contract text-blue-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Contratos</div>
+                                </a>
+                                <a href="materiais.html" class="p-3 border rounded-lg hover:bg-green-50 text-center">
+                                    <i class="fas fa-gift text-green-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Materiais</div>
+                                </a>
+                                <a href="suporte.html" class="p-3 border rounded-lg hover:bg-purple-50 text-center">
+                                    <i class="fas fa-question-circle text-purple-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Suporte</div>
+                                </a>
+                                <a href="configuracoes.html" class="p-3 border rounded-lg hover:bg-yellow-50 text-center">
+                                    <i class="fas fa-cog text-yellow-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Config</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Novo Parceiro -->
+    <div id="newPartnerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Novo Parceiro</h3>
+                <button onclick="closeNewPartnerModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <form id="partnerForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Parceiro *</label>
+                            <input type="text" id="partnerName" class="w-full border rounded-lg px-3 py-2" placeholder="Nome da empresa ou pessoa" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Parceiro *</label>
+                            <select id="partnerType" class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="">Selecionar...</option>
+                                <option value="affiliate">Afiliado</option>
+                                <option value="reseller">Revendedor</option>
+                                <option value="agency">Agência</option>
+                                <option value="consultant">Consultor</option>
+                                <option value="referral">Indicações</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <input type="email" id="partnerEmail" class="w-full border rounded-lg px-3 py-2" placeholder="email@exemplo.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                            <input type="tel" id="partnerPhone" class="w-full border rounded-lg px-3 py-2" placeholder="+244 XXX XXX XXX">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Taxa de Comissão (%)</label>
+                            <input type="number" id="commissionRate" class="w-full border rounded-lg px-3 py-2" min="0" max="50" step="0.5" value="15">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pagamento</label>
+                            <select id="paymentMethod" class="w-full border rounded-lg px-3 py-2">
+                                <option value="transfer">Transferência Bancária</option>
+                                <option value="mbway">MB Way</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="cash">Dinheiro</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                            <textarea id="partnerNotes" class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="Informações adicionais sobre o parceiro..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="closeNewPartnerModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-save mr-2"></i> Criar Parceiro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Importar dados do banco de dados
+        let partners = [];
+        let sales = [];
+        let commissions = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            setupEventListeners();
+            loadCategoriesAndSuppliers();
+        });
+
+        // Carregar dados do banco de dados
+        async function loadData() {
+            try {
+                // Importar dados do database.js
+                const database = await import('./database.js');
+                
+                // Carregar dados
+                partners = database.partners || [];
+                sales = database.sales || [];
+                commissions = database.commissions || [];
+                
+                // Atualizar interface
+                updateDashboardMetrics();
+                loadPartnersTable();
+                loadPerformanceData();
+                loadPendingCommissions();
+                loadQuickStats();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showNotification('Erro ao carregar dados do sistema', 'error');
+            }
+        }
+
+        async function loadCategoriesAndSuppliers() {
+            try {
+                const categories = await fetch('/api/categories').then(res => res.json());
+                const suppliers = await fetch('/api/suppliers').then(res => res.json());
+                console.log('Categorias:', categories);
+                console.log('Fornecedores:', suppliers);
+            } catch (error) {
+                console.error('Erro ao carregar categorias e fornecedores:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Formulário de novo parceiro
+            document.getElementById('partnerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewPartner();
+            });
+
+            // Filtros e pesquisa
+            document.getElementById('partnerTypeFilter').addEventListener('change', filterPartners);
+            document.getElementById('partnerSearch').addEventListener('input', filterPartners);
+        }
+
+        function updateDashboardMetrics() {
+            // Calcular métricas
+            const activePartners = partners.filter(p => p.status === 'active').length;
+            const newPartnersThisMonth = partners.filter(p => {
+                const joinDate = new Date(p.joinDate);
+                const now = new Date();
+                return joinDate.getMonth() === now.getMonth() && joinDate.getFullYear() === now.getFullYear();
+            }).length;
+
+            const monthlySales = sales
+                .filter(s => {
+                    const saleDate = new Date(s.date);
+                    const now = new Date();
+                    return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+                })
+                .reduce((total, sale) => total + sale.amount, 0);
+
+            const pendingCommissions = commissions
+                .filter(c => c.status === 'pending')
+                .reduce((total, commission) => total + commission.amount, 0);
+
+            // Atualizar elementos da interface
+            document.getElementById('activePartners').textContent = activePartners;
+            document.getElementById('activePartnersCount').innerHTML = `<i class="fas fa-handshake mr-1"></i> ${activePartners} Parceiros Activos`;
+            document.getElementById('newPartnersThisMonth').textContent = `+${newPartnersThisMonth} este mês`;
+            document.getElementById('monthlySales').textContent = `AOA ${monthlySales.toLocaleString('pt-BR')}`;
+            document.getElementById('pendingCommissions').textContent = `AOA ${pendingCommissions.toLocaleString('pt-BR')}`;
+            
+            // Calcular taxa de conversão (exemplo simplificado)
+            const conversionRate = (monthlySales > 0 ? (activePartners / monthlySales * 100) : 0).toFixed(1);
+            document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+        }
+
+        function loadPartnersTable() {
+            const tbody = document.getElementById('partnersTable');
+            tbody.innerHTML = '';
+
+            if (partners.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            Nenhum parceiro encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            partners.forEach(partner => {
+                const partnerSales = sales
+                    .filter(s => s.partnerId === partner.id)
+                    .reduce((total, sale) => total + sale.amount, 0);
+                
+                const partnerCommissions = commissions
+                    .filter(c => c.partnerId === partner.id)
+                    .reduce((total, commission) => total + commission.amount, 0);
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                ${partner.name.charAt(0)}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${partner.name}</div>
+                                <div class="text-sm text-gray-500">Desde ${partner.joinDate}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            partner.type === 'affiliate' ? 'bg-blue-100 text-blue-800' :
+                            partner.type === 'reseller' ? 'bg-green-100 text-green-800' :
+                            partner.type === 'agency' ? 'bg-purple-100 text-purple-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }">
+                            ${getPartnerTypeName(partner.type)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        AOA ${partnerSales.toLocaleString('pt-BR')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        AOA ${partnerCommissions.toLocaleString('pt-BR')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            partner.status === 'active' ? 'bg-green-100 text-green-800' :
+                            partner.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${partner.status === 'active' ? 'Activo' : partner.status === 'pending' ? 'Pendente' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewPartner(${partner.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye mr-1"></i> Ver
+                        </button>
+                        <button onclick="editPartner(${partner.id})" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-edit mr-1"></i> Editar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterPartners() {
+            const typeFilter = document.getElementById('partnerTypeFilter').value;
+            const searchFilter = document.getElementById('partnerSearch').value.toLowerCase();
+            
+            const filteredPartners = partners.filter(partner => {
+                const matchesType = !typeFilter || partner.type === typeFilter;
+                const matchesSearch = !searchFilter || 
+                    partner.name.toLowerCase().includes(searchFilter) ||
+                    partner.email.toLowerCase().includes(searchFilter);
+                
+                return matchesType && matchesSearch;
+            });
+            
+            // Atualizar tabela com parceiros filtrados
+            const tbody = document.getElementById('partnersTable');
+            tbody.innerHTML = '';
+            
+            if (filteredPartners.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            Nenhum parceiro encontrado com os filtros aplicados
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredPartners.forEach(partner => {
+                const partnerSales = sales
+                    .filter(s => s.partnerId === partner.id)
+                    .reduce((total, sale) => total + sale.amount, 0);
+                
+                const partnerCommissions = commissions
+                    .filter(c => c.partnerId === partner.id)
+                    .reduce((total, commission) => total + commission.amount, 0);
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                ${partner.name.charAt(0)}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${partner.name}</div>
+                                <div class="text-sm text-gray-500">Desde ${partner.joinDate}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            partner.type === 'affiliate' ? 'bg-blue-100 text-blue-800' :
+                            partner.type === 'reseller' ? 'bg-green-100 text-green-800' :
+                            partner.type === 'agency' ? 'bg-purple-100 text-purple-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }">
+                            ${getPartnerTypeName(partner.type)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        AOA ${partnerSales.toLocaleString('pt-BR')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        AOA ${partnerCommissions.toLocaleString('pt-BR')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            partner.status === 'active' ? 'bg-green-100 text-green-800' :
+                            partner.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${partner.status === 'active' ? 'Activo' : partner.status === 'pending' ? 'Pendente' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewPartner(${partner.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye mr-1"></i> Ver
+                        </button>
+                        <button onclick="editPartner(${partner.id})" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-edit mr-1"></i> Editar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadPerformanceData() {
+            // Top Performers (maiores vendas)
+            const topPerformers = partners
+                .map(partner => {
+                    const partnerSales = sales
+                        .filter(s => s.partnerId === partner.id)
+                        .reduce((total, sale) => total + sale.amount, 0);
+                    return { ...partner, totalSales: partnerSales };
+                })
+                .sort((a, b) => b.totalSales - a.totalSales)
+                .slice(0, 3);
+
+            const topPerformersContainer = document.getElementById('topPerformers');
+            topPerformersContainer.innerHTML = '';
+            
+            topPerformers.forEach(partner => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-blue-50 rounded';
+                div.innerHTML = `
+                    <span class="text-sm">${partner.name}</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">AOA ${partner.totalSales.toLocaleString('pt-BR')}</span>
+                `;
+                topPerformersContainer.appendChild(div);
+            });
+
+            // Em crescimento (maior crescimento percentual - exemplo simplificado)
+            const growingPartners = partners
+                .filter(partner => partner.status === 'active')
+                .slice(0, 3); // Em um sistema real, calcularíamos o crescimento real
+
+            const growingPartnersContainer = document.getElementById('growingPartners');
+            growingPartnersContainer.innerHTML = '';
+            
+            growingPartners.forEach(partner => {
+                const growth = Math.floor(Math.random() * 40) + 20; // Exemplo
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-green-50 rounded';
+                div.innerHTML = `
+                    <span class="text-sm">${partner.name}</span>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">+${growth}%</span>
+                `;
+                growingPartnersContainer.appendChild(div);
+            });
+
+            // Precisa de apoio (sem vendas ou poucas vendas)
+            const needsSupport = partners
+                .map(partner => {
+                    const partnerSales = sales
+                        .filter(s => s.partnerId === partner.id)
+                        .reduce((total, sale) => total + sale.amount, 0);
+                    return { ...partner, totalSales: partnerSales };
+                })
+                .filter(partner => partner.totalSales === 0)
+                .slice(0, 3);
+
+            const needsSupportContainer = document.getElementById('needsSupport');
+            needsSupportContainer.innerHTML = '';
+            
+            needsSupport.forEach(partner => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-yellow-50 rounded';
+                div.innerHTML = `
+                    <span class="text-sm">${partner.name}</span>
+                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">0 vendas</span>
+                `;
+                needsSupportContainer.appendChild(div);
+            });
+        }
+
+        function loadPendingCommissions() {
+            const pendingCommissionsList = document.getElementById('pendingCommissionsList');
+            pendingCommissionsList.innerHTML = '';
+
+            const pendingCommissions = commissions.filter(c => c.status === 'pending');
+            
+            if (pendingCommissions.length === 0) {
+                pendingCommissionsList.innerHTML = `
+                    <div class="text-center text-gray-500 py-4">
+                        Nenhuma comissão pendente
+                    </div>
+                `;
+                return;
+            }
+
+            pendingCommissions.forEach(commission => {
+                const partner = partners.find(p => p.id === commission.partnerId);
+                if (!partner) return;
+
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg';
+                div.innerHTML = `
+                    <div>
+                        <div class="font-medium text-yellow-800">${partner.name}</div>
+                        <div class="text-sm text-yellow-600">${commission.salesCount || 1} vendas • ${commission.period}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-yellow-800">AOA ${commission.amount.toLocaleString('pt-BR')}</div>
+                        <div class="text-xs text-yellow-600">a pagar</div>
+                    </div>
+                `;
+                pendingCommissionsList.appendChild(div);
+            });
+        }
+
+        function loadQuickStats() {
+            const quickStatsContainer = document.getElementById('quickStats');
+            
+            const totalPartners = partners.length;
+            const activePartners = partners.filter(p => p.status === 'active').length;
+            const activationRate = totalPartners > 0 ? Math.round((activePartners / totalPartners) * 100) : 0;
+            
+            const partnerSales = sales.filter(s => s.partnerId).length;
+            const totalSales = sales.length;
+            const partnerSalesPercentage = totalSales > 0 ? Math.round((partnerSales / totalSales) * 100) : 0;
+            
+            const avgCommission = partners.length > 0 ? 
+                partners.reduce((sum, partner) => sum + (partner.commissionRate || 0), 0) / partners.length : 0;
+
+            quickStatsContainer.innerHTML = `
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Total de Parceiros:</span>
+                    <span class="font-semibold">${totalPartners}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Taxa de Activação:</span>
+                    <span class="font-semibold ${activationRate >= 70 ? 'text-green-600' : 'text-yellow-600'}">${activationRate}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Vendas via Parceiros:</span>
+                    <span class="font-semibold">${partnerSalesPercentage}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Comissão Média:</span>
+                    <span class="font-semibold">${avgCommission.toFixed(1)}%</span>
+                </div>
+            `;
+        }
+
+        function getPartnerTypeName(type) {
+            const types = {
+                'affiliate': 'Afiliado',
+                'reseller': 'Revendedor',
+                'agency': 'Agência',
+                'consultant': 'Consultor',
+                'referral': 'Indicações'
+            };
+            return types[type] || type;
+        }
+
+        function openNewPartnerModal() {
+            document.getElementById('newPartnerModal').classList.remove('hidden');
+        }
+
+        function closeNewPartnerModal() {
+            document.getElementById('newPartnerModal').classList.add('hidden');
+            document.getElementById('partnerForm').reset();
+        }
+
+        async function createNewPartner() {
+            const formData = {
+                name: document.getElementById('partnerName').value,
+                type: document.getElementById('partnerType').value,
+                email: document.getElementById('partnerEmail').value,
+                phone: document.getElementById('partnerPhone').value,
+                commissionRate: parseFloat(document.getElementById('commissionRate').value),
+                paymentMethod: document.getElementById('paymentMethod').value,
+                notes: document.getElementById('partnerNotes').value,
+                status: 'pending',
+                joinDate: new Date().toISOString().split('T')[0]
+            };
+
+            try {
+                // Em um sistema real, aqui faríamos uma chamada à API para salvar no banco de dados
+                // Por enquanto, vamos apenas adicionar localmente
+                const newPartner = {
+                    id: partners.length > 0 ? Math.max(...partners.map(p => p.id)) + 1 : 1,
+                    ...formData
+                };
+
+                partners.push(newPartner);
+                
+                // Atualizar interface
+                loadPartnersTable();
+                updateDashboardMetrics();
+                loadQuickStats();
+                
+                closeNewPartnerModal();
+                showNotification('Parceiro criado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao criar parceiro:', error);
+                showNotification('Erro ao criar parceiro', 'error');
+            }
+        }
+
+        function viewPartner(partnerId) {
+            // Redirecionar para a página de detalhes do parceiro
+            window.location.href = `detalhe-parceiro.html?id=${partnerId}`;
+        }
+
+        function editPartner(partnerId) {
+            // Redirecionar para a página de edição do parceiro
+            window.location.href = `editar-parceiro.html?id=${partnerId}`;
+        }
+
+        function runCommissionCalculation() {
+            showNotification('Cálculo de comissões em andamento...', 'info');
+            setTimeout(() => {
+                showNotification('Comissões calculadas com sucesso!', 'success');
+            }, 2000);
+        }
+
+        function processCommissions() {
+            showNotification('Processando pagamentos de comissões...', 'info');
+            setTimeout(() => {
+                showNotification('Pagamentos processados com sucesso!', 'success');
+            }, 3000);
+        }
+
+        function generateReports() {
+            window.location.href = 'relatorios.html';
+        }
+
+        function sendNewsletter() {
+            showNotification('Newsletter enviada para todos os parceiros', 'success');
+        }
+
+        function manageCommissionRates() {
+            window.location.href = 'configuracoes.html#comissoes';
+        }
+
+        function partnerPortal() {
+            window.open('portal-parceiros.html', '_blank');
+        }
+
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 3000);
+        }
+    </script>
+    <script src="database.js"></script>
+</body>
+</html>

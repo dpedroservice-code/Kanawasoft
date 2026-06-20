@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contas Bancárias | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .account-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--info-color);
+        }
+        .account-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .account-card .balance {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .account-card .balance.positive { color: var(--success-color); }
+        .account-card .balance.negative { color: var(--danger-color); }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-money-bill-wave mr-3"></i>
+                        <span class="flex-1 font-medium">Financeiro</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="contas-bancarias.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-university mr-2 text-sm"></i>Contas Bancárias</a></li>
+                        <li><a href="movimentos-caixa.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-2 text-sm"></i>Movimentos Caixa</a></li>
+                        <li><a href="faturas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-file-invoice-dollar mr-2 text-sm"></i>Faturas</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">CONTAS BANCÁRIAS</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-university mr-1"></i> Gestão de Contas
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Toolbar -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <div class="flex-1 relative">
+                    <input type="text" id="searchContas" placeholder="Buscar conta por banco, número ou titular..." 
+                           class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <div class="flex gap-3">
+                    <select id="statusFilter" class="border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Activas</option>
+                        <option value="inativo">Inactivas</option>
+                    </select>
+                    <button onclick="window.openAccountModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Nova Conta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Contas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="accountsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Resumo de Movimentações -->
+            <div class="bg-white rounded-lg shadow mt-6">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">Últimas Movimentações</h2>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conta</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movimentosTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Carregando movimentações...</p>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== ACCOUNT MODAL ==================== -->
+    <div class="modal-overlay" id="accountModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Nova Conta Bancária</h3>
+                <button onclick="window.closeAccountModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="accountForm">
+                    <input type="hidden" id="accountId" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Banco *</label>
+                            <select id="acc_banco" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="BFA">Banco de Fomento Angola (BFA)</option>
+                                <option value="BAI">Banco Angolano de Investimentos (BAI)</option>
+                                <option value="BIC">Banco BIC</option>
+                                <option value="BCI">Banco de Comércio e Indústria (BCI)</option>
+                                <option value="SOL">Banco Sol</option>
+                                <option value="KEVE">Banco Keve</option>
+                                <option value="ATLANTICO">Banco Atlântico</option>
+                                <option value="ECONOMIA">Banco Economia</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Conta *</label>
+                            <select id="acc_tipo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="corrente">Conta Corrente</option>
+                                <option value="poupanca">Conta Poupança</option>
+                                <option value="empresarial">Conta Empresarial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Número da Conta *</label>
+                            <input type="text" id="acc_numero" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIB</label>
+                            <input type="text" id="acc_nib" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Número de Identificação Bancária">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Titular *</label>
+                            <input type="text" id="acc_titular" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Saldo Inicial</label>
+                            <input type="number" id="acc_saldo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" value="0">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="acc_observacoes" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div class="mt-4 flex items-center">
+                        <input type="checkbox" id="acc_ativo" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                        <label class="ml-2 text-sm text-gray-700">Conta Activa</label>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeAccountModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.saveAccount()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MOVIMENTO MODAL ==================== -->
+    <div class="modal-overlay" id="movimentoModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="movimentoModalTitle">Nova Movimentação</h3>
+                <button onclick="window.closeMovimentoModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="movimentoForm">
+                    <input type="hidden" id="movimento_account_id" value="">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo *</label>
+                        <select id="mov_tipo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                            <option value="entrada">Entrada (Depósito)</option>
+                            <option value="saida">Saída (Retirada)</option>
+                            <option value="transferencia">Transferência</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor *</label>
+                        <input type="number" id="mov_valor" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" required>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <input type="text" id="mov_descricao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Descrição da movimentação">
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                        <input type="datetime-local" id="mov_data" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeMovimentoModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.saveMovimento()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const ACCOUNTS_TABLE = 'contas_bancarias';
+            const MOVEMENTS_TABLE = 'movimentos_bancarios';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                accounts: [],
+                movements: [],
+                editingAccountId: null,
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                statsGrid: document.getElementById('statsGrid'),
+                accountsGrid: document.getElementById('accountsGrid'),
+                movimentosTableBody: document.getElementById('movimentosTableBody'),
+                searchContas: document.getElementById('searchContas'),
+                statusFilter: document.getElementById('statusFilter'),
+                accountModal: document.getElementById('accountModal'),
+                movimentoModal: document.getElementById('movimentoModal'),
+                modalTitle: document.getElementById('modalTitle'),
+                accountId: document.getElementById('accountId'),
+                acc_banco: document.getElementById('acc_banco'),
+                acc_tipo: document.getElementById('acc_tipo'),
+                acc_numero: document.getElementById('acc_numero'),
+                acc_nib: document.getElementById('acc_nib'),
+                acc_titular: document.getElementById('acc_titular'),
+                acc_saldo: document.getElementById('acc_saldo'),
+                acc_observacoes: document.getElementById('acc_observacoes'),
+                acc_ativo: document.getElementById('acc_ativo'),
+                movimentoModalTitle: document.getElementById('movimentoModalTitle'),
+                movimento_account_id: document.getElementById('movimento_account_id'),
+                mov_tipo: document.getElementById('mov_tipo'),
+                mov_valor: document.getElementById('mov_valor'),
+                mov_descricao: document.getElementById('mov_descricao'),
+                mov_data: document.getElementById('mov_data'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadAccounts(),
+                    loadMovements()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR CONTAS ====================
+            async function loadAccounts() {
+                state.isLoading = true;
+                try {
+                    const { data, error } = await state.supabase
+                        .from(ACCOUNTS_TABLE)
+                        .select('*')
+                        .order('banco');
+
+                    if (error) throw error;
+                    state.accounts = data || [];
+                    renderAccounts();
+                    updateStats();
+
+                } catch (error) {
+                    console.error('Erro ao carregar contas:', error);
+                    state.accounts = [];
+                    renderAccounts();
+                    updateStats();
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            // ==================== CARREGAR MOVIMENTAÇÕES ====================
+            async function loadMovements() {
+                try {
+                    const { data, error } = await state.supabase
+                        .from(MOVEMENTS_TABLE)
+                        .select('*, contas_bancarias(banco, numero, titular)')
+                        .order('data', { ascending: false })
+                        .limit(20);
+
+                    if (error) throw error;
+                    state.movements = data || [];
+                    renderMovements();
+
+                } catch (error) {
+                    console.error('Erro ao carregar movimentações:', error);
+                    state.movements = [];
+                    renderMovements();
+                }
+            }
+
+            // ==================== RENDER ====================
+            function renderAccounts() {
+                const container = DOM.accountsGrid;
+                const searchTerm = DOM.searchContas.value.toLowerCase();
+                const statusFilter = DOM.statusFilter.value;
+
+                let filtered = state.accounts;
+                if (searchTerm) {
+                    filtered = filtered.filter(a => 
+                        a.banco?.toLowerCase().includes(searchTerm) ||
+                        a.numero?.toLowerCase().includes(searchTerm) ||
+                        a.titular?.toLowerCase().includes(searchTerm) ||
+                        a.nib?.toLowerCase().includes(searchTerm)
+                    );
+                }
+                if (statusFilter === 'ativo') {
+                    filtered = filtered.filter(a => a.ativo !== false);
+                } else if (statusFilter === 'inativo') {
+                    filtered = filtered.filter(a => a.ativo === false);
+                }
+
+                if (state.isLoading) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                            <p>Carregando contas...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i class="fas fa-university text-5xl mb-4 opacity-50"></i>
+                            <p class="text-lg">Nenhuma conta encontrada</p>
+                            <p class="text-sm">Clique em "Nova Conta" para adicionar</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const bankColors = {
+                    'BFA': 'bg-blue-100 text-blue-800',
+                    'BAI': 'bg-green-100 text-green-800',
+                    'BIC': 'bg-purple-100 text-purple-800',
+                    'BCI': 'bg-yellow-100 text-yellow-800',
+                    'SOL': 'bg-orange-100 text-orange-800',
+                    'KEVE': 'bg-red-100 text-red-800',
+                    'ATLANTICO': 'bg-cyan-100 text-cyan-800',
+                    'ECONOMIA': 'bg-indigo-100 text-indigo-800'
+                };
+
+                const tipoLabels = {
+                    'corrente': 'Conta Corrente',
+                    'poupanca': 'Conta Poupança',
+                    'empresarial': 'Conta Empresarial'
+                };
+
+                container.innerHTML = filtered.map(account => {
+                    const bankColor = bankColors[account.banco] || 'bg-gray-100 text-gray-800';
+                    const tipoLabel = tipoLabels[account.tipo] || account.tipo;
+                    const statusClass = account.ativo !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const statusText = account.ativo !== false ? 'Activa' : 'Inactiva';
+
+                    return `
+                        <div class="account-card bg-white rounded-lg shadow p-6 border-l-4 ${account.ativo !== false ? 'border-blue-500' : 'border-red-400'} fade-in">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">${account.banco}</h3>
+                                    <p class="text-sm text-gray-500">${tipoLabel}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${bankColor}">${account.banco}</span>
+                            </div>
+                            <div class="space-y-1 text-sm">
+                                <p><span class="text-gray-500">Nº:</span> ${account.numero}</p>
+                                <p><span class="text-gray-500">Titular:</span> ${account.titular}</p>
+                                ${account.nib ? `<p><span class="text-gray-500">NIB:</span> ${account.nib}</p>` : ''}
+                            </div>
+                            <div class="mt-4 pt-4 border-t flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-gray-500">Saldo</p>
+                                    <p class="balance ${account.saldo >= 0 ? 'positive' : 'negative'}">
+                                        ${account.saldo >= 0 ? '' : '-'}AOA ${Math.abs(account.saldo).toLocaleString('pt-BR')}
+                                    </p>
+                                </div>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="mt-4 flex justify-end gap-2">
+                                <button onclick="window.openMovimentoModal('${account.id}')" class="text-green-600 hover:text-green-800 text-sm" title="Nova Movimentação">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button onclick="window.editAccount('${account.id}')" class="text-blue-600 hover:text-blue-800 text-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="window.deleteAccount('${account.id}')" class="text-red-600 hover:text-red-800 text-sm" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function renderMovements() {
+                const tbody = DOM.movimentosTableBody;
+
+                if (!state.movements || state.movements.length === 0) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-history text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhuma movimentação registrada</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = state.movements.map(m => {
+                    const conta = m.contas_bancarias || {};
+                    const tipoClass = m.tipo === 'entrada' ? 'text-green-600' : 'text-red-600';
+                    const tipoIcon = m.tipo === 'entrada' ? 'fa-arrow-down' : 'fa-arrow-up';
+                    const valor = m.tipo === 'entrada' ? `+${m.valor.toLocaleString('pt-BR')}` : `-${m.valor.toLocaleString('pt-BR')}`;
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                ${new Date(m.data).toLocaleDateString('pt-BR')} ${new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                ${conta.banco || 'N/A'} - ${conta.numero || ''}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                ${m.descricao || 'Sem descrição'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${tipoClass} text-right">
+                                AOA ${valor}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${tipoClass}">
+                                    <i class="fas ${tipoIcon} mr-1"></i>
+                                    ${m.tipo === 'entrada' ? 'Entrada' : m.tipo === 'saida' ? 'Saída' : 'Transferência'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function updateStats() {
+                const total = state.accounts.length;
+                const totalSaldo = state.accounts.reduce((sum, a) => sum + (a.saldo || 0), 0);
+                const ativas = state.accounts.filter(a => a.ativo !== false).length;
+                const lastMovement = state.movements.length > 0 ? new Date(state.movements[0].data) : null;
+
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Total de Contas</p>
+                                <h3 class="text-2xl font-bold text-gray-800">${total}</h3>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-university text-blue-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Saldo Total</p>
+                                <h3 class="text-2xl font-bold text-green-600">AOA ${totalSaldo.toLocaleString('pt-BR')}</h3>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-coins text-green-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Contas Activas</p>
+                                <h3 class="text-2xl font-bold text-green-600">${ativas}</h3>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-check-circle text-purple-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Última Movimentação</p>
+                                <h3 class="text-xl font-bold text-gray-800">${lastMovement ? lastMovement.toLocaleDateString('pt-BR') : 'N/A'}</h3>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ==================== CRUD CONTAS ====================
+            function openAccountModal(account = null) {
+                if (account) {
+                    DOM.modalTitle.textContent = 'Editar Conta Bancária';
+                    DOM.accountId.value = account.id;
+                    DOM.acc_banco.value = account.banco || '';
+                    DOM.acc_tipo.value = account.tipo || '';
+                    DOM.acc_numero.value = account.numero || '';
+                    DOM.acc_nib.value = account.nib || '';
+                    DOM.acc_titular.value = account.titular || '';
+                    DOM.acc_saldo.value = account.saldo || 0;
+                    DOM.acc_observacoes.value = account.observacoes || '';
+                    DOM.acc_ativo.checked = account.ativo !== false;
+                    state.editingAccountId = account.id;
+                } else {
+                    DOM.modalTitle.textContent = 'Nova Conta Bancária';
+                    DOM.accountId.value = '';
+                    DOM.acc_banco.value = '';
+                    DOM.acc_tipo.value = '';
+                    DOM.acc_numero.value = '';
+                    DOM.acc_nib.value = '';
+                    DOM.acc_titular.value = '';
+                    DOM.acc_saldo.value = 0;
+                    DOM.acc_observacoes.value = '';
+                    DOM.acc_ativo.checked = true;
+                    state.editingAccountId = null;
+                }
+                DOM.accountModal.classList.add('active');
+            }
+
+            function closeAccountModal() {
+                DOM.accountModal.classList.remove('active');
+                state.editingAccountId = null;
+            }
+
+            async function saveAccount() {
+                const accountData = {
+                    banco: DOM.acc_banco.value,
+                    tipo: DOM.acc_tipo.value,
+                    numero: DOM.acc_numero.value.trim(),
+                    nib: DOM.acc_nib.value.trim() || null,
+                    titular: DOM.acc_titular.value.trim(),
+                    saldo: parseFloat(DOM.acc_saldo.value) || 0,
+                    observacoes: DOM.acc_observacoes.value.trim() || null,
+                    ativo: DOM.acc_ativo.checked
+                };
+
+                if (!accountData.banco || !accountData.tipo || !accountData.numero || !accountData.titular) {
+                    showToast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                try {
+                    if (state.editingAccountId) {
+                        await state.supabase.from(ACCOUNTS_TABLE).update(accountData).eq('id', state.editingAccountId);
+                        showToast('Conta actualizada com sucesso!', 'success');
+                    } else {
+                        await state.supabase.from(ACCOUNTS_TABLE).insert([accountData]);
+                        showToast('Conta criada com sucesso!', 'success');
+                    }
+                    closeAccountModal();
+                    await loadAccounts();
+                } catch (error) {
+                    console.error('Erro ao salvar:', error);
+                    showToast('Erro ao salvar conta', 'error');
+                }
+            }
+
+            async function editAccount(id) {
+                const account = state.accounts.find(a => a.id == id);
+                if (account) openAccountModal(account);
+                else showToast('Conta não encontrada', 'error');
+            }
+
+            async function deleteAccount(id) {
+                const account = state.accounts.find(a => a.id == id);
+                if (!account) return;
+
+                if (!confirm(`Tem certeza que deseja excluir a conta "${account.banco} - ${account.numero}"?`)) return;
+
+                try {
+                    await state.supabase.from(ACCOUNTS_TABLE).delete().eq('id', id);
+                    showToast('Conta removida com sucesso!', 'success');
+                    await loadAccounts();
+                } catch (error) {
+                    console.error('Erro ao deletar:', error);
+                    showToast('Erro ao deletar conta', 'error');
+                }
+            }
+
+            // ==================== CRUD MOVIMENTAÇÕES ====================
+            function openMovimentoModal(accountId) {
+                DOM.movimentoModal.classList.add('active');
+                DOM.movimento_account_id.value = accountId;
+                DOM.mov_tipo.value = 'entrada';
+                DOM.mov_valor.value = '';
+                DOM.mov_descricao.value = '';
+                DOM.mov_data.value = new Date().toISOString().slice(0, 16);
+
+                const account = state.accounts.find(a => a.id == accountId);
+                DOM.movimentoModalTitle.textContent = account ? 
+                    `Nova Movimentação - ${account.banco}` : 'Nova Movimentação';
+            }
+
+            function closeMovimentoModal() {
+                DOM.movimentoModal.classList.remove('active');
+            }
+
+            async function saveMovimento() {
+                const accountId = DOM.movimento_account_id.value;
+                const tipo = DOM.mov_tipo.value;
+                const valor = parseFloat(DOM.mov_valor.value);
+                const descricao = DOM.mov_descricao.value.trim();
+                const data = DOM.mov_data.value;
+
+                if (!accountId || !valor || valor <= 0) {
+                    showToast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                try {
+                    // Registrar movimentação
+                    await state.supabase.from(MOVEMENTS_TABLE).insert([{
+                        conta_id: parseInt(accountId),
+                        tipo: tipo,
+                        valor: valor,
+                        descricao: descricao || null,
+                        data: data || new Date().toISOString()
+                    }]);
+
+                    // Atualizar saldo da conta
+                    const account = state.accounts.find(a => a.id == accountId);
+                    if (account) {
+                        const newSaldo = tipo === 'entrada' ? 
+                            (account.saldo || 0) + valor : 
+                            (account.saldo || 0) - valor;
+                        
+                        await state.supabase.from(ACCOUNTS_TABLE)
+                            .update({ saldo: newSaldo })
+                            .eq('id', accountId);
+                    }
+
+                    showToast('Movimentação registada com sucesso!', 'success');
+                    closeMovimentoModal();
+                    await Promise.all([loadAccounts(), loadMovements()]);
+
+                } catch (error) {
+                    console.error('Erro ao salvar movimentação:', error);
+                    showToast('Erro ao salvar movimentação', 'error');
+                }
+            }
+
+            // ==================== FILTROS ====================
+            function filterAccounts() {
+                renderAccounts();
+            }
+
+            // ==================== REFRESH ====================
+            function refreshData() {
+                Promise.all([loadAccounts(), loadMovements()]);
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.searchContas.addEventListener('input', filterAccounts);
+                DOM.statusFilter.addEventListener('change', filterAccounts);
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.accountModal.classList.contains('active')) closeAccountModal();
+                        if (DOM.movimentoModal.classList.contains('active')) closeMovimentoModal();
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.openAccountModal = openAccountModal;
+            window.closeAccountModal = closeAccountModal;
+            window.saveAccount = saveAccount;
+            window.editAccount = editAccount;
+            window.deleteAccount = deleteAccount;
+            window.openMovimentoModal = openMovimentoModal;
+            window.closeMovimentoModal = closeMovimentoModal;
+            window.saveMovimento = saveMovimento;
+            window.filterAccounts = filterAccounts;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.loadAccounts = loadAccounts;
+            window.loadMovements = loadMovements;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

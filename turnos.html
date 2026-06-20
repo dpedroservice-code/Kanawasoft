@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnos | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== SHIFT STATUS ==================== */
+        .shift-active { background-color: #d1fae5; color: #065f46; }
+        .shift-inactive { background-color: #f3f4f6; color: #6b7280; }
+        .shift-pending { background-color: #fef3c7; color: #92400e; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-users mr-3"></i>
+                        <span class="flex-1 font-medium">Recursos Humanos</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="funcionarios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-user-plus mr-2 text-sm"></i>Funcionários</a></li>
+                        <li><a href="turnos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-user-clock mr-2 text-sm"></i>Turnos</a></li>
+                        <li><a href="folha-pagamento.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-money-check mr-2 text-sm"></i>Folha Pagamento</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">GESTÃO DE TURNOS</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-user-clock mr-1"></i> <span id="shiftCount">0</span> Turnos
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Estatísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Total Turnos</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="totalShifts">0</h3>
+                            <p class="text-sm text-gray-500">Activos: <span id="activeShifts">0</span></p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Funcionários</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="totalEmployees">0</h3>
+                            <p class="text-sm text-gray-500">Alocados: <span id="allocatedEmployees">0</span></p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Turno Actual</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="currentShift">N/A</h3>
+                            <p class="text-sm text-gray-500" id="currentShiftTime">--</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Horas Trabalhadas</p>
+                            <h3 class="text-2xl font-bold text-purple-600" id="totalHours">0h</h3>
+                            <p class="text-sm text-gray-500">Esta semana</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-hourglass-half text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="filterStatus" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="ativo">Activo</option>
+                            <option value="inativo">Inactivo</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                        <select id="filterDepartamento" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="comercial">Comercial</option>
+                            <option value="financeiro">Financeiro</option>
+                            <option value="operacional">Operacional</option>
+                            <option value="administrativo">Administrativo</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                            <i class="fas fa-filter mr-2"></i> Filtrar
+                        </button>
+                        <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Turnos -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                    <h2 class="text-xl font-bold text-gray-800">Lista de Turnos</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openShiftModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors text-sm">
+                            <i class="fas fa-plus mr-2"></i> Novo Turno
+                        </button>
+                        <button onclick="exportShifts()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-file-export mr-2"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionários</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shiftsTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Carregado via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-sm text-gray-500" id="shiftInfo">0 turnos</span>
+                        <div class="flex gap-2">
+                            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Anterior
+                            </button>
+                            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== SHIFT MODAL ==================== -->
+    <div class="modal-overlay" id="shiftModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Novo Turno</h3>
+                <button onclick="closeShiftModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="shiftForm" onsubmit="saveShift(event)">
+                    <input type="hidden" id="shift_id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Turno *</label>
+                            <input type="text" id="turno_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Departamento</label>
+                            <select id="turno_departamento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="">Selecione...</option>
+                                <option value="comercial">Comercial</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="operacional">Operacional</option>
+                                <option value="administrativo">Administrativo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hora de Início *</label>
+                            <input type="time" id="turno_inicio" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hora de Fim *</label>
+                            <input type="time" id="turno_fim" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Dias da Semana</label>
+                            <div class="space-y-1">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_seg" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                                    <span class="text-sm">Segunda</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_ter" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                                    <span class="text-sm">Terça</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_qua" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                                    <span class="text-sm">Quarta</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+                            <div class="space-y-1">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_qui" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                                    <span class="text-sm">Quinta</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_sex" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                                    <span class="text-sm">Sexta</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_sab" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-sm">Sábado</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+                            <div class="space-y-1">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="turno_dom" class="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-sm">Domingo</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Funcionários</label>
+                            <select id="turno_funcionarios" multiple class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 h-32">
+                                <!-- Carregado via JavaScript -->
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Segure Ctrl para selecionar múltiplos</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="turno_status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="ativo">Activo</option>
+                                <option value="inativo">Inactivo</option>
+                                <option value="pendente">Pendente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="turno_observacoes" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeShiftModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="saveShift()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DETAILS MODAL ==================== -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="detailsTitle">Detalhes do Turno</h3>
+                <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div id="detailsContent">
+                    <!-- Carregado via JavaScript -->
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Fechar
+                </button>
+                <button onclick="printShiftDetails()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-print mr-2"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Turnos!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let shifts = [];
+        let employees = [];
+        let currentUser = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let editingShiftId = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadEmployees();
+            await loadShifts();
+            setupEventListeners();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadEmployees() {
+            try {
+                const { data, error } = await supabase
+                    .from('funcionarios')
+                    .select('*')
+                    .eq('status', 'ativo')
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                employees = data || [];
+                updateEmployeeSelect();
+                
+            } catch (error) {
+                console.error('Erro ao carregar funcionários:', error);
+                employees = getSampleEmployees();
+                updateEmployeeSelect();
+            }
+        }
+
+        async function loadShifts() {
+            try {
+                const statusFilter = document.getElementById('filterStatus')?.value || '';
+                const deptFilter = document.getElementById('filterDepartamento')?.value || '';
+                
+                let query = supabase
+                    .from('turnos')
+                    .select('*')
+                    .order('nome');
+                
+                if (statusFilter) {
+                    query = query.eq('status', statusFilter);
+                }
+                if (deptFilter) {
+                    query = query.eq('departamento', deptFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                shifts = data || [];
+                renderShifts();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Erro ao carregar turnos:', error);
+                shifts = getSampleShifts();
+                renderShifts();
+                updateStats();
+            }
+        }
+
+        async function saveShiftToDB(shiftData) {
+            try {
+                if (editingShiftId) {
+                    const { data, error } = await supabase
+                        .from('turnos')
+                        .update(shiftData)
+                        .eq('id', editingShiftId)
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Turno atualizado com sucesso!', 'success');
+                    return data;
+                } else {
+                    const { data, error } = await supabase
+                        .from('turnos')
+                        .insert([shiftData])
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Turno criado com sucesso!', 'success');
+                    return data;
+                }
+            } catch (error) {
+                console.error('Erro ao salvar turno:', error);
+                showToast('Erro ao salvar turno', 'error');
+                throw error;
+            }
+        }
+
+        async function deleteShiftFromDB(id) {
+            try {
+                const { error } = await supabase
+                    .from('turnos')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                showToast('Turno removido com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao deletar turno:', error);
+                showToast('Erro ao deletar turno', 'error');
+                throw error;
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleEmployees() {
+            return [
+                { id: 1, nome: 'João Silva', cargo: 'gerente' },
+                { id: 2, nome: 'Maria Santos', cargo: 'vendedor' },
+                { id: 3, nome: 'Carlos Mendes', cargo: 'estoquista' }
+            ];
+        }
+
+        function getSampleShifts() {
+            return [
+                { id: 1, nome: 'Turno da Manhã', inicio: '08:00', fim: '16:00', departamento: 'comercial', dias: ['seg', 'ter', 'qua', 'qui', 'sex'], funcionarios: [1, 2], status: 'ativo', observacoes: '' },
+                { id: 2, nome: 'Turno da Tarde', inicio: '14:00', fim: '22:00', departamento: 'operacional', dias: ['seg', 'ter', 'qua', 'qui', 'sex'], funcionarios: [3], status: 'ativo', observacoes: '' }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderShifts() {
+            const tbody = document.getElementById('shiftsTableBody');
+            const start = (currentPage - 1) * itemsPerPage;
+            const pageShifts = shifts.slice(start, start + itemsPerPage);
+            
+            if (pageShifts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-clock text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhum turno encontrado</p>
+                            <p class="text-sm">Clique em "Novo Turno" para adicionar</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('shiftInfo').textContent = '0 turnos';
+                return;
+            }
+            
+            const statusLabels = {
+                'ativo': 'Activo',
+                'inativo': 'Inactivo',
+                'pendente': 'Pendente'
+            };
+            
+            const statusClasses = {
+                'ativo': 'shift-active',
+                'inativo': 'shift-inactive',
+                'pendente': 'shift-pending'
+            };
+            
+            const deptLabels = {
+                'comercial': 'Comercial',
+                'financeiro': 'Financeiro',
+                'operacional': 'Operacional',
+                'administrativo': 'Administrativo'
+            };
+            
+            const dayLabels = {
+                'seg': 'Seg',
+                'ter': 'Ter',
+                'qua': 'Qua',
+                'qui': 'Qui',
+                'sex': 'Sex',
+                'sab': 'Sáb',
+                'dom': 'Dom'
+            };
+            
+            tbody.innerHTML = pageShifts.map(shift => {
+                const statusLabel = statusLabels[shift.status] || shift.status;
+                const statusClass = statusClasses[shift.status] || 'shift-inactive';
+                const deptLabel = deptLabels[shift.departamento] || shift.departamento || 'N/A';
+                const dias = shift.dias || [];
+                const diasStr = dias.map(d => dayLabels[d] || d).join(', ');
+                const employeeCount = shift.funcionarios?.length || 0;
+                
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-800">${shift.nome}</div>
+                            <div class="text-xs text-gray-500">${diasStr}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            ${shift.inicio} - ${shift.fim}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${employeeCount} funcionários</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${deptLabel}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${statusLabel}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="editShift('${shift.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="viewShiftDetails('${shift.id}')" class="text-green-600 hover:text-green-800 mr-3" title="Detalhes">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteShift('${shift.id}')" class="text-red-600 hover:text-red-800" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('shiftInfo').textContent = `${shifts.length} turnos`;
+            document.getElementById('shiftCount').textContent = shifts.length;
+            updatePagination();
+        }
+
+        function updateStats() {
+            const total = shifts.length;
+            const active = shifts.filter(s => s.status === 'ativo').length;
+            const totalEmployees = employees.length;
+            const allocated = new Set();
+            shifts.forEach(s => {
+                if (s.funcionarios) {
+                    s.funcionarios.forEach(id => allocated.add(id));
+                }
+            });
+            
+            // Encontrar turno actual
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+            
+            let currentShift = 'N/A';
+            let currentShiftTime = '--';
+            
+            for (const shift of shifts) {
+                if (shift.inicio <= currentTime && shift.fim >= currentTime && shift.status === 'ativo') {
+                    currentShift = shift.nome;
+                    currentShiftTime = `${shift.inicio} - ${shift.fim}`;
+                    break;
+                }
+            }
+            
+            document.getElementById('totalShifts').textContent = total;
+            document.getElementById('activeShifts').textContent = active;
+            document.getElementById('totalEmployees').textContent = totalEmployees;
+            document.getElementById('allocatedEmployees').textContent = allocated.size;
+            document.getElementById('currentShift').textContent = currentShift;
+            document.getElementById('currentShiftTime').textContent = currentShiftTime;
+            
+            // Horas trabalhadas (simulado)
+            document.getElementById('totalHours').textContent = '42h';
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(shifts.length / itemsPerPage);
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function updateEmployeeSelect() {
+            const select = document.getElementById('turno_funcionarios');
+            const currentValue = select.value;
+            select.innerHTML = '';
+            
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                const cargoLabel = emp.cargo || '';
+                option.textContent = `${emp.nome}${cargoLabel ? ` (${cargoLabel})` : ''}`;
+                select.appendChild(option);
+            });
+            
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== CRUD TURNOS ====================
+        function openShiftModal(shift = null) {
+            const modal = document.getElementById('shiftModal');
+            const title = document.getElementById('modalTitle');
+            
+            updateEmployeeSelect();
+            
+            if (shift) {
+                title.textContent = 'Editar Turno';
+                document.getElementById('shift_id').value = shift.id;
+                document.getElementById('turno_nome').value = shift.nome || '';
+                document.getElementById('turno_departamento').value = shift.departamento || '';
+                document.getElementById('turno_inicio').value = shift.inicio || '';
+                document.getElementById('turno_fim').value = shift.fim || '';
+                document.getElementById('turno_status').value = shift.status || 'ativo';
+                document.getElementById('turno_observacoes').value = shift.observacoes || '';
+                
+                // Dias
+                const dias = shift.dias || [];
+                document.getElementById('turno_seg').checked = dias.includes('seg');
+                document.getElementById('turno_ter').checked = dias.includes('ter');
+                document.getElementById('turno_qua').checked = dias.includes('qua');
+                document.getElementById('turno_qui').checked = dias.includes('qui');
+                document.getElementById('turno_sex').checked = dias.includes('sex');
+                document.getElementById('turno_sab').checked = dias.includes('sab');
+                document.getElementById('turno_dom').checked = dias.includes('dom');
+                
+                // Funcionários
+                const funcionarios = shift.funcionarios || [];
+                const options = document.getElementById('turno_funcionarios').options;
+                for (let i = 0; i < options.length; i++) {
+                    options[i].selected = funcionarios.includes(parseInt(options[i].value));
+                }
+                
+                editingShiftId = shift.id;
+            } else {
+                title.textContent = 'Novo Turno';
+                document.getElementById('shift_id').value = '';
+                document.getElementById('turno_nome').value = '';
+                document.getElementById('turno_departamento').value = '';
+                document.getElementById('turno_inicio').value = '08:00';
+                document.getElementById('turno_fim').value = '16:00';
+                document.getElementById('turno_status').value = 'ativo';
+                document.getElementById('turno_observacoes').value = '';
+                
+                // Dias padrão (segunda a sexta)
+                document.getElementById('turno_seg').checked = true;
+                document.getElementById('turno_ter').checked = true;
+                document.getElementById('turno_qua').checked = true;
+                document.getElementById('turno_qui').checked = true;
+                document.getElementById('turno_sex').checked = true;
+                document.getElementById('turno_sab').checked = false;
+                document.getElementById('turno_dom').checked = false;
+                
+                // Funcionários
+                const options = document.getElementById('turno_funcionarios').options;
+                for (let i = 0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                
+                editingShiftId = null;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeShiftModal() {
+            document.getElementById('shiftModal').classList.remove('active');
+            editingShiftId = null;
+        }
+
+        async function saveShift(event) {
+            if (event) event.preventDefault();
+            
+            const nome = document.getElementById('turno_nome').value.trim();
+            const departamento = document.getElementById('turno_departamento').value;
+            const inicio = document.getElementById('turno_inicio').value;
+            const fim = document.getElementById('turno_fim').value;
+            const status = document.getElementById('turno_status').value;
+            const observacoes = document.getElementById('turno_observacoes').value.trim();
+            
+            // Dias
+            const dias = [];
+            if (document.getElementById('turno_seg').checked) dias.push('seg');
+            if (document.getElementById('turno_ter').checked) dias.push('ter');
+            if (document.getElementById('turno_qua').checked) dias.push('qua');
+            if (document.getElementById('turno_qui').checked) dias.push('qui');
+            if (document.getElementById('turno_sex').checked) dias.push('sex');
+            if (document.getElementById('turno_sab').checked) dias.push('sab');
+            if (document.getElementById('turno_dom').checked) dias.push('dom');
+            
+            // Funcionários
+            const funcionarios = [];
+            const select = document.getElementById('turno_funcionarios');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].selected) {
+                    funcionarios.push(parseInt(select.options[i].value));
+                }
+            }
+            
+            if (!nome || !inicio || !fim) {
+                showToast('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+            
+            if (dias.length === 0) {
+                showToast('Selecione pelo menos um dia da semana', 'error');
+                return;
+            }
+            
+            const shiftData = {
+                nome: nome,
+                departamento: departamento || null,
+                inicio: inicio,
+                fim: fim,
+                dias: dias,
+                funcionarios: funcionarios,
+                status: status,
+                observacoes: observacoes || null
+            };
+            
+            try {
+                await saveShiftToDB(shiftData);
+                closeShiftModal();
+                await loadShifts();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        async function editShift(id) {
+            const shift = shifts.find(s => s.id == id);
+            if (shift) {
+                openShiftModal(shift);
+            } else {
+                showToast('Turno não encontrado', 'error');
+            }
+        }
+
+        async function deleteShift(id) {
+            const shift = shifts.find(s => s.id == id);
+            if (!shift) return;
+            
+            if (!confirm(`Tem certeza que deseja excluir o turno "${shift.nome}"?`)) return;
+            
+            try {
+                await deleteShiftFromDB(id);
+                await loadShifts();
+            } catch (error) {
+                console.error('Erro ao deletar:', error);
+            }
+        }
+
+        async function viewShiftDetails(id) {
+            const shift = shifts.find(s => s.id == id);
+            if (!shift) {
+                showToast('Turno não encontrado', 'error');
+                return;
+            }
+            
+            const statusLabels = {
+                'ativo': 'Activo',
+                'inativo': 'Inactivo',
+                'pendente': 'Pendente'
+            };
+            
+            const statusClasses = {
+                'ativo': 'bg-green-100 text-green-800',
+                'inativo': 'bg-gray-100 text-gray-800',
+                'pendente': 'bg-yellow-100 text-yellow-800'
+            };
+            
+            const deptLabels = {
+                'comercial': 'Comercial',
+                'financeiro': 'Financeiro',
+                'operacional': 'Operacional',
+                'administrativo': 'Administrativo'
+            };
+            
+            const dayLabels = {
+                'seg': 'Segunda-feira',
+                'ter': 'Terça-feira',
+                'qua': 'Quarta-feira',
+                'qui': 'Quinta-feira',
+                'sex': 'Sexta-feira',
+                'sab': 'Sábado',
+                'dom': 'Domingo'
+            };
+            
+            const dias = shift.dias || [];
+            const diasStr = dias.map(d => dayLabels[d] || d).join(', ');
+            
+            // Nomes dos funcionários
+            const funcionarios = shift.funcionarios || [];
+            const funcionariosNomes = funcionarios.map(id => {
+                const emp = employees.find(e => e.id == id);
+                return emp ? emp.nome : 'N/A';
+            }).join(', ') || 'Nenhum';
+            
+            document.getElementById('detailsTitle').textContent = `Detalhes do Turno: ${shift.nome}`;
+            
+            document.getElementById('detailsContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Nome do Turno</p>
+                            <p class="font-medium text-lg">${shift.nome}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Status</p>
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClasses[shift.status] || ''}">${statusLabels[shift.status] || shift.status}</span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Horário</p>
+                            <p class="font-medium">${shift.inicio} - ${shift.fim}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Departamento</p>
+                            <p class="font-medium">${deptLabels[shift.departamento] || shift.departamento || 'N/A'}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-sm text-gray-600">Dias da Semana</p>
+                            <p class="font-medium">${diasStr}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-sm text-gray-600">Funcionários Alocados</p>
+                            <p class="font-medium">${funcionariosNomes}</p>
+                            <p class="text-sm text-gray-500">Total: ${funcionarios.length} funcionário(s)</p>
+                        </div>
+                        ${shift.observacoes ? `
+                            <div class="col-span-2">
+                                <p class="text-sm text-gray-600">Observações</p>
+                                <p class="font-medium">${shift.observacoes}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('detailsModal').classList.add('active');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+        }
+
+        function printShiftDetails() {
+            showToast('A imprimir detalhes do turno...', 'info');
+            setTimeout(() => {
+                showToast('Documento enviado para impressora', 'success');
+            }, 1500);
+        }
+
+        // ==================== FILTROS ====================
+        function applyFilters() {
+            currentPage = 1;
+            loadShifts();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterDepartamento').value = '';
+            currentPage = 1;
+            loadShifts();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderShifts();
+                updatePagination();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(shifts.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderShifts();
+                updatePagination();
+            }
+        }
+
+        // ==================== EXPORT ====================
+        function exportShifts() {
+            if (shifts.length === 0) {
+                showToast('Nenhum turno para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['Nome', 'Departamento', 'Início', 'Fim', 'Dias', 'Funcionários', 'Status'];
+            const rows = shifts.map(s => {
+                const dias = (s.dias || []).join(', ');
+                const funcionarios = (s.funcionarios || []).length;
+                return [
+                    s.nome,
+                    s.departamento || '',
+                    s.inicio || '',
+                    s.fim || '',
+                    dias,
+                    funcionarios,
+                    s.status || ''
+                ];
+            });
+            
+            const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `turnos_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showToast('Turnos exportados com sucesso!', 'success');
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== UTILITÁRIOS ====================
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.getElementById('prevPage').addEventListener('click', prevPage);
+            document.getElementById('nextPage').addEventListener('click', nextPage);
+            document.getElementById('filterStatus').addEventListener('change', applyFilters);
+            document.getElementById('filterDepartamento').addEventListener('change', applyFilters);
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('shiftModal').classList.contains('active')) {
+                        closeShiftModal();
+                    }
+                    if (document.getElementById('detailsModal').classList.contains('active')) {
+                        closeDetailsModal();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    openShiftModal();
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.openShiftModal = openShiftModal;
+        window.closeShiftModal = closeShiftModal;
+        window.saveShift = saveShift;
+        window.editShift = editShift;
+        window.deleteShift = deleteShift;
+        window.viewShiftDetails = viewShiftDetails;
+        window.closeDetailsModal = closeDetailsModal;
+        window.printShiftDetails = printShiftDetails;
+        window.applyFilters = applyFilters;
+        window.clearFilters = clearFilters;
+        window.exportShifts = exportShifts;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadShifts = loadShifts;
+        window.loadEmployees = loadEmployees;
+    </script>
+</body>
+</html>

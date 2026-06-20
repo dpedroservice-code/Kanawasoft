@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integração API | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== API STATUS ==================== */
+        .api-status-active { background-color: #d1fae5; color: #065f46; }
+        .api-status-inactive { background-color: #f3f4f6; color: #6b7280; }
+        .api-status-problem { background-color: #fee2e2; color: #991b1b; }
+        .api-status-maintenance { background-color: #fef3c7; color: #92400e; }
+
+        .api-card {
+            transition: var(--transition);
+        }
+        .api-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-plug mr-3"></i>
+                        <span class="flex-1 font-medium">Integrações</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="integracao-api.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-code mr-2 text-sm"></i>API</a></li>
+                        <li><a href="webhooks.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-bolt mr-2 text-sm"></i>Webhooks</a></li>
+                        <li><a href="oauth.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-lock mr-2 text-sm"></i>OAuth</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">INTEGRAÇÃO API</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-plug mr-1"></i> <span id="apiCount">0</span> APIs Activas
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="testAllConnections()" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>Testar Conexões
+                    </button>
+                    <button onclick="openIntegrationModal()" class="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Nova Integração
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Métricas de API -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">APIs Activas</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="activeApis">0</h3>
+                            <p class="text-sm text-gray-500" id="inactiveApis">0 inactivas</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-plug text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Taxa de Sucesso</p>
+                            <h3 class="text-2xl font-bold text-blue-600" id="successRate">0%</h3>
+                            <p class="text-sm text-gray-500">Últimas 24h</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Tempo de Resposta</p>
+                            <h3 class="text-2xl font-bold text-purple-600" id="avgResponseTime">0ms</h3>
+                            <p class="text-sm text-gray-500">Média</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-clock text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Requisições Hoje</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="requestsToday">0</h3>
+                            <p class="text-sm text-gray-500" id="requestsChange">+0% vs ontem</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-exchange-alt text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lista de Integrações -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Integrações Activas</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="filterType" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="payment">Pagamentos</option>
+                                    <option value="shipping">Envio</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="analytics">Analytics</option>
+                                    <option value="erp">ERP</option>
+                                    <option value="communication">Comunicação</option>
+                                </select>
+                                <input type="text" id="searchApi" placeholder="Pesquisar API..." class="border rounded-lg px-3 py-2 text-sm w-48 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div id="integrationsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs de API -->
+                    <div class="bg-white rounded-lg shadow mt-6">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Logs de API</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="filterLogStatus" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Todos</option>
+                                    <option value="success">Sucesso</option>
+                                    <option value="error">Erro</option>
+                                </select>
+                                <button onclick="clearLogs()" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                    <i class="fas fa-trash mr-1"></i>Limpar
+                                </button>
+                                <button onclick="exportLogs()" class="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-download mr-1"></i>Exportar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endpoint</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tempo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="apiLogs" class="bg-white divide-y divide-gray-200">
+                                        <!-- Carregado via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controlo -->
+                <div class="space-y-6">
+                    <!-- Status das Conexões -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status das Conexões</h3>
+                        <div id="connectionStatus" class="space-y-3">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Teste Rápido -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Teste Rápido</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-700 mb-2">Selecionar API</label>
+                                <select id="quickTestSelect" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                            <button onclick="quickTest()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center">
+                                <i class="fas fa-bolt mr-2"></i> Testar Conexão
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Requisições/Minuto:</span>
+                                <span class="font-semibold" id="requestsPerMin">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Erros Hoje:</span>
+                                <span class="font-semibold text-red-600" id="errorsToday">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Latência Máxima:</span>
+                                <span class="font-semibold" id="maxLatency">0ms</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Uso de Banda:</span>
+                                <span class="font-semibold" id="bandwidth">0 MB/s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentação -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Documentação</h3>
+                        <div class="space-y-2">
+                            <button onclick="openDoc('guide')" class="w-full text-left flex items-center p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                <i class="fas fa-book mr-2"></i>
+                                <span>Guia de Integração</span>
+                            </button>
+                            <button onclick="openDoc('examples')" class="w-full text-left flex items-center p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                <i class="fas fa-code mr-2"></i>
+                                <span>Exemplos de Código</span>
+                            </button>
+                            <button onclick="openDoc('security')" class="w-full text-left flex items-center p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                <span>Política de Segurança</span>
+                            </button>
+                            <button onclick="openDoc('faq')" class="w-full text-left flex items-center p-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                                <i class="fas fa-question-circle mr-2"></i>
+                                <span>FAQ & Suporte</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== INTEGRATION MODAL ==================== -->
+    <div class="modal-overlay" id="integrationModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="integrationModalTitle">Nova Integração API</h3>
+                <button onclick="closeIntegrationModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="integrationForm" onsubmit="saveIntegration(event)">
+                    <input type="hidden" id="integration_id" value="">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Integração *</label>
+                            <input type="text" id="int_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de API *</label>
+                                <select id="int_tipo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                    <option value="">Selecionar...</option>
+                                    <option value="payment">Pagamentos</option>
+                                    <option value="shipping">Envio</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="analytics">Analytics</option>
+                                    <option value="erp">ERP</option>
+                                    <option value="crm">CRM</option>
+                                    <option value="communication">Comunicação</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ambiente</label>
+                                <select id="int_ambiente" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="production">Produção</option>
+                                    <option value="sandbox">Sandbox/Teste</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">URL Base *</label>
+                            <input type="url" id="int_url" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="https://api.exemplo.com/v1" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                                <input type="text" id="int_api_key" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Chave da API">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                                <input type="password" id="int_secret_key" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Chave secreta">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Configurações Adicionais</label>
+                            <textarea id="int_config" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Configurações específicas da API..."></textarea>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="int_auto_test" class="mr-3 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                            <label for="int_auto_test" class="text-sm text-gray-700">Testar conexão automaticamente após salvar</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeIntegrationModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="saveIntegration()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Integração API!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let integrations = [];
+        let apiLogs = [];
+        let currentUser = null;
+        let editingIntegrationId = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadIntegrations();
+            await loadApiLogs();
+            await loadStats();
+            setupEventListeners();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadIntegrations() {
+            try {
+                const { data, error } = await supabase
+                    .from('api_integrations')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                integrations = data || [];
+                renderIntegrations();
+                updateQuickTestSelect();
+                
+            } catch (error) {
+                console.error('Erro ao carregar integrações:', error);
+                integrations = getSampleIntegrations();
+                renderIntegrations();
+                updateQuickTestSelect();
+            }
+        }
+
+        async function loadApiLogs() {
+            try {
+                const { data, error } = await supabase
+                    .from('api_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+                
+                if (error) throw error;
+                
+                apiLogs = data || [];
+                renderLogs();
+                
+            } catch (error) {
+                console.error('Erro ao carregar logs:', error);
+                apiLogs = getSampleLogs();
+                renderLogs();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                // APIs activas
+                const { data: activeData, error: aError } = await supabase
+                    .from('api_integrations')
+                    .select('*')
+                    .eq('status', 'active');
+                
+                if (!aError) {
+                    const active = activeData?.length || 0;
+                    const total = integrations.length || 0;
+                    document.getElementById('activeApis').textContent = active;
+                    document.getElementById('inactiveApis').textContent = total - active;
+                    document.getElementById('apiCount').textContent = active;
+                }
+                
+                // Taxa de sucesso
+                const { data: logsData, error: lError } = await supabase
+                    .from('api_logs')
+                    .select('*')
+                    .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+                
+                if (!lError && logsData && logsData.length > 0) {
+                    const success = logsData.filter(l => l.status === 'success').length;
+                    const rate = Math.round((success / logsData.length) * 100);
+                    document.getElementById('successRate').textContent = `${rate}%`;
+                    
+                    const errors = logsData.filter(l => l.status === 'error').length;
+                    document.getElementById('errorsToday').textContent = errors;
+                }
+                
+                // Tempo de resposta médio
+                if (logsData && logsData.length > 0) {
+                    const avg = Math.round(logsData.reduce((sum, l) => sum + (l.response_time || 0), 0) / logsData.length);
+                    document.getElementById('avgResponseTime').textContent = `${avg}ms`;
+                    document.getElementById('maxLatency').textContent = `${Math.max(...logsData.map(l => l.response_time || 0))}ms`;
+                }
+                
+                // Requisições hoje
+                const { data: reqData, error: rError } = await supabase
+                    .from('api_logs')
+                    .select('*')
+                    .gte('created_at', today);
+                
+                if (!rError) {
+                    document.getElementById('requestsToday').textContent = reqData?.length || 0;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        async function saveIntegrationToDB(integrationData) {
+            try {
+                if (editingIntegrationId) {
+                    const { data, error } = await supabase
+                        .from('api_integrations')
+                        .update(integrationData)
+                        .eq('id', editingIntegrationId)
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Integração atualizada com sucesso!', 'success');
+                    return data;
+                } else {
+                    const { data, error } = await supabase
+                        .from('api_integrations')
+                        .insert([integrationData])
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Integração criada com sucesso!', 'success');
+                    return data;
+                }
+            } catch (error) {
+                console.error('Erro ao salvar integração:', error);
+                showToast('Erro ao salvar integração', 'error');
+                throw error;
+            }
+        }
+
+        async function deleteIntegrationFromDB(id) {
+            try {
+                const { error } = await supabase
+                    .from('api_integrations')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                showToast('Integração removida com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao deletar integração:', error);
+                showToast('Erro ao deletar integração', 'error');
+                throw error;
+            }
+        }
+
+        async function testIntegrationAPI(id) {
+            try {
+                const { data, error } = await supabase
+                    .from('api_integrations')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                // Simular teste
+                const success = Math.random() > 0.15;
+                const responseTime = Math.floor(Math.random() * 200) + 50;
+                
+                // Registrar log
+                await supabase
+                    .from('api_logs')
+                    .insert([{
+                        integration_id: id,
+                        integration_name: data.nome,
+                        endpoint: '/test',
+                        status: success ? 'success' : 'error',
+                        response_time: responseTime,
+                        created_at: new Date().toISOString()
+                    }]);
+                
+                // Atualizar status
+                const newStatus = success ? 'active' : 'problem';
+                await supabase
+                    .from('api_integrations')
+                    .update({ 
+                        status: newStatus,
+                        last_test: new Date().toISOString(),
+                        success_rate: success ? 99.8 : 89.3,
+                        response_time: responseTime
+                    })
+                    .eq('id', id);
+                
+                return { success, responseTime };
+                
+            } catch (error) {
+                console.error('Erro ao testar integração:', error);
+                return { success: false, responseTime: 0 };
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleIntegrations() {
+            return [
+                { id: 1, nome: 'Multicaixa Express', tipo: 'payment', status: 'active', url: 'https://api.multicaixa.ao/v1', last_test: '2024-09-25 14:30', success_rate: 99.8, response_time: 120, ambiente: 'production' },
+                { id: 2, nome: 'ENAvia', tipo: 'shipping', status: 'active', url: 'https://api.enavia.ao/v2', last_test: '2024-09-25 13:45', success_rate: 97.2, response_time: 210, ambiente: 'production' },
+                { id: 3, nome: 'Google Analytics', tipo: 'analytics', status: 'active', url: 'https://analytics.google.com', last_test: '2024-09-25 12:15', success_rate: 99.9, response_time: 85, ambiente: 'production' },
+                { id: 4, nome: 'MailChimp', tipo: 'marketing', status: 'inactive', url: 'https://api.mailchimp.com/3.0', last_test: '2024-09-24 16:20', success_rate: 95.4, response_time: 180, ambiente: 'production' },
+                { id: 5, nome: 'SAP Business One', tipo: 'erp', status: 'active', url: 'https://api.sapb1.com/v1', last_test: '2024-09-25 11:30', success_rate: 98.7, response_time: 320, ambiente: 'production' }
+            ];
+        }
+
+        function getSampleLogs() {
+            return [
+                { id: 1, integration_name: 'Multicaixa Express', endpoint: '/payments/process', status: 'success', response_time: 142, created_at: new Date(Date.now() - 3600000).toISOString() },
+                { id: 2, integration_name: 'ENAvia', endpoint: '/shipments/track', status: 'success', response_time: 218, created_at: new Date(Date.now() - 7200000).toISOString() },
+                { id: 3, integration_name: 'Google Analytics', endpoint: '/data/report', status: 'success', response_time: 92, created_at: new Date(Date.now() - 14400000).toISOString() },
+                { id: 4, integration_name: 'Twilio SMS', endpoint: '/Messages', status: 'error', response_time: 856, created_at: new Date(Date.now() - 21600000).toISOString() },
+                { id: 5, integration_name: 'SAP Business One', endpoint: '/inventory/update', status: 'success', response_time: 312, created_at: new Date(Date.now() - 28800000).toISOString() }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderIntegrations() {
+            const container = document.getElementById('integrationsList');
+            const typeFilter = document.getElementById('filterType')?.value || '';
+            const searchTerm = document.getElementById('searchApi')?.value?.toLowerCase() || '';
+            
+            let filtered = integrations;
+            if (typeFilter) {
+                filtered = filtered.filter(i => i.tipo === typeFilter);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(i => 
+                    i.nome?.toLowerCase().includes(searchTerm) ||
+                    i.url?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-plug text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhuma integração encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const tipoLabels = {
+                'payment': 'Pagamentos',
+                'shipping': 'Envio',
+                'marketing': 'Marketing',
+                'analytics': 'Analytics',
+                'erp': 'ERP',
+                'crm': 'CRM',
+                'communication': 'Comunicação'
+            };
+            
+            const statusClasses = {
+                'active': 'api-status-active',
+                'inactive': 'api-status-inactive',
+                'problem': 'api-status-problem',
+                'maintenance': 'api-status-maintenance'
+            };
+            
+            const statusLabels = {
+                'active': 'Activa',
+                'inactive': 'Inactiva',
+                'problem': 'Problema',
+                'maintenance': 'Manutenção'
+            };
+            
+            container.innerHTML = filtered.map(api => {
+                const statusClass = statusClasses[api.status] || 'api-status-inactive';
+                const statusLabel = statusLabels[api.status] || api.status;
+                const tipoLabel = tipoLabels[api.tipo] || api.tipo;
+                const lastTest = api.last_test ? new Date(api.last_test).toLocaleString('pt-BR') : 'Nunca';
+                
+                return `
+                    <div class="api-card bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-plug text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">${api.nome}</h3>
+                                    <p class="text-sm text-gray-500">${tipoLabel}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full ${statusClass}">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <div class="flex justify-between">
+                                <span>URL:</span>
+                                <span class="font-mono text-xs truncate max-w-[120px]">${api.url}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Taxa de Sucesso:</span>
+                                <span class="font-semibold ${api.success_rate >= 99 ? 'text-green-600' : api.success_rate >= 95 ? 'text-yellow-600' : 'text-red-600'}">
+                                    ${api.success_rate || 0}%
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Tempo de Resposta:</span>
+                                <span>${api.response_time || 0}ms</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Último Teste:</span>
+                                <span class="text-xs">${lastTest}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="testIntegration('${api.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm transition-colors">
+                                <i class="fas fa-bolt mr-1"></i> Testar
+                            </button>
+                            <button onclick="editIntegration('${api.id}')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded text-sm transition-colors">
+                                <i class="fas fa-cog mr-1"></i> Config
+                            </button>
+                            <button onclick="deleteIntegration('${api.id}')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-800 py-2 px-3 rounded text-sm transition-colors">
+                                <i class="fas fa-trash mr-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Atualizar estatísticas
+            const active = integrations.filter(i => i.status === 'active').length;
+            document.getElementById('activeApis').textContent = active;
+            document.getElementById('apiCount').textContent = active;
+            document.getElementById('inactiveApis').textContent = integrations.length - active;
+        }
+
+        function renderLogs() {
+            const tbody = document.getElementById('apiLogs');
+            const filter = document.getElementById('filterLogStatus')?.value || '';
+            
+            let filtered = apiLogs;
+            if (filter === 'success') {
+                filtered = filtered.filter(l => l.status === 'success');
+            } else if (filter === 'error') {
+                filtered = filtered.filter(l => l.status === 'error');
+            }
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-history text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhum log encontrado</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filtered.slice(0, 20).map(log => {
+                const statusClass = log.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const statusLabel = log.status === 'success' ? 'Sucesso' : 'Erro';
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDateTime(log.created_at)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${log.integration_name || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600 font-mono">${log.endpoint || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${statusLabel}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${log.response_time || 0}ms</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateQuickTestSelect() {
+            const select = document.getElementById('quickTestSelect');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Selecione...</option>';
+            
+            integrations.forEach(i => {
+                const option = document.createElement('option');
+                option.value = i.id;
+                option.textContent = i.nome;
+                select.appendChild(option);
+            });
+            
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== CRUD INTEGRAÇÕES ====================
+        function openIntegrationModal(integration = null) {
+            const modal = document.getElementById('integrationModal');
+            const title = document.getElementById('integrationModalTitle');
+            
+            if (integration) {
+                title.textContent = 'Editar Integração API';
+                document.getElementById('integration_id').value = integration.id;
+                document.getElementById('int_nome').value = integration.nome || '';
+                document.getElementById('int_tipo').value = integration.tipo || '';
+                document.getElementById('int_ambiente').value = integration.ambiente || 'production';
+                document.getElementById('int_url').value = integration.url || '';
+                document.getElementById('int_api_key').value = integration.api_key || '';
+                document.getElementById('int_secret_key').value = integration.secret_key || '';
+                document.getElementById('int_config').value = integration.config || '';
+                document.getElementById('int_auto_test').checked = true;
+                editingIntegrationId = integration.id;
+            } else {
+                title.textContent = 'Nova Integração API';
+                document.getElementById('integration_id').value = '';
+                document.getElementById('int_nome').value = '';
+                document.getElementById('int_tipo').value = '';
+                document.getElementById('int_ambiente').value = 'production';
+                document.getElementById('int_url').value = '';
+                document.getElementById('int_api_key').value = '';
+                document.getElementById('int_secret_key').value = '';
+                document.getElementById('int_config').value = '';
+                document.getElementById('int_auto_test').checked = true;
+                editingIntegrationId = null;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeIntegrationModal() {
+            document.getElementById('integrationModal').classList.remove('active');
+            editingIntegrationId = null;
+        }
+
+        async function saveIntegration(event) {
+            if (event) event.preventDefault();
+            
+            const integrationData = {
+                nome: document.getElementById('int_nome').value.trim(),
+                tipo: document.getElementById('int_tipo').value,
+                ambiente: document.getElementById('int_ambiente').value,
+                url: document.getElementById('int_url').value.trim(),
+                api_key: document.getElementById('int_api_key').value.trim() || null,
+                secret_key: document.getElementById('int_secret_key').value.trim() || null,
+                config: document.getElementById('int_config').value.trim() || null,
+                status: 'pending',
+                success_rate: 0,
+                response_time: 0,
+                last_test: null
+            };
+            
+            if (!integrationData.nome || !integrationData.tipo || !integrationData.url) {
+                showToast('Preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+            
+            try {
+                const result = await saveIntegrationToDB(integrationData);
+                
+                const autoTest = document.getElementById('int_auto_test').checked;
+                if (autoTest && result && result.length > 0) {
+                    const testResult = await testIntegrationAPI(result[0].id);
+                    if (testResult.success) {
+                        showToast('Integração criada e testada com sucesso!', 'success');
+                    } else {
+                        showToast('Integração criada, mas o teste falhou', 'warning');
+                    }
+                }
+                
+                closeIntegrationModal();
+                await loadIntegrations();
+                await loadApiLogs();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        async function editIntegration(id) {
+            const integration = integrations.find(i => i.id == id);
+            if (integration) {
+                openIntegrationModal(integration);
+            } else {
+                showToast('Integração não encontrada', 'error');
+            }
+        }
+
+        async function deleteIntegration(id) {
+            const integration = integrations.find(i => i.id == id);
+            if (!integration) return;
+            
+            if (!confirm(`Tem certeza que deseja excluir a integração "${integration.nome}"?`)) return;
+            
+            try {
+                await deleteIntegrationFromDB(id);
+                await loadIntegrations();
+            } catch (error) {
+                console.error('Erro ao deletar:', error);
+            }
+        }
+
+        // ==================== TESTES ====================
+        async function testIntegration(id) {
+            const integration = integrations.find(i => i.id == id);
+            if (!integration) {
+                showToast('Integração não encontrada', 'error');
+                return;
+            }
+            
+            showToast(`Testando conexão com ${integration.nome}...`, 'info');
+            
+            try {
+                const result = await testIntegrationAPI(id);
+                
+                if (result.success) {
+                    showToast(`Conexão com ${integration.nome} testada com sucesso (${result.responseTime}ms)`, 'success');
+                } else {
+                    showToast(`Falha na conexão com ${integration.nome}`, 'error');
+                }
+                
+                await loadIntegrations();
+                await loadApiLogs();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Erro ao testar integração:', error);
+                showToast('Erro ao testar integração', 'error');
+            }
+        }
+
+        async function testAllConnections() {
+            showToast('Testando todas as conexões...', 'info');
+            
+            let successCount = 0;
+            for (const integration of integrations) {
+                const result = await testIntegrationAPI(integration.id);
+                if (result.success) successCount++;
+            }
+            
+            await loadIntegrations();
+            await loadApiLogs();
+            await loadStats();
+            
+            showToast(`Teste concluído: ${successCount}/${integrations.length} conexões bem-sucedidas`, 'success');
+        }
+
+        function quickTest() {
+            const select = document.getElementById('quickTestSelect');
+            const id = select.value;
+            if (!id) {
+                showToast('Selecione uma API para testar', 'warning');
+                return;
+            }
+            testIntegration(id);
+        }
+
+        // ==================== FILTROS ====================
+        function filterIntegrations() {
+            renderIntegrations();
+        }
+
+        function filterLogs() {
+            renderLogs();
+        }
+
+        // ==================== LOGS ====================
+        function clearLogs() {
+            if (!confirm('Tem certeza que deseja limpar todos os logs?')) return;
+            
+            apiLogs = [];
+            renderLogs();
+            showToast('Logs limpos', 'success');
+        }
+
+        function exportLogs() {
+            if (apiLogs.length === 0) {
+                showToast('Nenhum log para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['Data/Hora', 'API', 'Endpoint', 'Status', 'Tempo (ms)'];
+            const rows = apiLogs.map(log => [
+                formatDateTime(log.created_at),
+                log.integration_name || '',
+                log.endpoint || '',
+                log.status === 'success' ? 'Sucesso' : 'Erro',
+                log.response_time || 0
+            ]);
+            
+            const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `api_logs_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showToast('Logs exportados com sucesso!', 'success');
+        }
+
+        // ==================== DOCUMENTAÇÃO ====================
+        function openDoc(type) {
+            const docs = {
+                'guide': 'Guia de Integração API - Como conectar seu sistema com a Kanawa Soft',
+                'examples': 'Exemplos de Código - Integrações com Python, JavaScript e PHP',
+                'security': 'Política de Segurança - Autenticação e boas práticas',
+                'faq': 'FAQ - Perguntas frequentes sobre integrações'
+            };
+            showToast(`📚 ${docs[type] || 'Documentação'}`, 'info');
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== UTILITÁRIOS ====================
+        function formatDateTime(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.getElementById('filterType').addEventListener('change', filterIntegrations);
+            document.getElementById('searchApi').addEventListener('input', filterIntegrations);
+            document.getElementById('filterLogStatus').addEventListener('change', filterLogs);
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('integrationModal').classList.contains('active')) {
+                        closeIntegrationModal();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    openIntegrationModal();
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.openIntegrationModal = openIntegrationModal;
+        window.closeIntegrationModal = closeIntegrationModal;
+        window.saveIntegration = saveIntegration;
+        window.editIntegration = editIntegration;
+        window.deleteIntegration = deleteIntegration;
+        window.testIntegration = testIntegration;
+        window.testAllConnections = testAllConnections;
+        window.quickTest = quickTest;
+        window.filterIntegrations = filterIntegrations;
+        window.filterLogs = filterLogs;
+        window.clearLogs = clearLogs;
+        window.exportLogs = exportLogs;
+        window.openDoc = openDoc;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadIntegrations = loadIntegrations;
+        window.loadApiLogs = loadApiLogs;
+        window.loadStats = loadStats;
+    </script>
+</body>
+</html>

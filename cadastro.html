@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta | Kanawa Soft</title>
+	  <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .register-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+        }
+        .card-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .plan-card {
+            transition: all 0.3s ease;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+        }
+        .plan-card.popular {
+            position: relative;
+            overflow: hidden;
+        }
+        .plan-card.popular::before {
+            content: 'MAIS POPULAR';
+            position: absolute;
+            top: 0;
+            right: -30px;
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 5px 40px;
+            font-size: 10px;
+            font-weight: bold;
+            transform: rotate(45deg);
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body class="register-bg min-h-screen flex items-center justify-center p-4">
+    <div class="container max-w-6xl mx-auto">
+        <div class="card-glass rounded-2xl shadow-2xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-chart-line text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">Kanawa Soft Premium</h1>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Criar sua conta</h2>
+                <p class="text-gray-600">Junte-se a mais de 1.000 empresas que usam o Kanawa Soft</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between max-w-md mx-auto">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">1</div>
+                        <span class="text-xs mt-1 text-blue-600 font-medium">Informações</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold">2</div>
+                        <span class="text-xs mt-1 text-gray-500">Empresa</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold">3</div>
+                        <span class="text-xs mt-1 text-gray-500">Plano</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="registerForm" class="space-y-6">
+                <!-- Step 1: Personal Information -->
+                <div id="step1" class="step-content">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Informações Pessoais</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="fullName"
+                                    class="input-field w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Seu nome completo"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="email" 
+                                    id="email"
+                                    class="input-field w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="seu@email.com"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Telefone *</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-phone text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    id="phone"
+                                    class="input-field w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="+244 XXX XXX XXX"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
+                            <select id="role" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Selecionar cargo...</option>
+                                <option value="owner">Proprietário/Dono</option>
+                                <option value="manager">Gerente</option>
+                                <option value="accountant">Contabilista</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="registerPassword"
+                                class="input-field w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Crie uma password segura"
+                                required
+                                oninput="checkPasswordStrength(this.value)"
+                            >
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="toggleRegisterPassword()">
+                                <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Password Strength Meter -->
+                        <div class="mt-2">
+                            <div class="flex space-x-1 mb-1">
+                                <div id="strength1" class="password-strength flex-1 bg-gray-300"></div>
+                                <div id="strength2" class="password-strength flex-1 bg-gray-300"></div>
+                                <div id="strength3" class="password-strength flex-1 bg-gray-300"></div>
+                                <div id="strength4" class="password-strength flex-1 bg-gray-300"></div>
+                            </div>
+                            <p id="passwordFeedback" class="text-xs text-gray-600"></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Password *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="confirmPassword"
+                                class="input-field w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Confirme sua password"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Company Information (Hidden by default) -->
+                <div id="step2" class="step-content hidden">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Informações da Empresa</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa *</label>
+                            <input 
+                                type="text" 
+                                id="companyName"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Nome da sua empresa"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIF *</label>
+                            <input 
+                                type="text" 
+                                id="nif"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Número de identificação fiscal"
+                                required
+                            >
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                            <input 
+                                type="text" 
+                                id="address"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Endereço completo"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                            <input 
+                                type="text" 
+                                id="city"
+                                class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Cidade"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">País</label>
+                            <select id="country" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="angola">Angola</option>
+                                <option value="portugal">Portugal</option>
+                                <option value="brasil">Brasil</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Setor de Actividade</label>
+                            <select id="sector" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Selecionar setor...</option>
+                                <option value="retail">Retalho</option>
+                                <option value="services">Serviços</option>
+                                <option value="manufacturing">Indústria</option>
+                                <option value="hospitality">Hotelaria</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Número de Funcionários</label>
+                            <select id="employees" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="1-5">1-5</option>
+                                <option value="6-20">6-20</option>
+                                <option value="21-50">21-50</option>
+                                <option value="51-100">51-100</option>
+                                <option value="100+">100+</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Plan Selection (Hidden by default) -->
+                <div id="step3" class="step-content">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 text-center">Escolha seu Plano</h3>
+                    
+                    <div id="plansContainer" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        <!-- Plano Básico -->
+                        <div class="plan-card border-2 border-gray-200 rounded-xl p-6 bg-white relative">
+                            <div class="text-center mb-6">
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">Básico</h4>
+                                <div class="text-3xl font-bold text-blue-600 mb-2">
+                                    AOA 24.900<span class="text-sm font-normal text-gray-600">/mês</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">Ideal para pequenos negócios</p>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Até 5 usuários</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>100 produtos</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Relatórios básicos</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Suporte por email</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Backup mensal</span>
+                                </li>
+                            </ul>
+                            
+                            <button type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold transition plan-select" data-plan-id="1">
+                                Selecionar Plano
+                            </button>
+                        </div>
+
+                        <!-- Plano Profissional -->
+                        <div class="plan-card popular border-2 border-blue-500 rounded-xl p-6 bg-white relative transform scale-105">
+                            <div class="text-center mb-6">
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">Profissional</h4>
+                                <div class="text-3xl font-bold text-blue-600 mb-2">
+                                    AOA 49.900<span class="text-sm font-normal text-gray-600">/mês</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">Perfeito para empresas em crescimento</p>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Até 20 usuários</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Produtos ilimitados</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Relatórios avançados</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Suporte prioritário</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Backup semanal</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Integração API</span>
+                                </li>
+                            </ul>
+                            
+                            <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition plan-select" data-plan-id="2">
+                                Selecionar Plano
+                            </button>
+                        </div>
+
+                        <!-- Plano Empresarial -->
+                        <div class="plan-card border-2 border-purple-500 rounded-xl p-6 bg-white relative">
+                            <div class="text-center mb-6">
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">Empresarial</h4>
+                                <div class="text-3xl font-bold text-purple-600 mb-2">
+                                    AOA 99.900<span class="text-sm font-normal text-gray-600">/mês</span>
+                                </div>
+                                <p class="text-gray-600 text-sm">Solução completa para grandes empresas</p>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Usuários ilimitados</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Produtos ilimitados</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Relatórios personalizados</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Suporte 24/7</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Backup diário</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>API avançada</span>
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Treinamento dedicado</span>
+                                </li>
+                            </ul>
+                            
+                            <button type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition plan-select" data-plan-id="3">
+                                Selecionar Plano
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Trial Information -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                        <div class="flex items-center justify-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-gift text-blue-500 text-2xl mr-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-blue-800 text-lg mb-1">Teste Grátis por 14 Dias</h4>
+                                <p class="text-blue-700">
+                                    Todos os planos incluem um período de teste gratuito. Não é necessário cartão de crédito.
+                                    Comece agora e explore todas as funcionalidades sem compromisso.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Plan Display -->
+                    <div id="selectedPlanDisplay" class="hidden mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-green-800">Plano Selecionado</h4>
+                                    <p id="selectedPlanName" class="text-green-700 text-sm"></p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="clearPlanSelection()" class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between pt-6 border-t border-gray-200">
+                    <button type="button" id="prevBtn" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-8 rounded-lg font-semibold transition">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar
+                    </button>
+                    
+                    <button type="button" id="nextBtn" class="ml-auto bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-lg font-semibold transition">
+                        Continuar<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    
+                    <button type="submit" id="submitBtn" class="hidden bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-semibold transition">
+                        <i class="fas fa-check mr-2"></i>Criar Conta
+                    </button>
+                </div>
+
+                <!-- Terms -->
+                <div class="text-center mt-6">
+                    <p class="text-sm text-gray-600">
+                        Ao criar uma conta, você concorda com nossos
+                        <a href="termos.html" class="text-blue-600 hover:text-blue-500 font-medium">Termos de Serviço</a> e
+                        <a href="privacidade.html" class="text-blue-600 hover:text-blue-500 font-medium">Política de Privacidade</a>.
+                    </p>
+                </div>
+            </form>
+
+            <div class="text-center mt-8">
+                <p class="text-gray-600">
+                    Já tem uma conta?
+                    <a href="login.html" class="text-blue-600 hover:text-blue-500 font-semibold">Faça login aqui</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+   <script src="js/database.js"></script>
+   <script>
+    let currentStep = 1;
+    let selectedPlan = 2; // Plano Profissional selecionado por padrão
+
+    function selectPlan(planId) {
+        selectedPlan = planId;
+        updatePlanSelection();
+        updateSelectedPlanDisplay();
+    }
+
+    function updatePlanSelection() {
+        // Remove all selected styles
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.classList.remove('border-blue-600', 'border-4', 'ring-4', 'ring-blue-100');
+            card.classList.add('border-gray-200', 'border-2');
+        });
+
+        // Add selected style to chosen plan
+        if (selectedPlan) {
+            const selectedCard = document.querySelector(`[data-plan-id="${selectedPlan}"]`).closest('.plan-card');
+            selectedCard.classList.remove('border-gray-200', 'border-2');
+            selectedCard.classList.add('border-blue-600', 'border-4', 'ring-4', 'ring-blue-100');
+        }
+    }
+
+    function updateSelectedPlanDisplay() {
+        const display = document.getElementById('selectedPlanDisplay');
+        const planName = document.getElementById('selectedPlanName');
+        
+        if (selectedPlan) {
+            const planNames = {
+                1: 'Básico - AOA 24.900/mês',
+                2: 'Profissional - AOA 49.900/mês', 
+                3: 'Empresarial - AOA 99.900/mês'
+            };
+            planName.textContent = planNames[selectedPlan];
+            display.classList.remove('hidden');
+        } else {
+            display.classList.add('hidden');
+        }
+    }
+
+    function clearPlanSelection() {
+        selectedPlan = null;
+        updatePlanSelection();
+        updateSelectedPlanDisplay();
+    }
+
+    function toggleRegisterPassword() {
+        const passwordInput = document.getElementById('registerPassword');
+        const icon = document.querySelector('#registerPassword + button i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function checkPasswordStrength(password) {
+        const strengthBars = [
+            document.getElementById('strength1'),
+            document.getElementById('strength2'),
+            document.getElementById('strength3'),
+            document.getElementById('strength4')
+        ];
+        const feedback = document.getElementById('passwordFeedback');
+        
+        let strength = 0;
+        let messages = [];
+        
+        // Reset bars
+        strengthBars.forEach(bar => {
+            bar.style.backgroundColor = '#d1d5db';
+        });
+        
+        // Check length
+        if (password.length >= 8) {
+            strength++;
+        } else {
+            messages.push('Pelo menos 8 caracteres');
+        }
+        
+        // Check for mixed case
+        if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
+            strength++;
+        } else {
+            messages.push('Letras maiúsculas e minúsculas');
+        }
+        
+        // Check for numbers
+        if (password.match(/([0-9])/)) {
+            strength++;
+        } else {
+            messages.push('Pelo menos um número');
+        }
+        
+        // Check for special characters
+        if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
+            strength++;
+        } else {
+            messages.push('Pelo menos um caractere especial');
+        }
+        
+        // Update strength bars
+        for (let i = 0; i < strength; i++) {
+            let color;
+            if (strength === 1) color = '#ef4444';
+            else if (strength === 2) color = '#f59e0b';
+            else if (strength === 3) color = '#3b82f6';
+            else if (strength === 4) color = '#10b981';
+            
+            strengthBars[i].style.backgroundColor = color;
+        }
+        
+        // Update feedback message
+        if (password.length === 0) {
+            feedback.textContent = '';
+        } else if (strength < 4) {
+            feedback.textContent = 'Recomendado: ' + messages.join(', ');
+            feedback.style.color = '#6b7280';
+        } else {
+            feedback.textContent = 'Password forte!';
+            feedback.style.color = '#10b981';
+        }
+    }
+
+    function updateStepNavigation() {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Update step indicators
+        document.querySelectorAll('.flex.flex-col.items-center').forEach((step, index) => {
+            const number = step.querySelector('div');
+            const text = step.querySelector('span');
+            
+            if (index + 1 === currentStep) {
+                number.className = 'w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold';
+                text.className = 'text-xs mt-1 text-blue-600 font-medium';
+            } else if (index + 1 < currentStep) {
+                number.className = 'w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-semibold';
+                text.className = 'text-xs mt-1 text-green-600 font-medium';
+            } else {
+                number.className = 'w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold';
+                text.className = 'text-xs mt-1 text-gray-500';
+            }
+        });
+        
+        // Show/hide buttons based on current step
+        if (currentStep === 1) {
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        } else if (currentStep === 2) {
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        } else if (currentStep === 3) {
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+        }
+        
+        // Show current step content
+        document.querySelectorAll('.step-content').forEach((content, index) => {
+            if (index + 1 === currentStep) {
+                content.classList.remove('hidden');
+            } else {
+                content.classList.add('hidden');
+            }
+        });
+    }
+
+    function nextStep() {
+        if (validateCurrentStep()) {
+            if (currentStep < 3) {
+                currentStep++;
+                updateStepNavigation();
+            }
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepNavigation();
+        }
+    }
+
+    function validateCurrentStep() {
+        if (currentStep === 1) {
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!fullName || !email || !phone || !password || !confirmPassword) {
+                showNotification('Por favor, preencha todos os campos obrigatórios!', 'error');
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('As passwords não coincidem!', 'error');
+                return false;
+            }
+
+            if (password.length < 8) {
+                showNotification('A password deve ter pelo menos 8 caracteres!', 'error');
+                return false;
+            }
+        } else if (currentStep === 2) {
+            const companyName = document.getElementById('companyName').value;
+            const nif = document.getElementById('nif').value;
+
+            if (!companyName || !nif) {
+                showNotification('Por favor, preencha o nome da empresa e NIF!', 'error');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Form submission - VERSÃO SIMPLIFICADA E CORRIGIDA
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedPlan) {
+            showNotification('Por favor, selecione um plano!', 'error');
+            return;
+        }
+        
+        if (!validateCurrentStep()) {
+            return;
+        }
+        
+        // Collect form data
+        const formData = {
+            nome: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('registerPassword').value,
+            telefone: document.getElementById('phone').value,
+            empresa_nome: document.getElementById('companyName').value,
+            empresa_nif: document.getElementById('nif').value,
+            endereco: document.getElementById('address').value,
+            cidade: document.getElementById('city').value,
+            pais: document.getElementById('country').value,
+            setor: document.getElementById('sector').value,
+            funcionarios: document.getElementById('employees').value,
+            cargo: document.getElementById('role').value,
+            plano_id: parseInt(selectedPlan)
+        };
+        
+        try {
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Criando conta...';
+            submitBtn.disabled = true;
+
+            console.log('Enviando dados para cadastro...');
+
+            // Fazer requisição para a API
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            // Verificar se a resposta é JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Resposta do servidor não é JSON');
+            }
+
+            const result = await response.json();
+            console.log('Resposta do servidor:', result);
+
+            if (result.success) {
+                showNotification('Conta criada com sucesso! Redirecionando...', 'success');
+                
+                // Store user data
+                localStorage.setItem('user', JSON.stringify(result.user));
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('loginTime', new Date().toISOString());
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } else {
+                throw new Error(result.error || 'Erro ao criar conta');
+            }
+            
+        } catch (error) {
+            console.error('Erro no cadastro:', error);
+            showNotification(error.message || 'Erro ao criar conta. Tente novamente.', 'error');
+            
+            // Reset button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Criar Conta';
+            submitBtn.disabled = false;
+        }
+    });
+
+    function showNotification(message, type) {
+        // Remove existing notifications
+        document.querySelectorAll('.notification-toast').forEach(toast => toast.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = `notification-toast fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle mr-3"></i>
+                <span class="font-medium">${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('translate-x-0');
+            toast.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            toast.classList.remove('translate-x-0');
+            toast.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStepNavigation();
+        updatePlanSelection();
+        updateSelectedPlanDisplay();
+        
+        // Add event listeners
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+        
+        // Add event listeners to plan selection buttons
+        document.querySelectorAll('.plan-select').forEach(button => {
+            button.addEventListener('click', function() {
+                selectPlan(this.dataset.planId);
+            });
+        });
+
+        // Add animation to form elements
+        const elements = document.querySelectorAll('.card-glass, .input-field, .plan-card');
+        elements.forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                el.style.transition = 'all 0.6s ease';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+</body>
+</html>

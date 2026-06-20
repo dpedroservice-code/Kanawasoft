@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Guia | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar-collapsed {
+            width: 70px;
+        }
+        .sidebar-expanded {
+            width: 280px;
+        }
+        .tour-step {
+            transition: all 0.3s ease;
+        }
+        .tour-highlight {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+            border-radius: 8px;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-rocket text-2xl mr-3 text-yellow-400"></i>
+                    <span class="text-xl font-bold">Kanawa Soft</span>
+                </div>
+                <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto py-2">
+                <ul class="space-y-1 px-2">
+                    <li>
+                        <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-cash-register mr-3"></i>
+                            <span class="font-medium">PDV</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="cadastroprodutos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-boxes mr-3"></i>
+                            <span class="font-medium">Produtos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-users mr-3"></i>
+                            <span class="font-medium">Clientes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span class="font-medium">Vendas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="gestao-estoque.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-pallet mr-3"></i>
+                            <span class="font-medium">Gestão de Estoque</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="tour-guia.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700">
+                            <i class="fas fa-map-signs mr-3 text-yellow-400"></i>
+                            <span class="font-medium">Tour Guia</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">TOUR GUIADO DO SISTEMA</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar ao Dashboard
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Banner de Introdução -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold mb-4">Bem-vindo ao Kanawa Soft!</h2>
+                            <p class="text-lg mb-6 opacity-90">
+                                Descubra todas as funcionalidades do nosso sistema de gestão com este tour guiado.
+                                Aprenda a utilizar cada módulo de forma eficiente.
+                            </p>
+                            <div class="flex items-center space-x-4">
+                                <button onclick="startTour()" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-play mr-2"></i> Iniciar Tour
+                                </button>
+                                <button onclick="skipTour()" class="border border-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white hover:text-blue-600 transition-colors">
+                                    Pular Tour
+                                </button>
+                            </div>
+                        </div>
+                        <div class="hidden md:block">
+                            <i class="fas fa-compass text-8xl opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progresso do Tour -->
+                <div id="tourProgress" class="hidden bg-white rounded-xl shadow p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">Progresso do Tour</h3>
+                        <span id="tourStep" class="text-sm text-gray-600">Passo 1 de 8</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Módulos do Sistema -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Módulo Dashboard -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="1">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-tachometer-alt text-blue-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Dashboard</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Visão geral do seu negócio com métricas importantes, gráficos e relatórios em tempo real.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Métricas de vendas
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Gráficos de desempenho
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Alertas importantes
+                            </li>
+                        </ul>
+                        <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Explorar Dashboard
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
+                    <!-- Módulo PDV -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="2">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-cash-register text-green-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">PDV</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Ponto de Venda completo para atendimento rápido e eficiente aos seus clientes.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Venda rápida
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Múltiplas formas de pagamento
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Impressão de recibos
+                            </li>
+                        </ul>
+                        <a href="pdv.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Ir para PDV
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
+                    <!-- Módulo Produtos -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="3">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-boxes text-yellow-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Gestão de Produtos</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Cadastre e gerencie seu catálogo de produtos com categorias, preços e controle de stock.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Cadastro completo
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Categorias organizadas
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Controle de preços
+                            </li>
+                        </ul>
+                        <a href="cadastroprodutos.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Gerir Produtos
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
+                    <!-- Módulo Clientes -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="4">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-users text-purple-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Gestão de Clientes</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Mantenha o registo dos seus clientes e histórico de compras para melhor atendimento.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Cadastro detalhado
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Histórico de compras
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Programa de fidelidade
+                            </li>
+                        </ul>
+                        <a href="clientes.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Ver Clientes
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
+                    <!-- Módulo Vendas -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="5">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-chart-line text-red-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Relatórios de Vendas</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Analise o desempenho das suas vendas com relatórios detalhados e gráficos interativos.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Vendas por período
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Produtos mais vendidos
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Análise de lucros
+                            </li>
+                        </ul>
+                        <a href="vendas.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Ver Relatórios
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
+                    <!-- Módulo Estoque -->
+                    <div class="tour-step bg-white rounded-xl shadow p-6" data-step="6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-pallet text-indigo-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Gestão de Estoque</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            Controle completo do seu inventário com alertas de stock baixo e movimentações.
+                        </p>
+                        <ul class="text-sm text-gray-500 space-y-2 mb-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Controlo de stock
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Alertas automáticos
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Movimentações
+                            </li>
+                        </ul>
+                        <a href="gestao-estoque.html" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                            Gerir Estoque
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dicas Rápidas -->
+                <div class="bg-white rounded-xl shadow p-6 mt-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">Dicas Rápidas para Começar</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-box text-blue-600 mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Cadastre Produtos</h4>
+                                <p class="text-sm text-gray-600">Comece adicionando seus produtos ao sistema</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-users text-green-600 mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Registe Clientes</h4>
+                                <p class="text-sm text-gray-600">Cadastre seus clientes para histórico</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg">
+                            <i class="fas fa-cash-register text-yellow-600 mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Faça Vendas</h4>
+                                <p class="text-sm text-gray-600">Use o PDV para suas primeiras vendas</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg">
+                            <i class="fas fa-chart-bar text-purple-600 mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Analise Dados</h4>
+                                <p class="text-sm text-gray-600">Acompanhe resultados no dashboard</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal do Tour -->
+    <div id="tourModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Bem-vindo ao Tour Guiado</h3>
+            </div>
+            <div class="p-6">
+                <div id="modalContent" class="mb-6">
+                    <p class="text-gray-600">Vamos conhecer as funcionalidades do sistema passo a passo.</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button id="prevBtn" onclick="prevStep()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 hidden">
+                        <i class="fas fa-arrow-left mr-2"></i> Anterior
+                    </button>
+                    <div class="flex space-x-3 ml-auto">
+                        <button onclick="skipTour()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+                            Pular Tour
+                        </button>
+                        <button id="nextBtn" onclick="nextStep()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            Próximo <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 6;
+        const tourSteps = [
+            {
+                title: "Dashboard - Visão Geral",
+                content: "O Dashboard é o centro de controlo do seu negócio. Aqui você encontra métricas importantes, gráficos de desempenho e alertas em tempo real.",
+                highlight: "[data-step='1']"
+            },
+            {
+                title: "PDV - Ponto de Venda",
+                content: "O módulo PDV permite realizar vendas rápidas e eficientes. Aceite múltiplas formas de pagamento e imprima recibos automaticamente.",
+                highlight: "[data-step='2']"
+            },
+            {
+                title: "Gestão de Produtos",
+                content: "Cadastre e organize seus produtos com categorias, controle de preços e gestão de stock. Mantenha seu catálogo sempre atualizado.",
+                highlight: "[data-step='3']"
+            },
+            {
+                title: "Gestão de Clientes",
+                content: "Mantenha um registo completo dos seus clientes com histórico de compras e programa de fidelidade para melhor atendimento.",
+                highlight: "[data-step='4']"
+            },
+            {
+                title: "Relatórios de Vendas",
+                content: "Analise o desempenho do seu negócio com relatórios detalhados de vendas por período, produtos mais vendidos e análise de lucros.",
+                highlight: "[data-step='5']"
+            },
+            {
+                title: "Gestão de Estoque",
+                content: "Controle completo do seu inventário com alertas automáticos de stock baixo e registo de todas as movimentações.",
+                highlight: "[data-step='6']"
+            }
+        ];
+
+        function startTour() {
+            currentStep = 0;
+            document.getElementById('tourProgress').classList.remove('hidden');
+            updateProgress();
+            showStep();
+        }
+
+        function showStep() {
+            const step = tourSteps[currentStep];
+            const modal = document.getElementById('tourModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Atualizar conteúdo do modal
+            modalTitle.textContent = step.title;
+            modalContent.innerHTML = `
+                <p class="text-gray-600 mb-4">${step.content}</p>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-blue-700">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        Dica: ${getTourTip(currentStep)}
+                    </p>
+                </div>
+            `;
+
+            // Atualizar botões
+            prevBtn.classList.toggle('hidden', currentStep === 0);
+            nextBtn.innerHTML = currentStep === totalSteps - 1 ? 
+                'Finalizar Tour <i class="fas fa-check ml-2"></i>' : 
+                'Próximo <i class="fas fa-arrow-right ml-2"></i>';
+
+            // Destacar elemento
+            highlightElement(step.highlight);
+
+            // Mostrar modal
+            modal.classList.remove('hidden');
+        }
+
+        function getTourTip(step) {
+            const tips = [
+                "Personalize seu dashboard arrastando os widgets conforme sua preferência.",
+                "Use atalhos de teclado (F2 para novo produto, F3 para pesquisa) para agilizar as vendas.",
+                "Organize seus produtos em categorias para facilitar a busca e gestão.",
+                "Cadastre o máximo de informações dos clientes para um atendimento personalizado.",
+                "Exporte relatórios em PDF para compartilhar com sua equipa.",
+                "Configure alertas de stock mínimo para nunca ficar sem produtos."
+            ];
+            return tips[step] || "Explore todas as funcionalidades para aproveitar ao máximo o sistema.";
+        }
+
+        function highlightElement(selector) {
+            // Remover destaque anterior
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+
+            // Aplicar novo destaque
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('tour-highlight');
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateProgress();
+                showStep();
+            } else {
+                finishTour();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateProgress();
+                showStep();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentStep + 1) / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('tourStep').textContent = `Passo ${currentStep + 1} de ${totalSteps}`;
+        }
+
+        function skipTour() {
+            document.getElementById('tourModal').classList.add('hidden');
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+            showNotification('Tour interrompido. Você pode reiniciá-lo a qualquer momento.', 'info');
+        }
+
+        function finishTour() {
+            document.getElementById('tourModal').classList.add('hidden');
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+            showNotification('Tour concluído com sucesso! Esperamos que aproveite o sistema.', 'success');
+            
+            // Salvar no localStorage que o tour foi concluído
+            localStorage.setItem('kanawaTourCompleted', 'true');
+        }
+
+        function showNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 transform transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 4000);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+        }
+
+        // Verificar se é a primeira vez do usuário
+        document.addEventListener('DOMContentLoaded', function() {
+            const tourCompleted = localStorage.getItem('kanawaTourCompleted');
+            if (!tourCompleted) {
+                // Mostrar prompt para iniciar o tour na primeira visita
+                setTimeout(() => {
+                    if (confirm('Deseja fazer um tour guiado pelo sistema para conhecer todas as funcionalidades?')) {
+                        startTour();
+                    }
+                }, 2000);
+            }
+        });
+    </script>
+    <script src="database.js"></script>
+</body>
+</html>

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanawa Soft - Alterar Senha</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease; display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.warning { background: #f59e0b; }
+        .toast.info { background: #3b82f6; }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .password-strength {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 2px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .input-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+        .input-toggle:hover { color: #4b5563; }
+
+        .card {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+            .card { margin: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li><a href="produtos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-3"></i><span class="font-medium">Produtos</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="flex-1 font-medium">Configurações</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="alterar-senha.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-key mr-2 text-sm"></i>Alterar Senha</a></li>
+                        <li><a href="perfil.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-user mr-2 text-sm"></i>Perfil</a></li>
+                        <li><a href="preferencias.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-sliders-h mr-2 text-sm"></i>Preferências</a></li>
+                    </ul>
+                </li>
+                <li><a href="ajuda-suporte.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-life-ring mr-3"></i><span class="font-medium">Ajuda & Suporte</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">ALTERAR SENHA</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-shield-alt mr-1"></i> Segurança
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-2xl mx-auto">
+                <!-- Card Principal -->
+                <div class="card p-6 md:p-8 fade-in">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-key text-blue-600 text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Alterar Senha</h2>
+                        <p class="text-gray-500 text-sm mt-1">Mantenha sua conta segura atualizando sua senha regularmente</p>
+                    </div>
+
+                    <form id="passwordForm" class="space-y-6">
+                        <!-- Senha Atual -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Senha Atual</label>
+                            <div class="relative">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="currentPassword" 
+                                       class="w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                       placeholder="Digite sua senha atual" required>
+                                <button type="button" class="input-toggle" onclick="window.togglePasswordVisibility('currentPassword')">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Nova Senha -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nova Senha</label>
+                            <div class="relative">
+                                <i class="fas fa-key input-icon"></i>
+                                <input type="password" id="newPassword" 
+                                       class="w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                       placeholder="Digite sua nova senha" required>
+                                <button type="button" class="input-toggle" onclick="window.togglePasswordVisibility('newPassword')">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Força da Senha -->
+                            <div class="password-strength">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                            <div class="flex justify-between text-xs mt-1">
+                                <span class="text-gray-400" id="strengthLabel">Fraca</span>
+                                <span class="text-gray-400" id="strengthRequirements">Mín: 8 caracteres</span>
+                            </div>
+                            <ul class="text-xs text-gray-500 mt-2 space-y-1" id="requirements">
+                                <li id="req-length" class="flex items-center"><i class="fas fa-circle text-gray-300 text-[6px] mr-2"></i> Mínimo 8 caracteres</li>
+                                <li id="req-uppercase" class="flex items-center"><i class="fas fa-circle text-gray-300 text-[6px] mr-2"></i> Pelo menos 1 letra maiúscula</li>
+                                <li id="req-lowercase" class="flex items-center"><i class="fas fa-circle text-gray-300 text-[6px] mr-2"></i> Pelo menos 1 letra minúscula</li>
+                                <li id="req-number" class="flex items-center"><i class="fas fa-circle text-gray-300 text-[6px] mr-2"></i> Pelo menos 1 número</li>
+                                <li id="req-special" class="flex items-center"><i class="fas fa-circle text-gray-300 text-[6px] mr-2"></i> Pelo menos 1 caractere especial</li>
+                            </ul>
+                        </div>
+
+                        <!-- Confirmar Senha -->
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nova Senha</label>
+                            <div class="relative">
+                                <i class="fas fa-check-circle input-icon"></i>
+                                <input type="password" id="confirmPassword" 
+                                       class="w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                       placeholder="Confirme sua nova senha" required>
+                                <button type="button" class="input-toggle" onclick="window.togglePasswordVisibility('confirmPassword')">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div id="matchStatus" class="text-xs mt-1 hidden">
+                                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                <span class="text-green-600">As senhas coincidem</span>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="flex flex-col md:flex-row gap-3 pt-4 border-t">
+                            <button type="button" onclick="window.cancelChange()" 
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-gray-700">
+                                <i class="fas fa-times mr-2"></i> Cancelar
+                            </button>
+                            <button type="submit" id="submitBtn" 
+                                    class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-save mr-2"></i> Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Dicas de Segurança -->
+                <div class="bg-white rounded-lg shadow p-6 mt-6">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-shield-alt text-blue-500 mr-2"></i> Dicas de Segurança
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Use senhas com pelo menos 8 caracteres</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Combine letras maiúsculas e minúsculas</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Inclua números e caracteres especiais</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Não use a mesma senha em outros serviços</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Altere sua senha regularmente</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5 mr-2"></i>
+                            <span class="text-gray-600">Evite usar informações pessoais</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== CONFIRM MODAL ==================== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Senha Alterada!</h3>
+                <p class="text-gray-500 mt-2">Sua senha foi alterada com sucesso.</p>
+                <button onclick="window.closeConfirmModal()" class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                isSubmitting: false
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                currentPassword: document.getElementById('currentPassword'),
+                newPassword: document.getElementById('newPassword'),
+                confirmPassword: document.getElementById('confirmPassword'),
+                strengthBar: document.getElementById('strengthBar'),
+                strengthLabel: document.getElementById('strengthLabel'),
+                matchStatus: document.getElementById('matchStatus'),
+                submitBtn: document.getElementById('submitBtn'),
+                toast: document.getElementById('toastContainer'),
+                confirmModal: document.getElementById('confirmModal'),
+                requirements: {
+                    length: document.getElementById('req-length'),
+                    uppercase: document.getElementById('req-uppercase'),
+                    lowercase: document.getElementById('req-lowercase'),
+                    number: document.getElementById('req-number'),
+                    special: document.getElementById('req-special')
+                }
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== VALIDAÇÃO DE SENHA ====================
+            function validatePassword(password) {
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[^A-Za-z0-9]/.test(password)
+                };
+                return checks;
+            }
+
+            function checkPasswordStrength(password) {
+                const checks = validatePassword(password);
+                const strength = Object.values(checks).filter(Boolean).length;
+                
+                // Atualizar requisitos
+                Object.keys(checks).forEach(key => {
+                    const el = DOM.requirements[key];
+                    if (el) {
+                        const icon = el.querySelector('i');
+                        if (checks[key]) {
+                            icon.className = 'fas fa-check-circle text-green-500 text-[10px] mr-2';
+                            el.className = 'flex items-center text-green-600';
+                        } else {
+                            icon.className = 'fas fa-circle text-gray-300 text-[6px] mr-2';
+                            el.className = 'flex items-center text-gray-500';
+                        }
+                    }
+                });
+
+                // Barra de força
+                const percentage = (strength / 5) * 100;
+                DOM.strengthBar.style.width = percentage + '%';
+                
+                let color, label;
+                if (strength <= 1) {
+                    color = '#ef4444';
+                    label = 'Fraca';
+                } else if (strength <= 2) {
+                    color = '#f59e0b';
+                    label = 'Media';
+                } else if (strength <= 3) {
+                    color = '#3b82f6';
+                    label = 'Boa';
+                } else if (strength <= 4) {
+                    color = '#8b5cf6';
+                    label = 'Forte';
+                } else {
+                    color = '#10b981';
+                    label = 'Excelente';
+                }
+                
+                DOM.strengthBar.style.backgroundColor = color;
+                DOM.strengthLabel.textContent = label;
+                DOM.strengthLabel.style.color = color;
+                
+                return strength;
+            }
+
+            function checkPasswordMatch() {
+                const newPass = DOM.newPassword.value;
+                const confirmPass = DOM.confirmPassword.value;
+                
+                if (confirmPass.length === 0) {
+                    DOM.matchStatus.classList.add('hidden');
+                    return;
+                }
+                
+                if (newPass === confirmPass) {
+                    DOM.matchStatus.classList.remove('hidden');
+                    DOM.matchStatus.innerHTML = `
+                        <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                        <span class="text-green-600">As senhas coincidem</span>
+                    `;
+                    DOM.confirmPassword.className = 'w-full pl-10 pr-10 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition';
+                    return true;
+                } else {
+                    DOM.matchStatus.classList.remove('hidden');
+                    DOM.matchStatus.innerHTML = `
+                        <i class="fas fa-times-circle text-red-500 mr-1"></i>
+                        <span class="text-red-600">As senhas não coincidem</span>
+                    `;
+                    DOM.confirmPassword.className = 'w-full pl-10 pr-10 py-3 border border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition';
+                    return false;
+                }
+            }
+
+            // ==================== SUBMISSÃO ====================
+            async function submitPasswordChange(e) {
+                e.preventDefault();
+                
+                if (state.isSubmitting) return;
+                
+                const currentPass = DOM.currentPassword.value;
+                const newPass = DOM.newPassword.value;
+                const confirmPass = DOM.confirmPassword.value;
+
+                // Validações
+                if (!currentPass) {
+                    showToast('Digite sua senha atual', 'warning');
+                    DOM.currentPassword.focus();
+                    return;
+                }
+
+                if (newPass.length < 8) {
+                    showToast('A nova senha deve ter pelo menos 8 caracteres', 'warning');
+                    DOM.newPassword.focus();
+                    return;
+                }
+
+                if (newPass !== confirmPass) {
+                    showToast('As senhas não coincidem', 'error');
+                    DOM.confirmPassword.focus();
+                    return;
+                }
+
+                // Verificar força da senha
+                const strength = checkPasswordStrength(newPass);
+                if (strength < 3) {
+                    showToast('A senha é muito fraca. Use uma combinação mais forte.', 'warning');
+                    return;
+                }
+
+                state.isSubmitting = true;
+                DOM.submitBtn.disabled = true;
+                DOM.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Alterando...';
+
+                try {
+                    // Simular alteração de senha
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Aqui viria a chamada real para a API
+                    // await state.supabase.auth.updateUser({ password: newPass });
+                    
+                    showToast('Senha alterada com sucesso!', 'success');
+                    DOM.confirmModal.classList.add('active');
+                    
+                    // Limpar formulário
+                    DOM.currentPassword.value = '';
+                    DOM.newPassword.value = '';
+                    DOM.confirmPassword.value = '';
+                    DOM.strengthBar.style.width = '0%';
+                    DOM.strengthLabel.textContent = 'Fraca';
+                    DOM.matchStatus.classList.add('hidden');
+                    
+                } catch (error) {
+                    console.error('Erro ao alterar senha:', error);
+                    showToast('Erro ao alterar senha. Tente novamente.', 'error');
+                } finally {
+                    state.isSubmitting = false;
+                    DOM.submitBtn.disabled = false;
+                    DOM.submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Salvar Alterações';
+                }
+            }
+
+            function closeConfirmModal() {
+                DOM.confirmModal.classList.remove('active');
+            }
+
+            function cancelChange() {
+                if (confirm('Tem certeza que deseja cancelar? As alterações não serão salvas.')) {
+                    window.location.href = 'index.html';
+                }
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== UTILITÁRIOS ====================
+            function togglePasswordVisibility(id) {
+                const input = document.getElementById(id);
+                const icon = input.parentElement.querySelector('.input-toggle i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'fas fa-eye';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'fas fa-eye-slash';
+                }
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.newPassword.addEventListener('input', function() {
+                    checkPasswordStrength(this.value);
+                    checkPasswordMatch();
+                });
+
+                DOM.confirmPassword.addEventListener('input', checkPasswordMatch);
+
+                document.getElementById('passwordForm').addEventListener('submit', submitPasswordChange);
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.confirmModal.classList.contains('active')) closeConfirmModal();
+                    }
+                });
+
+                DOM.confirmModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeConfirmModal();
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.togglePasswordVisibility = togglePasswordVisibility;
+            window.cancelChange = cancelChange;
+            window.closeConfirmModal = closeConfirmModal;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

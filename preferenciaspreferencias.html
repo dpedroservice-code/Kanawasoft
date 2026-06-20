@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanawa Soft - Preferências</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/preferenciaspreferencias.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="js/preferenciaspreferencias.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --secondary: #e11d48;
+            --text: #374151;
+            --light: #f9fafb;
+            --gray: #9ca3af;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f3f4f6;
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar styles */
+        .sidebar {
+            width: 250px;
+            background-color: #1e3a8a;
+            color: white;
+            transition: all 0.3s;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 16px;
+            max-width: 400px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Conteúdo do sidebar será carregado aqui -->
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1 class="text-xl font-bold">Preferências</h1>
+            </div>
+
+            <div class="card">
+                <div class="tab-container">
+                    <div class="tab active" onclick="openTab('geral')">Geral</div>
+                    <div class="tab" onclick="openTab('notificacoes')">Notificações</div>
+                    <div class="tab" onclick="openTab('tema')">Tema</div>
+                </div>
+
+                <div id="geral" class="tab-content active">
+                    <form>
+                        <div class="form-group">
+                            <label for="idioma">Idioma</label>
+                            <select id="idioma">
+                                <option value="pt">Português</option>
+                                <option value="en">Inglês</option>
+                                <option value="es">Espanhol</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="timezone">Fuso Horário</label>
+                            <select id="timezone">
+                                <option value="GMT-1">GMT-1 (Cabo Verde)</option>
+                                <option value="GMT+1" selected>GMT+1 (Angola)</option>
+                                <option value="GMT+0">GMT+0 (Portugal)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Formato de Data</label>
+                            <div class="checkbox-group">
+                                <input type="radio" id="date1" name="dateFormat" value="dd/MM/yyyy" checked>
+                                <label for="date1" style="margin-bottom: 0;">DD/MM/AAAA</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="radio" id="date2" name="dateFormat" value="MM/dd/yyyy">
+                                <label for="date2" style="margin-bottom: 0;">MM/DD/AAAA</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="radio" id="date3" name="dateFormat" value="yyyy-MM-dd">
+                                <label for="date3" style="margin-bottom: 0;">AAAA-MM-DD</label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="notificacoes" class="tab-content">
+                    <form>
+                        <div class="form-group">
+                            <label>Notificações por Email</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="notif1" checked>
+                                <label for="notif1" style="margin-bottom: 0;">Receber notificações importantes</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="notif2" checked>
+                                <label for="notif2" style="margin-bottom: 0;">Receber relatórios diários</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="notif3">
+                                <label for="notif3" style="margin-bottom: 0;">Receber newsletters</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Notificações no Sistema</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="notif4" checked>
+                                <label for="notif4" style="margin-bottom: 0;">Alertas sonoros</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="notif5" checked>
+                                <label for="notif5" style="margin-bottom: 0;">Notificações na área de trabalho</label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="tema" class="tab-content">
+                    <form>
+                        <div class="form-group">
+                            <label>Tema do Sistema</label>
+                            <div class="checkbox-group">
+                                <input type="radio" id="theme1" name="theme" value="light" checked>
+                                <label for="theme1" style="margin-bottom: 0;">Claro</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="radio" id="theme2" name="theme" value="dark">
+                                <label for="theme2" style="margin-bottom: 0;">Escuro</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="radio" id="theme3" name="theme" value="system">
+                                <label for="theme3" style="margin-bottom: 0;">Seguir sistema</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="primaryColor">Cor Primária</label>
+                            <input type="color" id="primaryColor" value="#1e40af">
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-2"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTab(tabName) {
+            // Esconde todos os conteúdos das tabs
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+
+            // Remove a classe active de todas as tabs
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+
+            // Mostra o conteúdo da tab selecionada e marca como active
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

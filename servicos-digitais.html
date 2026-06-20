@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços Digitais | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== STATUS BADGES ==================== */
+        .status-active { background-color: #d1fae5; color: #065f46; }
+        .status-inactive { background-color: #fee2e2; color: #991b1b; }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-maintenance { background-color: #dbeafe; color: #1e40af; }
+        .status-beta { background-color: #f3e8ff; color: #6d28d9; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== ANIMAÇÕES ==================== */
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== BOTÕES DE AÇÃO ==================== */
+        .action-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .action-btn:hover { transform: translateY(-1px); }
+        .action-btn-edit { background: #dbeafe; color: #1e40af; }
+        .action-btn-edit:hover { background: #bfdbfe; }
+        .action-btn-delete { background: #fee2e2; color: #991b1b; }
+        .action-btn-delete:hover { background: #fecaca; }
+        .action-btn-view { background: #e0e7ff; color: #4338ca; }
+        .action-btn-view:hover { background: #c7d2fe; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-cloud mr-3"></i>
+                        <span class="flex-1 font-medium">Serviços Digitais</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="servicos-digitais.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-server mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="dominios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-globe mr-2 text-sm"></i>Domínios</a></li>
+                        <li><a href="hospedagem.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-hdd mr-2 text-sm"></i>Hospedagem</a></li>
+                        <li><a href="certificados.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-lock mr-2 text-sm"></i>Certificados</a></li>
+                    </ul>
+                </li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+                <li><a href="preferencias.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cog mr-3"></i><span class="font-medium">Preferências</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">SERVIÇOS DIGITAIS</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-server mr-1"></i> <span id="serviceCount">0</span> Serviços
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Estatísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Total Serviços</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="totalServices">0</h3>
+                            <p class="text-sm text-gray-500">Ativos</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-server text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Ativos</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="activeServices">0</h3>
+                            <p class="text-sm text-gray-500">Em operação</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Manutenção</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="maintenanceServices">0</h3>
+                            <p class="text-sm text-gray-500">Em manutenção</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-wrench text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Beta</p>
+                            <h3 class="text-2xl font-bold text-purple-600" id="betaServices">0</h3>
+                            <p class="text-sm text-gray-500">Em teste</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-flask text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="filterStatus" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="active">Ativo</option>
+                            <option value="inactive">Inativo</option>
+                            <option value="pending">Pendente</option>
+                            <option value="maintenance">Manutenção</option>
+                            <option value="beta">Beta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select id="filterCategory" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas</option>
+                            <option value="desenvolvimento">Desenvolvimento</option>
+                            <option value="infraestrutura">Infraestrutura</option>
+                            <option value="seguranca">Segurança</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="suporte">Suporte</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Criação</label>
+                        <input type="date" id="filterDate" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                            <i class="fas fa-filter mr-2"></i> Filtrar
+                        </button>
+                        <button onclick="clearFilters()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Serviços -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                    <h2 class="text-xl font-bold text-gray-800">Lista de Serviços Digitais</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openServiceModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors text-sm">
+                            <i class="fas fa-plus mr-2"></i> Novo Serviço
+                        </button>
+                        <button onclick="exportServices()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-file-export mr-2"></i> Exportar
+                        </button>
+                        <button onclick="refreshServices()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serviço</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="servicesTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Carregado via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-sm text-gray-500" id="serviceInfo">0 registos</span>
+                        <div class="flex gap-2">
+                            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Anterior
+                            </button>
+                            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== SERVICE MODAL ==================== -->
+    <div class="modal-overlay" id="serviceModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Novo Serviço Digital</h3>
+                <button onclick="closeServiceModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="serviceForm" onsubmit="return false;">
+                    <input type="hidden" id="service_id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Serviço *</label>
+                            <input type="text" id="service_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Ex: API Gateway" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                            <select id="service_categoria" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="desenvolvimento">Desenvolvimento</option>
+                                <option value="infraestrutura">Infraestrutura</option>
+                                <option value="seguranca">Segurança</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="suporte">Suporte</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">URL do Serviço</label>
+                            <input type="url" id="service_url" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="https://api.exemplo.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="service_status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="pending">Pendente</option>
+                                <option value="active">Ativo</option>
+                                <option value="inactive">Inativo</option>
+                                <option value="maintenance">Manutenção</option>
+                                <option value="beta">Beta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Versão</label>
+                            <input type="text" id="service_versao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="1.0.0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ambiente</label>
+                            <select id="service_ambiente" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="producao">Produção</option>
+                                <option value="homologacao">Homologação</option>
+                                <option value="desenvolvimento">Desenvolvimento</option>
+                                <option value="teste">Teste</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <textarea id="service_descricao" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Descreva o serviço..."></textarea>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="service_observacoes" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Observações adicionais..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeServiceModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="saveService()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DETAILS MODAL ==================== -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="detailsTitle">Detalhes do Serviço</h3>
+                <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]" id="detailsContent">
+                <!-- Carregado via JavaScript -->
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Fechar
+                </button>
+                <button onclick="printServiceDetails()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-print mr-2"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Serviços Digitais!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let services = [];
+        let currentUser = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let editingServiceId = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadServices();
+            setupEventListeners();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadServices() {
+            try {
+                const statusFilter = document.getElementById('filterStatus')?.value || '';
+                const categoryFilter = document.getElementById('filterCategory')?.value || '';
+                const dateFilter = document.getElementById('filterDate')?.value || '';
+                
+                let query = supabase
+                    .from('servicos_digitais')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (statusFilter) {
+                    query = query.eq('status', statusFilter);
+                }
+                if (categoryFilter) {
+                    query = query.eq('categoria', categoryFilter);
+                }
+                if (dateFilter) {
+                    query = query.gte('created_at', dateFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                services = data || [];
+                renderServices();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Erro ao carregar serviços:', error);
+                services = getSampleServices();
+                renderServices();
+                updateStats();
+            }
+        }
+
+        async function saveServiceToDB(serviceData) {
+            try {
+                let result;
+                if (editingServiceId) {
+                    const { data, error } = await supabase
+                        .from('servicos_digitais')
+                        .update(serviceData)
+                        .eq('id', editingServiceId)
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data;
+                    showToast('Serviço atualizado com sucesso!', 'success');
+                } else {
+                    const { data, error } = await supabase
+                        .from('servicos_digitais')
+                        .insert([serviceData])
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data;
+                    showToast('Serviço criado com sucesso!', 'success');
+                }
+                return result;
+            } catch (error) {
+                console.error('Erro ao salvar serviço:', error);
+                showToast('Erro ao salvar serviço: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        async function deleteServiceFromDB(id) {
+            try {
+                const { error } = await supabase
+                    .from('servicos_digitais')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                showToast('Serviço removido com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao deletar serviço:', error);
+                showToast('Erro ao deletar serviço', 'error');
+                throw error;
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleServices() {
+            const serviceNames = [
+                'API Gateway',
+                'Sistema de Autenticação',
+                'Banco de Dados Principal',
+                'Cache Redis',
+                'Serviço de Email',
+                'CDN Global',
+                'Balanceador de Carga',
+                'Monitoramento',
+                'Logs Centralizado',
+                'Fila de Mensagens'
+            ];
+            
+            const categories = ['desenvolvimento', 'infraestrutura', 'seguranca', 'marketing', 'suporte'];
+            const statuses = ['active', 'inactive', 'pending', 'maintenance', 'beta'];
+            const ambientes = ['producao', 'homologacao', 'desenvolvimento', 'teste'];
+            
+            const services = [];
+            for (let i = 0; i < 12; i++) {
+                const created = new Date();
+                created.setDate(created.getDate() - Math.floor(Math.random() * 60));
+                
+                services.push({
+                    id: i + 1,
+                    nome: serviceNames[i % serviceNames.length] + (i > 8 ? ` ${i}` : ''),
+                    categoria: categories[Math.floor(Math.random() * categories.length)],
+                    url: `https://api${i + 1}.kanawasoft.co.ao`,
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    versao: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`,
+                    ambiente: ambientes[Math.floor(Math.random() * ambientes.length)],
+                    descricao: `Serviço de ${serviceNames[i % serviceNames.length]}`,
+                    observacoes: '',
+                    created_at: created.toISOString()
+                });
+            }
+            return services;
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderServices() {
+            const tbody = document.getElementById('servicesTableBody');
+            const start = (currentPage - 1) * itemsPerPage;
+            const pageServices = services.slice(start, start + itemsPerPage);
+            
+            if (pageServices.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-server text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhum serviço encontrado</p>
+                            <p class="text-sm">Clique em "Novo Serviço" para adicionar</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('serviceInfo').textContent = '0 registos';
+                document.getElementById('serviceCount').textContent = '0';
+                return;
+            }
+            
+            const statusLabels = {
+                'active': 'Ativo',
+                'inactive': 'Inativo',
+                'pending': 'Pendente',
+                'maintenance': 'Manutenção',
+                'beta': 'Beta'
+            };
+            
+            const statusClasses = {
+                'active': 'status-active',
+                'inactive': 'status-inactive',
+                'pending': 'status-pending',
+                'maintenance': 'status-maintenance',
+                'beta': 'status-beta'
+            };
+            
+            const categoryLabels = {
+                'desenvolvimento': 'Desenvolvimento',
+                'infraestrutura': 'Infraestrutura',
+                'seguranca': 'Segurança',
+                'marketing': 'Marketing',
+                'suporte': 'Suporte'
+            };
+            
+            const categoryIcons = {
+                'desenvolvimento': 'fa-code',
+                'infraestrutura': 'fa-server',
+                'seguranca': 'fa-shield-alt',
+                'marketing': 'fa-bullhorn',
+                'suporte': 'fa-headset'
+            };
+            
+            tbody.innerHTML = pageServices.map(service => {
+                const statusClass = statusClasses[service.status] || 'status-pending';
+                const categoryIcon = categoryIcons[service.categoria] || 'fa-cube';
+                
+                return `
+                    <tr class="fade-in hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${service.nome}</div>
+                                <div class="text-xs text-gray-500">v${service.versao || '1.0.0'}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-700">
+                                <i class="fas ${categoryIcon} mr-1"></i>
+                                ${categoryLabels[service.categoria] || service.categoria}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-700 truncate max-w-xs">
+                                <a href="${service.url}" target="_blank" class="text-blue-600 hover:underline">
+                                    ${service.url || '-'}
+                                </a>
+                            </div>
+                            <div class="text-xs text-gray-500">${service.ambiente || 'Produção'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                ${statusLabels[service.status] || service.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center gap-2">
+                                <button onclick="viewService(${service.id})" class="action-btn action-btn-view" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editService(${service.id})" class="action-btn action-btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteService(${service.id})" class="action-btn action-btn-delete" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('serviceInfo').textContent = `${services.length} registos`;
+            document.getElementById('serviceCount').textContent = services.length;
+            
+            // Paginação
+            const totalPages = Math.ceil(services.length / itemsPerPage);
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function updateStats() {
+            const total = services.length;
+            const active = services.filter(s => s.status === 'active').length;
+            const maintenance = services.filter(s => s.status === 'maintenance').length;
+            const beta = services.filter(s => s.status === 'beta').length;
+            
+            document.getElementById('totalServices').textContent = total;
+            document.getElementById('activeServices').textContent = active;
+            document.getElementById('maintenanceServices').textContent = maintenance;
+            document.getElementById('betaServices').textContent = beta;
+        }
+
+        // ==================== FUNÇÕES AUXILIARES ====================
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleString('pt-BR');
+        }
+
+        // ==================== CRUD OPERATIONS ====================
+        function openServiceModal(data) {
+            const modal = document.getElementById('serviceModal');
+            const form = document.getElementById('serviceForm');
+            form.reset();
+            document.getElementById('service_id').value = '';
+            editingServiceId = null;
+            
+            if (data) {
+                document.getElementById('modalTitle').textContent = 'Editar Serviço Digital';
+                document.getElementById('service_id').value = data.id;
+                document.getElementById('service_nome').value = data.nome || '';
+                document.getElementById('service_categoria').value = data.categoria || '';
+                document.getElementById('service_url').value = data.url || '';
+                document.getElementById('service_status').value = data.status || 'pending';
+                document.getElementById('service_versao').value = data.versao || '';
+                document.getElementById('service_ambiente').value = data.ambiente || 'producao';
+                document.getElementById('service_descricao').value = data.descricao || '';
+                document.getElementById('service_observacoes').value = data.observacoes || '';
+                editingServiceId = data.id;
+            } else {
+                document.getElementById('modalTitle').textContent = 'Novo Serviço Digital';
+                document.getElementById('service_status').value = 'pending';
+                document.getElementById('service_ambiente').value = 'producao';
+                document.getElementById('service_versao').value = '1.0.0';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeServiceModal() {
+            document.getElementById('serviceModal').classList.remove('active');
+        }
+
+        async function saveService() {
+            const form = document.getElementById('serviceForm');
+            
+            // Validar campos obrigatórios
+            const nome = document.getElementById('service_nome').value.trim();
+            const categoria = document.getElementById('service_categoria').value;
+            
+            if (!nome) {
+                showToast('Informe o nome do serviço', 'warning');
+                return;
+            }
+            if (!categoria) {
+                showToast('Selecione uma categoria', 'warning');
+                return;
+            }
+            
+            const data = {
+                nome: nome,
+                categoria: categoria,
+                url: document.getElementById('service_url').value.trim() || null,
+                status: document.getElementById('service_status').value,
+                versao: document.getElementById('service_versao').value || '1.0.0',
+                ambiente: document.getElementById('service_ambiente').value,
+                descricao: document.getElementById('service_descricao').value || null,
+                observacoes: document.getElementById('service_observacoes').value || null
+            };
+            
+            try {
+                await saveServiceToDB(data);
+                closeServiceModal();
+                await loadServices();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        function editService(id) {
+            const service = services.find(s => s.id === id);
+            if (service) {
+                openServiceModal(service);
+            }
+        }
+
+        async function deleteService(id) {
+            const service = services.find(s => s.id === id);
+            if (!service) return;
+            
+            if (!confirm(`Tem certeza que deseja eliminar o serviço "${service.nome}"?`)) {
+                return;
+            }
+            
+            try {
+                await deleteServiceFromDB(id);
+                await loadServices();
+            } catch (error) {
+                console.error('Erro ao deletar:', error);
+            }
+        }
+
+        function viewService(id) {
+            const service = services.find(s => s.id === id);
+            if (!service) return;
+            
+            const statusLabels = {
+                'active': 'Ativo',
+                'inactive': 'Inativo',
+                'pending': 'Pendente',
+                'maintenance': 'Manutenção',
+                'beta': 'Beta'
+            };
+            
+            const statusClass = `status-${service.status || 'pending'}`;
+            const categoryLabels = {
+                'desenvolvimento': 'Desenvolvimento',
+                'infraestrutura': 'Infraestrutura',
+                'seguranca': 'Segurança',
+                'marketing': 'Marketing',
+                'suporte': 'Suporte'
+            };
+            
+            const categoryIcons = {
+                'desenvolvimento': 'fa-code',
+                'infraestrutura': 'fa-server',
+                'seguranca': 'fa-shield-alt',
+                'marketing': 'fa-bullhorn',
+                'suporte': 'fa-headset'
+            };
+            
+            const categoryIcon = categoryIcons[service.categoria] || 'fa-cube';
+            
+            document.getElementById('detailsTitle').textContent = `Serviço: ${service.nome}`;
+            document.getElementById('detailsContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Informações Gerais</h4>
+                        <p class="font-semibold text-gray-800 text-lg">${service.nome}</p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas ${categoryIcon} mr-1"></i>
+                            ${categoryLabels[service.categoria] || service.categoria}
+                        </p>
+                        <p class="text-sm text-gray-600">Versão: v${service.versao || '1.0.0'}</p>
+                        <p class="text-sm text-gray-600">Ambiente: ${service.ambiente || 'Produção'}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Status</h4>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                            ${statusLabels[service.status] || service.status}
+                        </span>
+                        <p class="text-sm text-gray-500 mt-2">Criado em: ${formatDateTime(service.created_at)}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">URL</h4>
+                        <p class="text-gray-700">
+                            ${service.url ? `<a href="${service.url}" target="_blank" class="text-blue-600 hover:underline">${service.url}</a>` : 'Não informado'}
+                        </p>
+                    </div>
+                </div>
+                ${service.descricao ? `
+                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Descrição</h4>
+                        <p class="text-gray-700">${service.descricao}</p>
+                    </div>
+                ` : ''}
+                ${service.observacoes ? `
+                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Observações</h4>
+                        <p class="text-gray-700">${service.observacoes}</p>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('detailsModal').classList.add('active');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+        }
+
+        function printServiceDetails() {
+            const content = document.getElementById('detailsContent').innerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html>
+                    <head><title>Detalhes do Serviço</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; }
+                        h1 { color: #1e3a5f; }
+                        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+                        .box { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+                        .label { font-size: 12px; color: #64748b; }
+                        .value { font-weight: 600; color: #1e293b; }
+                        .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+                    </style>
+                    </head>
+                    <body>
+                        <h1>Detalhes do Serviço Digital</h1>
+                        ${content}
+                        <p style="margin-top: 30px; color: #94a3b8; font-size: 12px;">
+                            Documento gerado em ${new Date().toLocaleString('pt-BR')}
+                        </p>
+                    </body>
+                </html>
+            `);
+            win.document.close();
+            setTimeout(() => win.print(), 500);
+        }
+
+        function refreshServices() {
+            showToast('Atualizando serviços...', 'info');
+            loadServices().then(() => {
+                showToast('Serviços atualizados!', 'success');
+            });
+        }
+
+        // ==================== FILTROS ====================
+        function applyFilters() {
+            currentPage = 1;
+            loadServices();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterDate').value = '';
+            currentPage = 1;
+            loadServices();
+        }
+
+        // ==================== EXPORT ====================
+        function exportServices() {
+            if (services.length === 0) {
+                showToast('Não há dados para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['ID', 'Nome', 'Categoria', 'URL', 'Status', 'Versão', 'Ambiente', 'Descrição', 'Criado em'];
+            const rows = services.map(s => [
+                s.id,
+                s.nome || '',
+                s.categoria || '',
+                s.url || '',
+                s.status || '',
+                s.versao || '',
+                s.ambiente || '',
+                s.descricao || '',
+                s.created_at || ''
+            ]);
+            
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `servicos_digitais_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showToast('Exportação concluída com sucesso!', 'success');
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const title = document.getElementById('sidebarTitle');
+            
+            if (sidebar.classList.contains('sidebar-expanded')) {
+                sidebar.classList.remove('sidebar-expanded');
+                sidebar.classList.add('sidebar-collapsed');
+                title.style.display = 'none';
+                document.querySelectorAll('.sidebar .menu-item span, .sidebar .menu-item a span').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.add('sidebar-expanded');
+                title.style.display = 'inline';
+                document.querySelectorAll('.sidebar .menu-item span, .sidebar .menu-item a span').forEach(el => {
+                    el.style.display = 'inline';
+                });
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-hidden');
+        }
+
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const icon = element.querySelector('.fa-chevron-down');
+            submenu.classList.toggle('submenu-open');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function loadSidebarPreference() {
+            const sidebar = document.querySelector('.sidebar');
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderServices();
+                }
+            });
+            
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(services.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderServices();
+                }
+            });
+            
+            // Fechar modais com ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeServiceModal();
+                    closeDetailsModal();
+                }
+            });
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info}"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        window.addEventListener('load', function() {
+            console.log('✅ Página de Serviços Digitais carregada!');
+        });
+    </script>
+</body>
+</html>

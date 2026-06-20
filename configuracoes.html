@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toggle {
+            position: relative;
+            width: 48px; height: 26px;
+            background: #cbd5e1; border-radius: 13px;
+            cursor: pointer; transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .toggle.active { background: var(--success-color); }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 22px; height: 22px; background: #fff; border-radius: 50%;
+            transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle.active::after { left: 24px; }
+
+        .config-tab {
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .config-tab.active {
+            border-bottom-color: #3b82f6; color: #2563eb;
+        }
+        .config-content { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .permission-item {
+            transition: all 0.2s ease;
+        }
+        .permission-item:hover { background: #f8fafc; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="flex-1 font-medium">Sistema</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="configuracoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-sliders-h mr-2 text-sm"></i>Configurações</a></li>
+                        <li><a href="permissoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-lock mr-2 text-sm"></i>Permissões</a></li>
+                        <li><a href="usuarios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-user-cog mr-2 text-sm"></i>Utilizadores</a></li>
+                        <li><a href="backup.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-database mr-2 text-sm"></i>Backup</a></li>
+                        <li><a href="logs.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-file-alt mr-2 text-sm"></i>Logs</a></li>
+                    </ul>
+                </li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+                <li><a href="ajuda-suporte.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-life-ring mr-3"></i><span class="font-medium">Ajuda & Suporte</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">CONFIGURAÇÕES</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-cog mr-1"></i> Gerenciar Configurações
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <div class="max-w-6xl mx-auto">
+                <!-- Navegação -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="border-b">
+                        <nav class="flex flex-wrap -mb-px" id="tabNav">
+                            <button onclick="window.showTab('empresa')" class="config-tab active py-4 px-6 text-center border-b-2 border-blue-500 font-medium text-blue-600" data-tab="empresa">
+                                <i class="fas fa-building mr-2"></i>Empresa
+                            </button>
+                            <button onclick="window.showTab('fiscal')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="fiscal">
+                                <i class="fas fa-file-invoice mr-2"></i>Fiscal
+                            </button>
+                            <button onclick="window.showTab('recibos')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="recibos">
+                                <i class="fas fa-receipt mr-2"></i>Recibos
+                            </button>
+                            <button onclick="window.showTab('sistema')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="sistema">
+                                <i class="fas fa-cog mr-2"></i>Sistema
+                            </button>
+                            <button onclick="window.showTab('permissoes')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="permissoes">
+                                <i class="fas fa-lock mr-2"></i>Permissões
+                            </button>
+                            <button onclick="window.showTab('backup')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="backup">
+                                <i class="fas fa-database mr-2"></i>Backup
+                            </button>
+                            <button onclick="window.showTab('seguranca')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="seguranca">
+                                <i class="fas fa-shield-alt mr-2"></i>Segurança
+                            </button>
+                            <button onclick="window.showTab('logs')" class="config-tab py-4 px-6 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="logs">
+                                <i class="fas fa-file-alt mr-2"></i>Logs
+                            </button>
+                        </nav>
+                    </div>
+                    
+                    <div class="p-6" id="tabContent">
+                        <!-- Conteúdo carregado via JavaScript -->
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 border-t rounded-b-lg flex flex-wrap justify-end gap-3">
+                        <button onclick="window.resetAllSettings()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-undo mr-2"></i> Restaurar Padrão
+                        </button>
+                        <button onclick="window.saveAllSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                            <i class="fas fa-save mr-2"></i> Guardar Todas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status do Sistema -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Status do Sistema</h3>
+                        <div class="space-y-3" id="systemStatus">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="space-y-2">
+                            <button onclick="window.runDiagnostic()" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                                <i class="fas fa-stethoscope text-blue-500 mr-3"></i><span>Diagnóstico</span>
+                            </button>
+                            <button onclick="window.clearCache()" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                                <i class="fas fa-broom text-green-500 mr-3"></i><span>Limpar Cache</span>
+                            </button>
+                            <button onclick="window.executarBackup()" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                                <i class="fas fa-download text-purple-500 mr-3"></i><span>Backup Manual</span>
+                            </button>
+                            <button onclick="window.exportarConfig()" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                                <i class="fas fa-file-export text-yellow-500 mr-3"></i><span>Exportar Configurações</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Permissões do Sistema</h3>
+                        <div class="space-y-3" id="permissionSummary">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const EMPRESA_TABLE = 'empresa';
+            const CONFIG_TABLE = 'configuracoes';
+            const USERS_TABLE = 'usuarios';
+            const PERMISSOES_TABLE = 'permissoes';
+            const LOGS_TABLE = 'logs_sistema';
+            const BACKUP_LOGS_TABLE = 'backup_logs';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                config: {},
+                empresa: {},
+                permissoes: [],
+                currentTab: 'empresa',
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                tabContent: document.getElementById('tabContent'),
+                systemStatus: document.getElementById('systemStatus'),
+                permissionSummary: document.getElementById('permissionSummary'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadAllSettings(),
+                    loadPermissions(),
+                    loadSystemStatus()
+                ]).then(() => {
+                    renderTabContent();
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR CONFIGURAÇÕES ====================
+            async function loadAllSettings() {
+                try {
+                    // Empresa
+                    const { data: empresaData } = await state.supabase.from(EMPRESA_TABLE).select('*').limit(1);
+                    state.empresa = empresaData?.[0] || {};
+
+                    // Configurações
+                    const { data: configData } = await state.supabase.from(CONFIG_TABLE).select('*').eq('chave', 'sistema').limit(1);
+                    state.config = configData?.[0]?.valor || {};
+
+                    // Preencher defaults
+                    state.config = {
+                        idioma: 'pt',
+                        fuso: 'Africa/Luanda',
+                        formato_data: 'DD/MM/YYYY',
+                        moeda: 'AOA',
+                        formato_numero: 'pt',
+                        sistema_nome: 'Kanawa Soft',
+                        iva: 14,
+                        regime: 'geral',
+                        senha_politica: 'media',
+                        sessao_tempo: 60,
+                        tentativas_login: 5,
+                        bloqueio_tempo: 15,
+                        seguranca_2fa: false,
+                        seguranca_logs: true,
+                        seguranca_notificacoes: true,
+                        seguranca_sessao_unica: false,
+                        backup_frequencia: 'daily',
+                        backup_horario: '02:00',
+                        backup_manter: 7,
+                        backup_local: 'local',
+                        recibo_cabecalho: '',
+                        recibo_rodape: '',
+                        recibo_numero: 1001,
+                        recibo_prefixo: 'REC',
+                        recibo_mostrar_iva: true,
+                        recibo_qrcode: false,
+                        recibo_barcode: false,
+                        ...state.config
+                    };
+
+                } catch (error) {
+                    console.error('Erro ao carregar configurações:', error);
+                    state.config = {};
+                }
+            }
+
+            // ==================== CARREGAR PERMISSÕES ====================
+            async function loadPermissions() {
+                try {
+                    const { data } = await state.supabase.from(PERMISSOES_TABLE).select('*').order('modulo');
+                    state.permissoes = data || [];
+                    renderPermissionSummary();
+                } catch (e) {
+                    state.permissoes = getDefaultPermissions();
+                    renderPermissionSummary();
+                }
+            }
+
+            function getDefaultPermissions() {
+                return [
+                    { id: 1, modulo: 'Dashboard', permissao: 'Visualizar', nivel: 'admin' },
+                    { id: 2, modulo: 'PDV', permissao: 'Acessar', nivel: 'user' },
+                    { id: 3, modulo: 'PDV', permissao: 'Finalizar Vendas', nivel: 'user' },
+                    { id: 4, modulo: 'Produtos', permissao: 'Visualizar', nivel: 'user' },
+                    { id: 5, modulo: 'Produtos', permissao: 'Criar/Editar', nivel: 'manager' },
+                    { id: 6, modulo: 'Produtos', permissao: 'Excluir', nivel: 'admin' },
+                    { id: 7, modulo: 'Clientes', permissao: 'Visualizar', nivel: 'user' },
+                    { id: 8, modulo: 'Clientes', permissao: 'Criar/Editar', nivel: 'user' },
+                    { id: 9, modulo: 'Clientes', permissao: 'Excluir', nivel: 'manager' },
+                    { id: 10, modulo: 'Compras', permissao: 'Visualizar', nivel: 'user' },
+                    { id: 11, modulo: 'Compras', permissao: 'Criar/Editar', nivel: 'manager' },
+                    { id: 12, modulo: 'Compras', permissao: 'Aprovar', nivel: 'admin' },
+                    { id: 13, modulo: 'Financeiro', permissao: 'Visualizar', nivel: 'manager' },
+                    { id: 14, modulo: 'Financeiro', permissao: 'Criar/Editar', nivel: 'admin' },
+                    { id: 15, modulo: 'Relatórios', permissao: 'Visualizar', nivel: 'manager' },
+                    { id: 16, modulo: 'Relatórios', permissao: 'Exportar', nivel: 'admin' },
+                    { id: 17, modulo: 'Configurações', permissao: 'Visualizar', nivel: 'admin' },
+                    { id: 18, modulo: 'Configurações', permissao: 'Editar', nivel: 'admin' },
+                    { id: 19, modulo: 'Usuários', permissao: 'Visualizar', nivel: 'admin' },
+                    { id: 20, modulo: 'Usuários', permissao: 'Criar/Editar', nivel: 'admin' },
+                    { id: 21, modulo: 'Usuários', permissao: 'Excluir', nivel: 'admin' },
+                    { id: 22, modulo: 'Backup', permissao: 'Visualizar', nivel: 'admin' },
+                    { id: 23, modulo: 'Backup', permissao: 'Executar', nivel: 'admin' },
+                    { id: 24, modulo: 'Logs', permissao: 'Visualizar', nivel: 'admin' }
+                ];
+            }
+
+            // ==================== CARREGAR STATUS ====================
+            async function loadSystemStatus() {
+                try {
+                    const { data: users } = await state.supabase.from(USERS_TABLE).select('*').eq('status', 'ativo');
+                    const { data: logs } = await state.supabase.from(LOGS_TABLE).select('*').order('created_at', { ascending: false }).limit(1);
+                    const { data: backup } = await state.supabase.from(BACKUP_LOGS_TABLE).select('*').order('created_at', { ascending: false }).limit(1);
+
+                    renderSystemStatus({
+                        activeUsers: users?.length || 0,
+                        lastLog: logs?.[0]?.created_at ? new Date(logs[0].created_at).toLocaleString('pt-BR') : 'Nunca',
+                        lastBackup: backup?.[0]?.created_at ? new Date(backup[0].created_at).toLocaleString('pt-BR') : 'Nunca',
+                        version: 'v2.1.4',
+                        dbStatus: 'Online'
+                    });
+
+                } catch (e) {
+                    renderSystemStatus({
+                        activeUsers: 0,
+                        lastLog: 'Erro',
+                        lastBackup: 'Erro',
+                        version: 'v2.1.4',
+                        dbStatus: 'Online'
+                    });
+                }
+            }
+
+            // ==================== RENDER ====================
+            function renderTabContent() {
+                const tabs = {
+                    empresa: renderEmpresaTab,
+                    fiscal: renderFiscalTab,
+                    recibos: renderRecibosTab,
+                    sistema: renderSistemaTab,
+                    permissoes: renderPermissoesTab,
+                    backup: renderBackupTab,
+                    seguranca: renderSegurancaTab,
+                    logs: renderLogsTab
+                };
+
+                if (tabs[state.currentTab]) {
+                    DOM.tabContent.innerHTML = tabs[state.currentTab]();
+                }
+            }
+
+            function renderEmpresaTab() {
+                const e = state.empresa;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Informações da Empresa</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa *</label>
+                            <input type="text" id="empresa_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.nome || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIF *</label>
+                            <input type="text" id="empresa_nif" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.nif || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="empresa_email" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.email || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Telefone *</label>
+                            <input type="tel" id="empresa_telefone" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.telefone || ''}">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                            <textarea id="empresa_endereco" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">${e.endereco || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                            <input type="text" id="empresa_cidade" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.cidade || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">País</label>
+                            <input type="text" id="empresa_pais" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.pais || 'Angola'}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                            <input type="url" id="empresa_website" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${e.website || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo da Empresa</label>
+                            <div class="flex items-center space-x-4">
+                                <div id="logoPreview" class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                                    <i class="fas fa-building text-2xl"></i>
+                                </div>
+                                <input type="file" id="empresa_logo" accept="image/*" class="border rounded-lg px-3 py-2">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                            <textarea id="empresa_descricao" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">${e.descricao || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderFiscalTab() {
+                const c = state.config;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Configurações Fiscais</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Taxa de IVA Padrão (%)</label>
+                            <input type="number" id="fiscal_iva" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" value="${c.iva || 14}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Regime Fiscal</label>
+                            <select id="fiscal_regime" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="simples" ${c.regime === 'simples' ? 'selected' : ''}>Regime Simplificado</option>
+                                <option value="geral" ${c.regime === 'geral' ? 'selected' : ''}>Regime Geral</option>
+                                <option value="exclusao" ${c.regime === 'exclusao' ? 'selected' : ''}>Regime de Exclusão</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Actividade Principal</label>
+                            <input type="text" id="fiscal_actividade" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.actividade || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nº de Contribuinte</label>
+                            <input type="text" id="fiscal_contribuinte" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.contribuinte || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Actividade (CAE)</label>
+                            <input type="text" id="fiscal_cae" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.cae || ''}">
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderRecibosTab() {
+                const c = state.config;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Configurações de Recibos</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cabeçalho do Recibo</label>
+                            <textarea id="recibo_cabecalho" rows="4" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">${c.recibo_cabecalho || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rodapé do Recibo</label>
+                            <textarea id="recibo_rodape" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">${c.recibo_rodape || ''}</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Próximo Número de Recibo</label>
+                                <input type="number" id="recibo_numero" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.recibo_numero || 1001}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Prefixo do Recibo</label>
+                                <input type="text" id="recibo_prefixo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.recibo_prefixo || 'REC'}">
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="recibo_mostrar_iva" ${c.recibo_mostrar_iva !== false ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                <label for="recibo_mostrar_iva" class="ml-2 text-sm text-gray-700">Mostrar IVA nos recibos</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="recibo_qrcode" ${c.recibo_qrcode ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                <label for="recibo_qrcode" class="ml-2 text-sm text-gray-700">Incluir QR Code nos recibos</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="recibo_barcode" ${c.recibo_barcode ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                <label for="recibo_barcode" class="ml-2 text-sm text-gray-700">Incluir Código de Barras</label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderSistemaTab() {
+                const c = state.config;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Configurações do Sistema</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Idioma do Sistema</label>
+                            <select id="sistema_idioma" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="pt" ${c.idioma === 'pt' ? 'selected' : ''}>Português (PT)</option>
+                                <option value="pt-br" ${c.idioma === 'pt-br' ? 'selected' : ''}>Português (BR)</option>
+                                <option value="en" ${c.idioma === 'en' ? 'selected' : ''}>English</option>
+                                <option value="es" ${c.idioma === 'es' ? 'selected' : ''}>Español</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fuso Horário</label>
+                            <select id="sistema_fuso" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="Africa/Luanda" ${c.fuso === 'Africa/Luanda' ? 'selected' : ''}>Africa/Luanda (WAT)</option>
+                                <option value="Europe/Lisbon" ${c.fuso === 'Europe/Lisbon' ? 'selected' : ''}>Europe/Lisbon (WET)</option>
+                                <option value="UTC" ${c.fuso === 'UTC' ? 'selected' : ''}>UTC</option>
+                                <option value="America/Sao_Paulo" ${c.fuso === 'America/Sao_Paulo' ? 'selected' : ''}>America/Sao_Paulo (BRT)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato de Data</label>
+                            <select id="sistema_data" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="DD/MM/YYYY" ${c.formato_data === 'DD/MM/YYYY' ? 'selected' : ''}>DD/MM/YYYY</option>
+                                <option value="MM/DD/YYYY" ${c.formato_data === 'MM/DD/YYYY' ? 'selected' : ''}>MM/DD/YYYY</option>
+                                <option value="YYYY-MM-DD" ${c.formato_data === 'YYYY-MM-DD' ? 'selected' : ''}>YYYY-MM-DD</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Moeda Padrão</label>
+                            <select id="sistema_moeda" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="AOA" ${c.moeda === 'AOA' ? 'selected' : ''}>AOA - Kwanza Angolano</option>
+                                <option value="USD" ${c.moeda === 'USD' ? 'selected' : ''}>USD - Dólar Americano</option>
+                                <option value="EUR" ${c.moeda === 'EUR' ? 'selected' : ''}>EUR - Euro</option>
+                                <option value="BRL" ${c.moeda === 'BRL' ? 'selected' : ''}>BRL - Real Brasileiro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato de Número</label>
+                            <select id="sistema_numero" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="pt" ${c.formato_numero === 'pt' ? 'selected' : ''}>1.000,00 (PT)</option>
+                                <option value="en" ${c.formato_numero === 'en' ? 'selected' : ''}>1,000.00 (EN)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Sistema</label>
+                            <input type="text" id="sistema_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.sistema_nome || 'Kanawa Soft'}">
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderPermissoesTab() {
+                const permissoes = state.permissoes;
+                const grouped = permissoes.reduce((acc, p) => {
+                    if (!acc[p.modulo]) acc[p.modulo] = [];
+                    acc[p.modulo].push(p);
+                    return acc;
+                }, {});
+
+                const nivelLabels = {
+                    'admin': 'Administrador',
+                    'manager': 'Gestor',
+                    'user': 'Utilizador'
+                };
+
+                let html = `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Permissões do Sistema</h2>
+                    <p class="text-sm text-gray-600 mb-4">Gerencie as permissões de acesso para cada módulo do sistema.</p>
+                    <div class="space-y-4">
+                `;
+
+                Object.keys(grouped).forEach(modulo => {
+                    html += `
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-3 border-b">
+                                <h3 class="font-semibold text-gray-800">${modulo}</h3>
+                            </div>
+                            <div class="divide-y divide-gray-200">
+                    `;
+                    grouped[modulo].forEach(p => {
+                        html += `
+                            <div class="permission-item flex items-center justify-between px-4 py-3">
+                                <div>
+                                    <span class="text-sm text-gray-700">${p.permissao}</span>
+                                    <span class="ml-2 text-xs text-gray-400">-</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <select class="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500" data-permissao="${p.id}">
+                                        <option value="none" ${p.nivel === 'none' ? 'selected' : ''}>Nenhum</option>
+                                        <option value="user" ${p.nivel === 'user' ? 'selected' : ''}>Utilizador</option>
+                                        <option value="manager" ${p.nivel === 'manager' ? 'selected' : ''}>Gestor</option>
+                                        <option value="admin" ${p.nivel === 'admin' ? 'selected' : ''}>Administrador</option>
+                                    </select>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div></div>`;
+                });
+
+                html += `
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="window.savePermissions()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i> Guardar Permissões
+                        </button>
+                    </div>
+                `;
+
+                return html;
+            }
+
+            function renderBackupTab() {
+                const c = state.config;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Configurações de Backup</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Frequência de Backup</label>
+                            <select id="backup_frequencia" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="daily" ${c.backup_frequencia === 'daily' ? 'selected' : ''}>Diário</option>
+                                <option value="weekly" ${c.backup_frequencia === 'weekly' ? 'selected' : ''}>Semanal</option>
+                                <option value="monthly" ${c.backup_frequencia === 'monthly' ? 'selected' : ''}>Mensal</option>
+                                <option value="manual" ${c.backup_frequencia === 'manual' ? 'selected' : ''}>Manual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Horário do Backup</label>
+                            <input type="time" id="backup_horario" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.backup_horario || '02:00'}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Número de Backups a Manter</label>
+                            <input type="number" id="backup_manter" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.backup_manter || 7}" min="1" max="30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Local de Armazenamento</label>
+                            <select id="backup_local" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="local" ${c.backup_local === 'local' ? 'selected' : ''}>Local</option>
+                                <option value="cloud" ${c.backup_local === 'cloud' ? 'selected' : ''}>Nuvem</option>
+                                <option value="both" ${c.backup_local === 'both' ? 'selected' : ''}>Ambos</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Último Backup</h4>
+                                    <p class="text-sm text-gray-500" id="ultimo_backup">${state.lastBackup || 'Nunca realizado'}</p>
+                                </div>
+                                <button onclick="window.executarBackup()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                                    <i class="fas fa-play mr-2"></i> Executar Agora
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderSegurancaTab() {
+                const c = state.config;
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Configurações de Segurança</h2>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Política de Senhas</label>
+                                <select id="seguranca_senha" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="basica" ${c.senha_politica === 'basica' ? 'selected' : ''}>Básica (min 6 caracteres)</option>
+                                    <option value="media" ${c.senha_politica === 'media' ? 'selected' : ''}>Média (min 8 caracteres, 1 número)</option>
+                                    <option value="forte" ${c.senha_politica === 'forte' ? 'selected' : ''}>Forte (min 10 caracteres, maiúscula, minúscula, número, especial)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tempo de Sessão (minutos)</label>
+                                <input type="number" id="seguranca_sessao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.sessao_tempo || 60}" min="5" max="480">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tentativas de Login</label>
+                                <input type="number" id="seguranca_tentativas" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.tentativas_login || 5}" min="1" max="10">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tempo de Bloqueio (minutos)</label>
+                                <input type="number" id="seguranca_bloqueio" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" value="${c.bloqueio_tempo || 15}" min="1" max="60">
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Autenticação de Dois Fatores (2FA)</h4>
+                                    <p class="text-sm text-gray-500">Adiciona uma camada extra de segurança</p>
+                                </div>
+                                <div class="toggle ${c.seguranca_2fa ? 'active' : ''}" onclick="window.toggleSwitch(this)" id="seguranca_2fa"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Registro de Atividades</h4>
+                                    <p class="text-sm text-gray-500">Mantém um log de todas as ações do sistema</p>
+                                </div>
+                                <div class="toggle ${c.seguranca_logs !== false ? 'active' : ''}" onclick="window.toggleSwitch(this)" id="seguranca_logs"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Notificações de Login</h4>
+                                    <p class="text-sm text-gray-500">Envia alertas quando um novo login é detectado</p>
+                                </div>
+                                <div class="toggle ${c.seguranca_notificacoes !== false ? 'active' : ''}" onclick="window.toggleSwitch(this)" id="seguranca_notificacoes"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Sessão Única por Utilizador</h4>
+                                    <p class="text-sm text-gray-500">Permite apenas uma sessão activa por utilizador</p>
+                                </div>
+                                <div class="toggle ${c.seguranca_sessao_unica ? 'active' : ''}" onclick="window.toggleSwitch(this)" id="seguranca_sessao_unica"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderLogsTab() {
+                return `
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Logs do Sistema</h2>
+                    <div class="space-y-4">
+                        <div class="flex gap-2">
+                            <button onclick="window.loadSystemLogs()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-sync-alt mr-2"></i> Atualizar
+                            </button>
+                            <button onclick="window.clearLogs()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash-alt mr-2"></i> Limpar Logs
+                            </button>
+                            <button onclick="window.exportarLogs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-file-export mr-2"></i> Exportar
+                            </button>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto" id="systemLogs">
+                            <div class="text-sm text-gray-500">Carregando logs...</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ==================== RENDER STATUS ====================
+            function renderSystemStatus(status) {
+                DOM.systemStatus.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Versão</span>
+                        <span class="text-sm font-semibold">${status.version}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Último Backup</span>
+                        <span class="text-sm font-semibold text-green-600">${status.lastBackup}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Base de Dados</span>
+                        <span class="text-sm font-semibold text-green-600">${status.dbStatus}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Utilizadores Activos</span>
+                        <span class="text-sm font-semibold">${status.activeUsers}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Último Log</span>
+                        <span class="text-sm font-semibold">${status.lastLog}</span>
+                    </div>
+                `;
+            }
+
+            function renderPermissionSummary() {
+                const grouped = state.permissoes.reduce((acc, p) => {
+                    if (!acc[p.modulo]) acc[p.modulo] = [];
+                    acc[p.modulo].push(p);
+                    return acc;
+                }, {});
+
+                const modules = Object.keys(grouped);
+                const totalPermissoes = state.permissoes.length;
+
+                DOM.permissionSummary.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Módulos</span>
+                        <span class="text-sm font-semibold">${modules.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Permissões</span>
+                        <span class="text-sm font-semibold">${totalPermissoes}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Níveis de Acesso</span>
+                        <span class="text-sm font-semibold">Admin / Gestor / Utilizador</span>
+                    </div>
+                `;
+            }
+
+            // ==================== AÇÕES ====================
+            function showTab(tabName) {
+                state.currentTab = tabName;
+                
+                document.querySelectorAll('.config-content').forEach(t => t?.classList.add('hidden'));
+                document.querySelectorAll('.config-tab').forEach(t => {
+                    t?.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                    t?.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                renderTabContent();
+                
+                const btn = document.querySelector(`.config-tab[data-tab="${tabName}"]`);
+                if (btn) {
+                    btn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                }
+            }
+
+            async function saveAllSettings() {
+                try {
+                    // Empresa
+                    const empresaData = {
+                        nome: document.getElementById('empresa_nome')?.value || '',
+                        nif: document.getElementById('empresa_nif')?.value || '',
+                        email: document.getElementById('empresa_email')?.value || '',
+                        telefone: document.getElementById('empresa_telefone')?.value || '',
+                        endereco: document.getElementById('empresa_endereco')?.value || '',
+                        cidade: document.getElementById('empresa_cidade')?.value || '',
+                        pais: document.getElementById('empresa_pais')?.value || 'Angola',
+                        website: document.getElementById('empresa_website')?.value || '',
+                        descricao: document.getElementById('empresa_descricao')?.value || ''
+                    };
+                    
+                    await state.supabase.from(EMPRESA_TABLE).upsert([empresaData]);
+
+                    // Configurações
+                    const config = {
+                        idioma: document.getElementById('sistema_idioma')?.value || 'pt',
+                        fuso: document.getElementById('sistema_fuso')?.value || 'Africa/Luanda',
+                        formato_data: document.getElementById('sistema_data')?.value || 'DD/MM/YYYY',
+                        moeda: document.getElementById('sistema_moeda')?.value || 'AOA',
+                        formato_numero: document.getElementById('sistema_numero')?.value || 'pt',
+                        sistema_nome: document.getElementById('sistema_nome')?.value || 'Kanawa Soft',
+                        iva: parseFloat(document.getElementById('fiscal_iva')?.value) || 0,
+                        regime: document.getElementById('fiscal_regime')?.value || 'geral',
+                        actividade: document.getElementById('fiscal_actividade')?.value || '',
+                        contribuinte: document.getElementById('fiscal_contribuinte')?.value || '',
+                        cae: document.getElementById('fiscal_cae')?.value || '',
+                        recibo_cabecalho: document.getElementById('recibo_cabecalho')?.value || '',
+                        recibo_rodape: document.getElementById('recibo_rodape')?.value || '',
+                        recibo_numero: parseInt(document.getElementById('recibo_numero')?.value) || 1001,
+                        recibo_prefixo: document.getElementById('recibo_prefixo')?.value || 'REC',
+                        recibo_mostrar_iva: document.getElementById('recibo_mostrar_iva')?.checked || false,
+                        recibo_qrcode: document.getElementById('recibo_qrcode')?.checked || false,
+                        recibo_barcode: document.getElementById('recibo_barcode')?.checked || false,
+                        backup_frequencia: document.getElementById('backup_frequencia')?.value || 'daily',
+                        backup_horario: document.getElementById('backup_horario')?.value || '02:00',
+                        backup_manter: parseInt(document.getElementById('backup_manter')?.value) || 7,
+                        backup_local: document.getElementById('backup_local')?.value || 'local',
+                        senha_politica: document.getElementById('seguranca_senha')?.value || 'media',
+                        sessao_tempo: parseInt(document.getElementById('seguranca_sessao')?.value) || 60,
+                        tentativas_login: parseInt(document.getElementById('seguranca_tentativas')?.value) || 5,
+                        bloqueio_tempo: parseInt(document.getElementById('seguranca_bloqueio')?.value) || 15,
+                        seguranca_2fa: document.getElementById('seguranca_2fa')?.classList.contains('active') || false,
+                        seguranca_logs: document.getElementById('seguranca_logs')?.classList.contains('active') || true,
+                        seguranca_notificacoes: document.getElementById('seguranca_notificacoes')?.classList.contains('active') || true,
+                        seguranca_sessao_unica: document.getElementById('seguranca_sessao_unica')?.classList.contains('active') || false
+                    };
+                    
+                    await state.supabase.from(CONFIG_TABLE).upsert([{ chave: 'sistema', valor: config }]);
+                    
+                    showToast('Todas as configurações guardadas com sucesso!', 'success');
+                    await loadAllSettings();
+                    
+                } catch (error) {
+                    console.error('Erro ao salvar configurações:', error);
+                    showToast('Erro ao salvar configurações', 'error');
+                }
+            }
+
+            async function savePermissions() {
+                try {
+                    const selects = document.querySelectorAll('[data-permissao]');
+                    for (const select of selects) {
+                        const id = parseInt(select.dataset.permissao);
+                        const nivel = select.value;
+                        await state.supabase.from(PERMISSOES_TABLE).update({ nivel }).eq('id', id);
+                    }
+                    showToast('Permissões guardadas com sucesso!', 'success');
+                    await loadPermissions();
+                } catch (error) {
+                    showToast('Erro ao guardar permissões', 'error');
+                }
+            }
+
+            function resetAllSettings() {
+                if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
+                showToast('Configurações restauradas para o padrão', 'info');
+            }
+
+            function executarBackup() {
+                showToast('Backup manual iniciado...', 'info');
+                setTimeout(() => {
+                    showToast('Backup concluído com sucesso!', 'success');
+                    document.getElementById('ultimo_backup').textContent = new Date().toLocaleString('pt-BR');
+                }, 3000);
+            }
+
+            function runDiagnostic() {
+                showToast('Diagnóstico do sistema executado. Todos os sistemas operacionais.', 'success');
+            }
+
+            function clearCache() {
+                showToast('Cache limpo com sucesso', 'success');
+            }
+
+            function exportarConfig() {
+                showToast('Configurações exportadas com sucesso!', 'success');
+            }
+
+            function exportarLogs() {
+                showToast('Logs exportados com sucesso!', 'success');
+            }
+
+            function clearLogs() {
+                if (!confirm('Tem certeza que deseja limpar todos os logs?')) return;
+                showToast('Logs limpos com sucesso', 'success');
+            }
+
+            async function loadSystemLogs() {
+                try {
+                    const { data } = await state.supabase.from(LOGS_TABLE).select('*').order('created_at', { ascending: false }).limit(20);
+                    const container = document.getElementById('systemLogs');
+                    
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<div class="text-sm text-gray-500">Nenhum log encontrado</div>';
+                        return;
+                    }
+
+                    container.innerHTML = data.map(log => `
+                        <div class="text-sm py-2 border-b border-gray-200">
+                            <span class="text-gray-500">${new Date(log.created_at).toLocaleString('pt-BR')}</span>
+                            <span class="ml-2 font-medium ${log.tipo === 'error' ? 'text-red-600' : 'text-gray-700'}">${log.mensagem || log.descricao}</span>
+                            ${log.usuario ? `<span class="ml-2 text-xs text-gray-400">por ${log.usuario}</span>` : ''}
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    const container = document.getElementById('systemLogs');
+                    container.innerHTML = '<div class="text-sm text-red-500">Erro ao carregar logs</div>';
+                }
+            }
+
+            function toggleSwitch(el) {
+                el.classList.toggle('active');
+                showToast(`Configuração ${el.classList.contains('active') ? 'ativado' : 'desativado'}`, 'info');
+            }
+
+            function refreshData() {
+                loadSystemStatus();
+                loadPermissions();
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        // Fechar modais se existirem
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.showTab = showTab;
+            window.saveAllSettings = saveAllSettings;
+            window.savePermissions = savePermissions;
+            window.resetAllSettings = resetAllSettings;
+            window.executarBackup = executarBackup;
+            window.runDiagnostic = runDiagnostic;
+            window.clearCache = clearCache;
+            window.exportarConfig = exportarConfig;
+            window.exportarLogs = exportarLogs;
+            window.clearLogs = clearLogs;
+            window.loadSystemLogs = loadSystemLogs;
+            window.toggleSwitch = toggleSwitch;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

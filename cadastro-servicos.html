@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-pallet mr-2 text-sm"></i>Estoque</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">GESTÃO DE SERVIÇOS</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Toolbar -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <div class="flex-1 relative">
+                    <input type="text" id="searchInput" placeholder="Buscar serviço por nome, descrição ou categoria..." 
+                           class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <div class="flex gap-3">
+                    <select id="categoryFilter" class="border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+                        <option value="">Todas Categorias</option>
+                    </select>
+                    <button onclick="window.openServiceModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Novo Serviço
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serviço</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duração</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="servicesTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Carregando serviços...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-3 border-t flex justify-between items-center">
+                    <span class="text-sm text-gray-500" id="serviceCount">0 serviços</span>
+                    <div class="flex gap-2">
+                        <button onclick="window.loadServices()" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button onclick="window.exportServices()" class="text-green-600 hover:text-green-800">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== SERVICE MODAL ==================== -->
+    <div class="modal-overlay" id="serviceModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Novo Serviço</h3>
+                <button onclick="window.closeServiceModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="serviceForm">
+                    <input type="hidden" id="serviceId" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Serviço *</label>
+                            <input type="text" id="serv_nome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                            <select id="serv_categoria_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <textarea id="serv_descricao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Preço (AOA) *</label>
+                            <input type="number" id="serv_preco" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duração (minutos)</label>
+                            <input type="number" id="serv_duracao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" min="0" placeholder="Ex: 30">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Custo (AOA)</label>
+                            <input type="number" id="serv_custo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Imagem (URL)</label>
+                            <input type="text" id="serv_imagem" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="https://exemplo.com/imagem.jpg">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex items-center">
+                        <input type="checkbox" id="serv_ativo" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                        <label class="ml-2 text-sm text-gray-700">Serviço Activo</label>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeServiceModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="window.saveService()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DETAILS MODAL ==================== -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Detalhes do Serviço</h3>
+                <button onclick="window.closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div id="detailsContent">
+                    <!-- Carregado via JavaScript -->
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end">
+                <button onclick="window.closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const SERVICES_TABLE = 'servicos';
+            const CATEGORIES_TABLE = 'categorias_servicos';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                services: [],
+                categories: [],
+                editingId: null,
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                statsGrid: document.getElementById('statsGrid'),
+                servicesTableBody: document.getElementById('servicesTableBody'),
+                serviceCount: document.getElementById('serviceCount'),
+                searchInput: document.getElementById('searchInput'),
+                categoryFilter: document.getElementById('categoryFilter'),
+                serviceModal: document.getElementById('serviceModal'),
+                modalTitle: document.getElementById('modalTitle'),
+                serviceId: document.getElementById('serviceId'),
+                serv_nome: document.getElementById('serv_nome'),
+                serv_categoria_id: document.getElementById('serv_categoria_id'),
+                serv_descricao: document.getElementById('serv_descricao'),
+                serv_preco: document.getElementById('serv_preco'),
+                serv_duracao: document.getElementById('serv_duracao'),
+                serv_custo: document.getElementById('serv_custo'),
+                serv_imagem: document.getElementById('serv_imagem'),
+                serv_ativo: document.getElementById('serv_ativo'),
+                detailsModal: document.getElementById('detailsModal'),
+                detailsContent: document.getElementById('detailsContent'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadCategories(),
+                    loadServices()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR CATEGORIAS ====================
+            async function loadCategories() {
+                try {
+                    const { data, error } = await state.supabase
+                        .from(CATEGORIES_TABLE)
+                        .select('*')
+                        .order('nome');
+
+                    if (error) throw error;
+
+                    state.categories = data || [];
+                    updateCategorySelects();
+                    DOM.statsGrid.querySelector('#stat3Value')?.textContent = state.categories.length;
+
+                } catch (error) {
+                    console.error('Erro ao carregar categorias:', error);
+                    state.categories = [];
+                }
+            }
+
+            function updateCategorySelects() {
+                const selects = ['categoryFilter', 'serv_categoria_id'];
+                selects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (!select) return;
+                    const currentValue = select.value;
+                    const isFilter = id === 'categoryFilter';
+                    select.innerHTML = isFilter ? '<option value="">Todas Categorias</option>' : '<option value="">Selecione...</option>';
+                    state.categories.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = c.nome;
+                        select.appendChild(opt);
+                    });
+                    if (currentValue) select.value = currentValue;
+                });
+            }
+
+            // ==================== CARREGAR SERVIÇOS ====================
+            async function loadServices() {
+                state.isLoading = true;
+                try {
+                    const searchTerm = DOM.searchInput.value.toLowerCase();
+                    const categoryFilter = DOM.categoryFilter.value;
+
+                    let query = state.supabase
+                        .from(SERVICES_TABLE)
+                        .select('*, categorias_servicos(nome)')
+                        .order('nome');
+
+                    if (searchTerm) {
+                        query = query.or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%`);
+                    }
+
+                    if (categoryFilter) {
+                        query = query.eq('categoria_id', categoryFilter);
+                    }
+
+                    const { data, error } = await query;
+
+                    if (error) throw error;
+
+                    state.services = data || [];
+                    renderServices();
+                    updateStats();
+
+                } catch (error) {
+                    console.error('Erro ao carregar serviços:', error);
+                    showToast('Erro ao carregar serviços', 'error');
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            // ==================== RENDERIZAR ====================
+            function renderServices() {
+                const tbody = DOM.servicesTableBody;
+
+                if (state.isLoading) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando serviços...</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                if (state.services.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-concierge-bell text-4xl mb-2 opacity-50"></i>
+                                <p>Nenhum serviço encontrado</p>
+                                <p class="text-sm">Clique em "Novo Serviço" para cadastrar</p>
+                            </td>
+                        </tr>
+                    `;
+                    DOM.serviceCount.textContent = '0 serviços';
+                    return;
+                }
+
+                tbody.innerHTML = state.services.map(s => {
+                    const categoryName = s.categorias_servicos?.nome || 'Sem categoria';
+                    const statusClass = s.ativo === false ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                    const statusText = s.ativo === false ? 'Inactivo' : 'Activo';
+                    const duracao = s.duracao ? `${s.duracao} min` : 'N/A';
+
+                    return `
+                        <tr class="hover:bg-gray-50 fade-in">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <img src="${s.imagem || 'https://via.placeholder.com/40x40?text=Serv'}" 
+                                         alt="${s.nome}" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                    <div>
+                                        <div class="font-medium text-gray-800">${s.nome}</div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">${s.descricao || ''}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${categoryName}</td>
+                            <td class="px-6 py-4 text-sm text-right font-medium text-green-700">AOA ${(s.preco || 0).toLocaleString('pt-BR')}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${duracao}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="${statusClass} px-2 py-1 rounded-full text-xs font-medium">${statusText}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="window.editService('${s.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="window.viewServiceDetails('${s.id}')" class="text-green-600 hover:text-green-800 mr-3" title="Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="window.toggleServiceStatus('${s.id}')" 
+                                        class="${s.ativo === false ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} mr-3" 
+                                        title="${s.ativo === false ? 'Activar' : 'Desactivar'}">
+                                    <i class="fas ${s.ativo === false ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
+                                </button>
+                                <button onclick="window.deleteService('${s.id}')" class="text-red-600 hover:text-red-800" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                DOM.serviceCount.textContent = `${state.services.length} serviços`;
+            }
+
+            function updateStats() {
+                const total = state.services.length;
+                const active = state.services.filter(s => s.ativo !== false).length;
+                const prices = state.services.filter(s => s.preco > 0).map(s => s.preco);
+                const avg = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Total Serviços</div>
+                        <div class="text-2xl font-bold text-gray-800">${total}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Ativos</div>
+                        <div class="text-2xl font-bold text-green-600">${active}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Categorias</div>
+                        <div class="text-2xl font-bold text-blue-600">${state.categories.length}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Preço Médio</div>
+                        <div class="text-2xl font-bold text-purple-600">AOA ${avg.toLocaleString('pt-BR')}</div>
+                    </div>
+                `;
+            }
+
+            // ==================== CRUD ====================
+            function openServiceModal(service = null) {
+                // Atualizar categorias no select
+                updateCategorySelects();
+
+                if (service) {
+                    DOM.modalTitle.textContent = 'Editar Serviço';
+                    DOM.serviceId.value = service.id;
+                    DOM.serv_nome.value = service.nome || '';
+                    DOM.serv_descricao.value = service.descricao || '';
+                    DOM.serv_categoria_id.value = service.categoria_id || '';
+                    DOM.serv_preco.value = service.preco || '';
+                    DOM.serv_duracao.value = service.duracao || '';
+                    DOM.serv_custo.value = service.custo || '';
+                    DOM.serv_imagem.value = service.imagem || '';
+                    DOM.serv_ativo.checked = service.ativo !== false;
+                    state.editingId = service.id;
+                } else {
+                    DOM.modalTitle.textContent = 'Novo Serviço';
+                    DOM.serviceId.value = '';
+                    DOM.serv_nome.value = '';
+                    DOM.serv_descricao.value = '';
+                    DOM.serv_categoria_id.value = '';
+                    DOM.serv_preco.value = '';
+                    DOM.serv_duracao.value = '';
+                    DOM.serv_custo.value = '';
+                    DOM.serv_imagem.value = '';
+                    DOM.serv_ativo.checked = true;
+                    state.editingId = null;
+                }
+
+                DOM.serviceModal.classList.add('active');
+            }
+
+            function closeServiceModal() {
+                DOM.serviceModal.classList.remove('active');
+                state.editingId = null;
+            }
+
+            async function saveService() {
+                const serviceData = {
+                    nome: DOM.serv_nome.value.trim(),
+                    descricao: DOM.serv_descricao.value.trim(),
+                    categoria_id: DOM.serv_categoria_id.value || null,
+                    preco: parseFloat(DOM.serv_preco.value) || 0,
+                    duracao: parseInt(DOM.serv_duracao.value) || null,
+                    custo: parseFloat(DOM.serv_custo.value) || 0,
+                    imagem: DOM.serv_imagem.value.trim() || null,
+                    ativo: DOM.serv_ativo.checked
+                };
+
+                if (!serviceData.nome) {
+                    showToast('O campo Nome é obrigatório!', 'error');
+                    return;
+                }
+
+                if (!serviceData.preco || serviceData.preco <= 0) {
+                    showToast('O campo Preço é obrigatório e deve ser maior que 0!', 'error');
+                    return;
+                }
+
+                if (!serviceData.categoria_id) {
+                    showToast('Selecione uma categoria!', 'error');
+                    return;
+                }
+
+                try {
+                    if (state.editingId) {
+                        const { error } = await state.supabase
+                            .from(SERVICES_TABLE)
+                            .update(serviceData)
+                            .eq('id', state.editingId);
+
+                        if (error) throw error;
+                        showToast('Serviço atualizado com sucesso!', 'success');
+                    } else {
+                        const { error } = await state.supabase
+                            .from(SERVICES_TABLE)
+                            .insert([serviceData]);
+
+                        if (error) throw error;
+                        showToast('Serviço cadastrado com sucesso!', 'success');
+                    }
+
+                    closeServiceModal();
+                    await loadServices();
+                } catch (error) {
+                    console.error('Erro ao salvar:', error);
+                    showToast('Erro ao salvar serviço', 'error');
+                }
+            }
+
+            async function editService(id) {
+                const service = state.services.find(s => s.id == id);
+                if (service) {
+                    openServiceModal(service);
+                } else {
+                    showToast('Serviço não encontrado', 'error');
+                }
+            }
+
+            async function deleteService(id) {
+                const service = state.services.find(s => s.id == id);
+                if (!service) return;
+
+                if (!confirm(`Tem certeza que deseja excluir o serviço "${service.nome}"?`)) return;
+
+                try {
+                    await state.supabase.from(SERVICES_TABLE).delete().eq('id', id);
+                    showToast('Serviço removido com sucesso!', 'success');
+                    await loadServices();
+                } catch (error) {
+                    console.error('Erro ao deletar:', error);
+                    showToast('Erro ao deletar serviço', 'error');
+                }
+            }
+
+            async function toggleServiceStatus(id) {
+                const service = state.services.find(s => s.id == id);
+                if (!service) return;
+
+                try {
+                    await state.supabase
+                        .from(SERVICES_TABLE)
+                        .update({ ativo: !service.ativo })
+                        .eq('id', id);
+
+                    showToast(`Serviço ${!service.ativo ? 'activado' : 'desactivado'} com sucesso!`, 'success');
+                    await loadServices();
+                } catch (error) {
+                    console.error('Erro ao alterar status:', error);
+                    showToast('Erro ao alterar status', 'error');
+                }
+            }
+
+            async function viewServiceDetails(id) {
+                const service = state.services.find(s => s.id == id);
+                if (!service) {
+                    showToast('Serviço não encontrado', 'error');
+                    return;
+                }
+
+                const category = state.categories.find(c => c.id == service.categoria_id);
+
+                DOM.detailsContent.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex items-center">
+                            <img src="${service.imagem || 'https://via.placeholder.com/80x80?text=Serv'}" 
+                                 alt="${service.nome}" class="w-20 h-20 rounded-xl object-cover mr-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">${service.nome}</h3>
+                                <p class="text-gray-600">${category?.nome || 'Sem categoria'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-blue-800 mb-3">Informações do Serviço</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div><strong>Descrição:</strong> ${service.descricao || 'Não informada'}</div>
+                                    <div><strong>Preço:</strong> <span class="font-bold text-green-700">AOA ${(service.preco || 0).toLocaleString('pt-BR')}</span></div>
+                                    <div><strong>Duração:</strong> ${service.duracao ? `${service.duracao} minutos` : 'Não definida'}</div>
+                                    <div><strong>Custo:</strong> AOA ${(service.custo || 0).toLocaleString('pt-BR')}</div>
+                                    <div><strong>Margem:</strong> AOA ${((service.preco || 0) - (service.custo || 0)).toLocaleString('pt-BR')}</div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-green-800 mb-3">Status</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div><strong>Status:</strong> <span class="${service.ativo === false ? 'text-red-600' : 'text-green-600'} font-medium">${service.ativo === false ? 'Inactivo' : 'Activo'}</span></div>
+                                    <div><strong>Cadastrado em:</strong> ${service.created_at ? new Date(service.created_at).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                                    <div><strong>Última atualização:</strong> ${service.updated_at ? new Date(service.updated_at).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                DOM.detailsModal.classList.add('active');
+            }
+
+            function closeDetailsModal() {
+                DOM.detailsModal.classList.remove('active');
+            }
+
+            // ==================== EXPORT ====================
+            function exportServices() {
+                if (state.services.length === 0) {
+                    showToast('Nenhum serviço para exportar', 'warning');
+                    return;
+                }
+
+                const headers = ['Nome', 'Descrição', 'Categoria', 'Preço', 'Duração', 'Custo', 'Status'];
+                const rows = state.services.map(s => [
+                    s.nome,
+                    s.descricao || '',
+                    s.categorias_servicos?.nome || '',
+                    s.preco || 0,
+                    s.duracao || '',
+                    s.custo || 0,
+                    s.ativo !== false ? 'Activo' : 'Inactivo'
+                ]);
+
+                const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `servicos_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                showToast('Serviços exportados com sucesso!', 'success');
+            }
+
+            // ==================== FILTROS ====================
+            function filterServices() {
+                loadServices();
+            }
+
+            // ==================== REFRESH ====================
+            function refreshData() {
+                loadServices();
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.searchInput.addEventListener('input', filterServices);
+                DOM.categoryFilter.addEventListener('change', filterServices);
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.serviceModal.classList.contains('active')) closeServiceModal();
+                        if (DOM.detailsModal.classList.contains('active')) closeDetailsModal();
+                    }
+                    if (e.ctrlKey && e.key === 'n') {
+                        e.preventDefault();
+                        openServiceModal();
+                    }
+                });
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EXPORT ====================
+            window.openServiceModal = openServiceModal;
+            window.closeServiceModal = closeServiceModal;
+            window.saveService = saveService;
+            window.editService = editService;
+            window.deleteService = deleteService;
+            window.toggleServiceStatus = toggleServiceStatus;
+            window.viewServiceDetails = viewServiceDetails;
+            window.closeDetailsModal = closeDetailsModal;
+            window.filterServices = filterServices;
+            window.exportServices = exportServices;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.loadServices = loadServices;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

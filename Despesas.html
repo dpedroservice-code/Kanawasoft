@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despesas | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .status-pago { background: #d1fae5; color: #065f46; }
+        .status-pendente { background: #fef3c7; color: #92400e; }
+        .status-vencido { background: #fee2e2; color: #991b1b; }
+        .status-cancelado { background: #f3f4f6; color: #6b7280; }
+        .status-parcelado { background: #dbeafe; color: #1e40af; }
+
+        .action-btn {
+            padding: 4px 10px; border-radius: 6px; font-size: 12px;
+            transition: all 0.2s; border: none; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .action-btn:hover { transform: translateY(-1px); }
+        .action-btn-edit { background: #dbeafe; color: #1e40af; }
+        .action-btn-edit:hover { background: #bfdbfe; }
+        .action-btn-delete { background: #fee2e2; color: #991b1b; }
+        .action-btn-delete:hover { background: #fecaca; }
+        .action-btn-view { background: #e0e7ff; color: #4338ca; }
+        .action-btn-view:hover { background: #c7d2fe; }
+        .action-btn-status { background: #d1fae5; color: #065f46; }
+        .action-btn-status:hover { background: #a7f3d0; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-wallet mr-3"></i>
+                        <span class="flex-1 font-medium">Financeiro</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="despesas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-arrow-down mr-2 text-sm"></i>Despesas</a></li>
+                        <li><a href="receitas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-arrow-up mr-2 text-sm"></i>Receitas</a></li>
+                        <li><a href="orcamentos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-calculator mr-2 text-sm"></i>Orçamentos</a></li>
+                    </ul>
+                </li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="fornecedores.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-truck mr-3"></i><span class="font-medium">Fornecedores</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">DESPESAS</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-arrow-down mr-1"></i> <span id="expenseCount">0</span> Registos
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Filtros -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="filterStatus" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="pago">Pago</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="vencido">Vencido</option>
+                            <option value="cancelado">Cancelado</option>
+                            <option value="parcelado">Parcelado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select id="filterCategory" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas</option>
+                            <option value="aluguel">Aluguel</option>
+                            <option value="salarios">Salários</option>
+                            <option value="energia">Energia</option>
+                            <option value="agua">Água</option>
+                            <option value="internet">Internet</option>
+                            <option value="material">Material</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="transporte">Transporte</option>
+                            <option value="alimentacao">Alimentação</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
+                        <input type="date" id="filterDateStart" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
+                        <input type="date" id="filterDateEnd" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="window.applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                            <i class="fas fa-filter mr-2"></i> Filtrar
+                        </button>
+                        <button onclick="window.clearFilters()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                    <h2 class="text-xl font-bold text-gray-800">Lista de Despesas</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.openExpenseModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center text-sm">
+                            <i class="fas fa-plus mr-2"></i> Nova Despesa
+                        </button>
+                        <button onclick="window.exportExpenses()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-file-export mr-2"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Carregando despesas...</p>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-sm text-gray-500" id="expenseInfo">0 registos</span>
+                        <div class="flex gap-2">
+                            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>Anterior</button>
+                            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50" disabled>Próximo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== EXPENSE MODAL ==================== -->
+    <div class="modal-overlay" id="expenseModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Nova Despesa</h3>
+                <button onclick="window.closeExpenseModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="expenseForm">
+                    <input type="hidden" id="expense_id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição *</label>
+                            <input type="text" id="expense_descricao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                            <select id="expense_categoria" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="aluguel">Aluguel</option>
+                                <option value="salarios">Salários</option>
+                                <option value="energia">Energia</option>
+                                <option value="agua">Água</option>
+                                <option value="internet">Internet</option>
+                                <option value="material">Material</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="transporte">Transporte</option>
+                                <option value="alimentacao">Alimentação</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Valor (Kz) *</label>
+                            <input type="number" id="expense_valor" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01" min="0" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data *</label>
+                            <input type="date" id="expense_data" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="expense_status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="pendente">Pendente</option>
+                                <option value="pago">Pago</option>
+                                <option value="vencido">Vencido</option>
+                                <option value="cancelado">Cancelado</option>
+                                <option value="parcelado">Parcelado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Vencimento</label>
+                            <input type="date" id="expense_vencimento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="expense_obs" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Forma de Pagamento</label>
+                        <select id="expense_pagamento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecione...</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="cartao_debito">Cartão de Débito</option>
+                            <option value="transferencia">Transferência</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="pix">PIX</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeExpenseModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.saveExpense()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DETAILS MODAL ==================== -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="detailsTitle">Detalhes da Despesa</h3>
+                <button onclick="window.closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]" id="detailsContent">
+                <!-- Carregado via JavaScript -->
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Fechar</button>
+                <button onclick="window.printExpenseDetails()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-print mr-2"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const EXPENSES_TABLE = 'despesas';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                expenses: [],
+                currentPage: 1,
+                itemsPerPage: 10,
+                editingId: null,
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                statsGrid: document.getElementById('statsGrid'),
+                expensesTableBody: document.getElementById('expensesTableBody'),
+                expenseInfo: document.getElementById('expenseInfo'),
+                expenseCount: document.getElementById('expenseCount'),
+                filterStatus: document.getElementById('filterStatus'),
+                filterCategory: document.getElementById('filterCategory'),
+                filterDateStart: document.getElementById('filterDateStart'),
+                filterDateEnd: document.getElementById('filterDateEnd'),
+                expenseModal: document.getElementById('expenseModal'),
+                modalTitle: document.getElementById('modalTitle'),
+                expenseId: document.getElementById('expense_id'),
+                expense_descricao: document.getElementById('expense_descricao'),
+                expense_categoria: document.getElementById('expense_categoria'),
+                expense_valor: document.getElementById('expense_valor'),
+                expense_data: document.getElementById('expense_data'),
+                expense_status: document.getElementById('expense_status'),
+                expense_vencimento: document.getElementById('expense_vencimento'),
+                expense_obs: document.getElementById('expense_obs'),
+                expense_pagamento: document.getElementById('expense_pagamento'),
+                detailsModal: document.getElementById('detailsModal'),
+                detailsTitle: document.getElementById('detailsTitle'),
+                detailsContent: document.getElementById('detailsContent'),
+                toast: document.getElementById('toastContainer'),
+                prevPage: document.getElementById('prevPage'),
+                nextPage: document.getElementById('nextPage')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadExpenses()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR DESPESAS ====================
+            async function loadExpenses() {
+                state.isLoading = true;
+                try {
+                    const statusFilter = DOM.filterStatus.value;
+                    const categoryFilter = DOM.filterCategory.value;
+                    const dateStart = DOM.filterDateStart.value;
+                    const dateEnd = DOM.filterDateEnd.value;
+
+                    let query = state.supabase
+                        .from(EXPENSES_TABLE)
+                        .select('*')
+                        .order('data', { ascending: false });
+
+                    if (statusFilter) {
+                        query = query.eq('status', statusFilter);
+                    }
+                    if (categoryFilter) {
+                        query = query.eq('categoria', categoryFilter);
+                    }
+                    if (dateStart) {
+                        query = query.gte('data', dateStart);
+                    }
+                    if (dateEnd) {
+                        query = query.lte('data', dateEnd);
+                    }
+
+                    const { data, error } = await query;
+                    if (error) throw error;
+
+                    state.expenses = data || [];
+                    renderExpenses();
+                    updateStats();
+
+                } catch (error) {
+                    console.error('Erro ao carregar despesas:', error);
+                    state.expenses = [];
+                    renderExpenses();
+                    updateStats();
+                    showToast('Erro ao carregar despesas', 'error');
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            // ==================== RENDER ====================
+            function renderExpenses() {
+                const tbody = DOM.expensesTableBody;
+                const start = (state.currentPage - 1) * state.itemsPerPage;
+                const pageExpenses = state.expenses.slice(start, start + state.itemsPerPage);
+
+                if (state.isLoading) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando despesas...</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                if (pageExpenses.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-arrow-down text-4xl mb-2 opacity-50"></i>
+                                <p>Nenhuma despesa encontrada</p>
+                                <p class="text-sm">Clique em "Nova Despesa" para adicionar</p>
+                            </td>
+                        </tr>
+                    `;
+                    DOM.expenseInfo.textContent = '0 registos';
+                    DOM.expenseCount.textContent = '0';
+                    DOM.prevPage.disabled = true;
+                    DOM.nextPage.disabled = true;
+                    return;
+                }
+
+                const statusLabels = {
+                    'pago': 'Pago',
+                    'pendente': 'Pendente',
+                    'vencido': 'Vencido',
+                    'cancelado': 'Cancelado',
+                    'parcelado': 'Parcelado'
+                };
+
+                const statusClasses = {
+                    'pago': 'status-pago',
+                    'pendente': 'status-pendente',
+                    'vencido': 'status-vencido',
+                    'cancelado': 'status-cancelado',
+                    'parcelado': 'status-parcelado'
+                };
+
+                const categoryLabels = {
+                    'aluguel': 'Aluguel',
+                    'salarios': 'Salários',
+                    'energia': 'Energia',
+                    'agua': 'Água',
+                    'internet': 'Internet',
+                    'material': 'Material',
+                    'marketing': 'Marketing',
+                    'transporte': 'Transporte',
+                    'alimentacao': 'Alimentação',
+                    'outros': 'Outros'
+                };
+
+                tbody.innerHTML = pageExpenses.map(expense => {
+                    const statusClass = statusClasses[expense.status] || 'status-pendente';
+                    const isOverdue = expense.status === 'vencido' || (expense.status === 'pendente' && expense.data_vencimento && new Date(expense.data_vencimento) < new Date());
+
+                    return `
+                        <tr class="fade-in hover:bg-gray-50 ${isOverdue ? 'bg-red-50' : ''}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${formatDate(expense.data)}
+                                ${expense.data_vencimento ? `<div class="text-xs text-gray-400">Venc: ${formatDate(expense.data_vencimento)}</div>` : ''}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">${expense.descricao}</div>
+                                <div class="text-xs text-gray-500">${expense.forma_pagamento || ''}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-700">${categoryLabels[expense.categoria] || expense.categoria}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-bold text-red-600">${formatCurrency(expense.valor)}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                    ${statusLabels[expense.status] || expense.status}
+                                </span>
+                                ${isOverdue && expense.status !== 'vencido' ? '<span class="ml-1 text-xs text-red-500"><i class="fas fa-exclamation-triangle"></i></span>' : ''}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.viewExpense(${expense.id})" class="action-btn action-btn-view" title="Ver detalhes"><i class="fas fa-eye"></i></button>
+                                    <button onclick="window.editExpense(${expense.id})" class="action-btn action-btn-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                                    <button onclick="window.changeExpenseStatus(${expense.id})" class="action-btn action-btn-status" title="Alterar status"><i class="fas fa-exchange-alt"></i></button>
+                                    <button onclick="window.deleteExpense(${expense.id})" class="action-btn action-btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                DOM.expenseInfo.textContent = `${state.expenses.length} registos`;
+                DOM.expenseCount.textContent = state.expenses.length;
+
+                const totalPages = Math.ceil(state.expenses.length / state.itemsPerPage);
+                DOM.prevPage.disabled = state.currentPage <= 1;
+                DOM.nextPage.disabled = state.currentPage >= totalPages;
+            }
+
+            function updateStats() {
+                const total = state.expenses.reduce((sum, e) => sum + e.valor, 0);
+                const paid = state.expenses.filter(e => e.status === 'pago').reduce((sum, e) => sum + e.valor, 0);
+                const pending = state.expenses.filter(e => e.status === 'pendente').reduce((sum, e) => sum + e.valor, 0);
+                const overdue = state.expenses.filter(e => e.status === 'vencido' || (e.status === 'pendente' && e.data_vencimento && new Date(e.data_vencimento) < new Date())).reduce((sum, e) => sum + e.valor, 0);
+                
+                const paidCount = state.expenses.filter(e => e.status === 'pago').length;
+                const pendingCount = state.expenses.filter(e => e.status === 'pendente').length;
+                const overdueCount = state.expenses.filter(e => e.status === 'vencido' || (e.status === 'pendente' && e.data_vencimento && new Date(e.data_vencimento) < new Date())).length;
+
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Total Despesas</p>
+                                <h3 class="text-2xl font-bold text-gray-800">${formatCurrency(total)}</h3>
+                                <p class="text-sm text-gray-500">${state.expenses.length} registos</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full"><i class="fas fa-arrow-down text-red-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Pagas</p>
+                                <h3 class="text-2xl font-bold text-green-600">${formatCurrency(paid)}</h3>
+                                <p class="text-sm text-gray-500">${paidCount} registos</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-check-circle text-green-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Pendentes</p>
+                                <h3 class="text-2xl font-bold text-yellow-600">${formatCurrency(pending)}</h3>
+                                <p class="text-sm text-gray-500">${pendingCount} registos</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Vencidas</p>
+                                <h3 class="text-2xl font-bold text-red-600">${formatCurrency(overdue)}</h3>
+                                <p class="text-sm text-gray-500">${overdueCount} registos</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full"><i class="fas fa-exclamation-circle text-red-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('pt-AO', {
+                    style: 'currency',
+                    currency: 'AOA',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value).replace('AOA', 'Kz');
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString('pt-BR');
+            }
+
+            function formatDateTime(dateStr) {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                return d.toLocaleString('pt-BR');
+            }
+
+            // ==================== CRUD ====================
+            function openExpenseModal(data = null) {
+                if (data) {
+                    DOM.modalTitle.textContent = 'Editar Despesa';
+                    DOM.expenseId.value = data.id;
+                    DOM.expense_descricao.value = data.descricao || '';
+                    DOM.expense_categoria.value = data.categoria || '';
+                    DOM.expense_valor.value = data.valor || '';
+                    DOM.expense_data.value = data.data || '';
+                    DOM.expense_status.value = data.status || 'pendente';
+                    DOM.expense_vencimento.value = data.data_vencimento || '';
+                    DOM.expense_obs.value = data.observacoes || '';
+                    DOM.expense_pagamento.value = data.forma_pagamento || '';
+                    state.editingId = data.id;
+                } else {
+                    DOM.modalTitle.textContent = 'Nova Despesa';
+                    DOM.expenseId.value = '';
+                    DOM.expense_descricao.value = '';
+                    DOM.expense_categoria.value = '';
+                    DOM.expense_valor.value = '';
+                    DOM.expense_status.value = 'pendente';
+                    DOM.expense_obs.value = '';
+                    DOM.expense_pagamento.value = '';
+                    
+                    const today = new Date().toISOString().split('T')[0];
+                    DOM.expense_data.value = today;
+                    
+                    const dueDate = new Date();
+                    dueDate.setDate(dueDate.getDate() + 15);
+                    DOM.expense_vencimento.value = dueDate.toISOString().split('T')[0];
+                    state.editingId = null;
+                }
+                DOM.expenseModal.classList.add('active');
+            }
+
+            function closeExpenseModal() {
+                DOM.expenseModal.classList.remove('active');
+                state.editingId = null;
+            }
+
+            async function saveExpense() {
+                const descricao = DOM.expense_descricao.value.trim();
+                const categoria = DOM.expense_categoria.value;
+                const valor = parseFloat(DOM.expense_valor.value);
+                const data = DOM.expense_data.value;
+
+                if (!descricao || !categoria || !valor || valor <= 0 || !data) {
+                    showToast('Preencha todos os campos obrigatórios', 'warning');
+                    return;
+                }
+
+                const expenseData = {
+                    descricao: descricao,
+                    categoria: categoria,
+                    valor: valor,
+                    data: data,
+                    status: DOM.expense_status.value,
+                    data_vencimento: DOM.expense_vencimento.value || null,
+                    observacoes: DOM.expense_obs.value || null,
+                    forma_pagamento: DOM.expense_pagamento.value || null
+                };
+
+                try {
+                    if (state.editingId) {
+                        await state.supabase.from(EXPENSES_TABLE).update(expenseData).eq('id', state.editingId);
+                        showToast('Despesa atualizada com sucesso!', 'success');
+                    } else {
+                        await state.supabase.from(EXPENSES_TABLE).insert([expenseData]);
+                        showToast('Despesa criada com sucesso!', 'success');
+                    }
+                    closeExpenseModal();
+                    await loadExpenses();
+                } catch (error) {
+                    console.error('Erro ao salvar:', error);
+                    showToast('Erro ao salvar despesa', 'error');
+                }
+            }
+
+            function editExpense(id) {
+                const expense = state.expenses.find(e => e.id == id);
+                if (expense) openExpenseModal(expense);
+                else showToast('Despesa não encontrada', 'error');
+            }
+
+            async function deleteExpense(id) {
+                const expense = state.expenses.find(e => e.id == id);
+                if (!expense) return;
+
+                if (!confirm(`Tem certeza que deseja eliminar a despesa "${expense.descricao}"?`)) return;
+
+                try {
+                    await state.supabase.from(EXPENSES_TABLE).delete().eq('id', id);
+                    showToast('Despesa removida com sucesso!', 'success');
+                    await loadExpenses();
+                } catch (error) {
+                    console.error('Erro ao deletar:', error);
+                    showToast('Erro ao deletar despesa', 'error');
+                }
+            }
+
+            function viewExpense(id) {
+                const expense = state.expenses.find(e => e.id == id);
+                if (!expense) return;
+
+                const statusLabels = {
+                    'pago': 'Pago',
+                    'pendente': 'Pendente',
+                    'vencido': 'Vencido',
+                    'cancelado': 'Cancelado',
+                    'parcelado': 'Parcelado'
+                };
+
+                const statusClass = `status-${expense.status || 'pendente'}`;
+                const categoryLabels = {
+                    'aluguel': 'Aluguel',
+                    'salarios': 'Salários',
+                    'energia': 'Energia',
+                    'agua': 'Água',
+                    'internet': 'Internet',
+                    'material': 'Material',
+                    'marketing': 'Marketing',
+                    'transporte': 'Transporte',
+                    'alimentacao': 'Alimentação',
+                    'outros': 'Outros'
+                };
+
+                const paymentLabels = {
+                    'dinheiro': 'Dinheiro',
+                    'cartao_credito': 'Cartão de Crédito',
+                    'cartao_debito': 'Cartão de Débito',
+                    'transferencia': 'Transferência',
+                    'cheque': 'Cheque',
+                    'pix': 'PIX'
+                };
+
+                DOM.detailsTitle.textContent = `Despesa: ${expense.descricao}`;
+                DOM.detailsContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Informações</h4>
+                            <p class="font-semibold text-gray-800">${expense.descricao}</p>
+                            <p class="text-sm text-gray-600">Categoria: ${categoryLabels[expense.categoria] || expense.categoria}</p>
+                            <p class="text-sm text-gray-600">Data: ${formatDate(expense.data)}</p>
+                            ${expense.data_vencimento ? `<p class="text-sm text-gray-600">Vencimento: ${formatDate(expense.data_vencimento)}</p>` : ''}
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Status</h4>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${statusClass}">${statusLabels[expense.status] || expense.status}</span>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Valor</h4>
+                            <p class="text-2xl font-bold text-red-600">${formatCurrency(expense.valor)}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Forma de Pagamento</h4>
+                            <p class="font-semibold text-gray-800">${paymentLabels[expense.forma_pagamento] || expense.forma_pagamento || 'Não informado'}</p>
+                        </div>
+                    </div>
+                    ${expense.observacoes ? `
+                        <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Observações</h4>
+                            <p class="text-gray-700">${expense.observacoes}</p>
+                        </div>
+                    ` : ''}
+                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Registado em</h4>
+                        <p class="text-sm text-gray-600">${formatDateTime(expense.created_at)}</p>
+                    </div>
+                `;
+
+                DOM.detailsModal.classList.add('active');
+            }
+
+            function closeDetailsModal() {
+                DOM.detailsModal.classList.remove('active');
+            }
+
+            function printExpenseDetails() {
+                const content = DOM.detailsContent.innerHTML;
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html>
+                        <head><title>Detalhes da Despesa</title>
+                        <style>
+                            body { font-family: 'Segoe UI', sans-serif; padding: 40px; }
+                            h1 { color: #1e3a5f; }
+                            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+                            .box { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+                            .label { font-size: 12px; color: #64748b; }
+                            .value { font-weight: 600; color: #1e293b; }
+                            .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+                        </style>
+                        </head>
+                        <body>
+                            <h1>Comprovante de Despesa</h1>
+                            ${content}
+                            <p style="margin-top: 30px; color: #94a3b8; font-size: 12px;">
+                                Documento gerado em ${new Date().toLocaleString('pt-BR')}
+                            </p>
+                        </body>
+                    </html>
+                `);
+                win.document.close();
+                setTimeout(() => win.print(), 500);
+            }
+
+            async function changeExpenseStatus(id) {
+                const expense = state.expenses.find(e => e.id == id);
+                if (!expense) return;
+
+                const statuses = ['pendente', 'pago', 'vencido', 'cancelado', 'parcelado'];
+                const statusLabels = {
+                    'pendente': 'Pendente',
+                    'pago': 'Pago',
+                    'vencido': 'Vencido',
+                    'cancelado': 'Cancelado',
+                    'parcelado': 'Parcelado'
+                };
+
+                const currentIndex = statuses.indexOf(expense.status);
+                const nextIndex = (currentIndex + 1) % statuses.length;
+                const newStatus = statuses[nextIndex];
+
+                try {
+                    await state.supabase.from(EXPENSES_TABLE).update({ status: newStatus }).eq('id', id);
+                    showToast(`Status alterado para: ${statusLabels[newStatus]}`, 'success');
+                    await loadExpenses();
+                } catch (error) {
+                    console.error('Erro ao alterar status:', error);
+                    showToast('Erro ao alterar status', 'error');
+                }
+            }
+
+            // ==================== FILTROS ====================
+            function applyFilters() {
+                state.currentPage = 1;
+                loadExpenses();
+                showToast('Filtros aplicados!', 'success');
+            }
+
+            function clearFilters() {
+                DOM.filterStatus.value = '';
+                DOM.filterCategory.value = '';
+                DOM.filterDateStart.value = '';
+                DOM.filterDateEnd.value = '';
+                state.currentPage = 1;
+                loadExpenses();
+                showToast('Filtros limpos!', 'info');
+            }
+
+            // ==================== EXPORT ====================
+            function exportExpenses() {
+                if (state.expenses.length === 0) {
+                    showToast('Não há dados para exportar', 'warning');
+                    return;
+                }
+
+                const headers = ['ID', 'Descrição', 'Categoria', 'Valor', 'Data', 'Vencimento', 'Status', 'Pagamento', 'Observações'];
+                const rows = state.expenses.map(e => [
+                    e.id,
+                    e.descricao || '',
+                    e.categoria || '',
+                    e.valor || 0,
+                    e.data || '',
+                    e.data_vencimento || '',
+                    e.status || '',
+                    e.forma_pagamento || '',
+                    e.observacoes || ''
+                ]);
+
+                const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `despesas_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                showToast('Exportação concluída com sucesso!', 'success');
+            }
+
+            // ==================== REFRESH ====================
+            function refreshData() {
+                loadExpenses();
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.prevPage.addEventListener('click', () => {
+                    if (state.currentPage > 1) { state.currentPage--; renderExpenses(); }
+                });
+
+                DOM.nextPage.addEventListener('click', () => {
+                    const total = Math.ceil(state.expenses.length / state.itemsPerPage);
+                    if (state.currentPage < total) { state.currentPage++; renderExpenses(); }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.expenseModal.classList.contains('active')) closeExpenseModal();
+                        if (DOM.detailsModal.classList.contains('active')) closeDetailsModal();
+                    }
+                    if (e.ctrlKey && e.key === 'n') {
+                        e.preventDefault();
+                        openExpenseModal();
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.openExpenseModal = openExpenseModal;
+            window.closeExpenseModal = closeExpenseModal;
+            window.saveExpense = saveExpense;
+            window.editExpense = editExpense;
+            window.deleteExpense = deleteExpense;
+            window.viewExpense = viewExpense;
+            window.closeDetailsModal = closeDetailsModal;
+            window.printExpenseDetails = printExpenseDetails;
+            window.changeExpenseStatus = changeExpenseStatus;
+            window.applyFilters = applyFilters;
+            window.clearFilters = clearFilters;
+            window.exportExpenses = exportExpenses;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.loadExpenses = loadExpenses;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

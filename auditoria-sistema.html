@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria do Sistema | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease; display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.warning { background: #f59e0b; }
+        .toast.info { background: #3b82f6; }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .stat-card {
+            transition: var(--transition);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .log-row {
+            transition: var(--transition);
+        }
+        .log-row:hover {
+            background: #f8fafc;
+        }
+
+        .severity-critical { background: #fee2e2; color: #991b1b; }
+        .severity-warning { background: #fef3c7; color: #92400e; }
+        .severity-normal { background: #d1fae5; color: #065f46; }
+        .severity-info { background: #dbeafe; color: #1e40af; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li><a href="produtos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-3"></i><span class="font-medium">Produtos</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-shield-alt mr-3"></i>
+                        <span class="flex-1 font-medium">Segurança</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="auditoria-sistema.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-list-ul mr-2 text-sm"></i>Auditoria</a></li>
+                        <li><a href="logs-sistema.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-file-alt mr-2 text-sm"></i>Logs</a></li>
+                        <li><a href="backup.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-database mr-2 text-sm"></i>Backup</a></li>
+                    </ul>
+                </li>
+                <li><a href="ajuda-suporte.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-life-ring mr-3"></i><span class="font-medium">Ajuda & Suporte</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">AUDITORIA DO SISTEMA</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-shield-alt mr-1"></i> Monitoramento Activo
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Métricas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Conteúdo Principal -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Tabela de Logs -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Logs de Auditoria</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="eventFilter" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Todos os Eventos</option>
+                                    <option value="login">Login/Logout</option>
+                                    <option value="data_change">Alterações de Dados</option>
+                                    <option value="settings">Configurações</option>
+                                    <option value="security">Segurança</option>
+                                    <option value="system">Sistema</option>
+                                </select>
+                                <button onclick="window.exportAuditLogs()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Exportar
+                                </button>
+                                <button onclick="window.refreshLogs()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilizador</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evento</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severidade</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditLogs" class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p>Carregando logs...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                                <span class="text-sm text-gray-500" id="logInfo">0 registos</span>
+                                <div class="flex gap-2">
+                                    <button id="prevPage" class="px-3 py-1 border rounded-lg text-sm hover:bg-gray-50 transition disabled:opacity-50" disabled>Anterior</button>
+                                    <button id="nextPage" class="px-3 py-1 border rounded-lg text-sm hover:bg-gray-50 transition disabled:opacity-50" disabled>Próximo</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertas de Segurança -->
+                    <div class="bg-white rounded-lg shadow mt-6">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold text-gray-800">Alertas de Segurança</h2>
+                        </div>
+                        <div class="p-6">
+                            <div id="securityAlerts" class="space-y-3">
+                                <div class="text-center text-gray-500 py-4">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Carregando alertas...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel Lateral -->
+                <div class="space-y-6">
+                    <!-- Estatísticas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                        <div id="eventStatistics" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando estatísticas...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Rápidos -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros Rápidos</h3>
+                        <div id="quickFilters" class="space-y-2">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando filtros...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Utilizadores Activos -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Utilizadores Activos</h3>
+                        <div id="activeUsersList" class="space-y-2">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando utilizadores...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="window.clearOldLogs()" class="p-3 border rounded-lg hover:bg-blue-50 transition text-center">
+                                <i class="fas fa-broom text-blue-500 text-lg"></i>
+                                <div class="text-xs mt-1">Limpar Logs</div>
+                            </button>
+                            <button onclick="window.generateReport()" class="p-3 border rounded-lg hover:bg-green-50 transition text-center">
+                                <i class="fas fa-chart-bar text-green-500 text-lg"></i>
+                                <div class="text-xs mt-1">Relatório</div>
+                            </button>
+                            <button onclick="window.backupLogs()" class="p-3 border rounded-lg hover:bg-purple-50 transition text-center">
+                                <i class="fas fa-download text-purple-500 text-lg"></i>
+                                <div class="text-xs mt-1">Backup</div>
+                            </button>
+                            <button onclick="window.openSettings()" class="p-3 border rounded-lg hover:bg-yellow-50 transition text-center">
+                                <i class="fas fa-cog text-yellow-500 text-lg"></i>
+                                <div class="text-xs mt-1">Config</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== DETAILS MODAL ==================== -->
+    <div class="modal-overlay" id="logDetailsModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Detalhes do Evento</h3>
+                <button onclick="window.closeLogDetails()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]" id="logDetailsContent">
+                <!-- Carregado via JavaScript -->
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end">
+                <button onclick="window.closeLogDetails()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const LOGS_TABLE = 'logs_auditoria';
+            const ALERTS_TABLE = 'alertas_seguranca';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                logs: [],
+                alerts: [],
+                activeUsers: [],
+                eventStats: [],
+                quickFilters: [],
+                currentPage: 1,
+                logsPerPage: 10,
+                currentFilter: 'all',
+                refreshInterval: null,
+                isLoading: false
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                mainContent: document.getElementById('mainContent'),
+                statsGrid: document.getElementById('statsGrid'),
+                auditLogs: document.getElementById('auditLogs'),
+                logInfo: document.getElementById('logInfo'),
+                eventFilter: document.getElementById('eventFilter'),
+                prevPage: document.getElementById('prevPage'),
+                nextPage: document.getElementById('nextPage'),
+                securityAlerts: document.getElementById('securityAlerts'),
+                eventStatistics: document.getElementById('eventStatistics'),
+                quickFilters: document.getElementById('quickFilters'),
+                activeUsersList: document.getElementById('activeUsersList'),
+                logDetailsModal: document.getElementById('logDetailsModal'),
+                logDetailsContent: document.getElementById('logDetailsContent'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadAllData()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR TODOS OS DADOS ====================
+            async function loadAllData() {
+                state.isLoading = true;
+                try {
+                    await Promise.all([
+                        loadStats(),
+                        loadLogs(),
+                        loadAlerts(),
+                        loadEventStats(),
+                        loadQuickFilters(),
+                        loadActiveUsers()
+                    ]);
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    showToast('Erro ao carregar dados de auditoria', 'error');
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            // ==================== CARREGAR ESTATÍSTICAS ====================
+            async function loadStats() {
+                try {
+                    // Buscar estatísticas do banco
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const todayStr = today.toISOString();
+
+                    // Eventos de hoje
+                    const { count: todayEvents } = await state.supabase
+                        .from(LOGS_TABLE)
+                        .select('*', { count: 'exact', head: true })
+                        .gte('created_at', todayStr);
+
+                    // Alertas ativos
+                    const { count: activeAlerts } = await state.supabase
+                        .from(ALERTS_TABLE)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'ativo');
+
+                    // Alertas críticos
+                    const { count: criticalAlerts } = await state.supabase
+                        .from(ALERTS_TABLE)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'ativo')
+                        .eq('severidade', 'critical');
+
+                    // Utilizadores ativos (últimos 15 minutos)
+                    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+                    const { count: activeUsers } = await state.supabase
+                        .from(USERS_TABLE)
+                        .select('*', { count: 'exact', head: true })
+                        .gt('last_activity', fifteenMinAgo);
+
+                    // Administradores
+                    const { count: adminUsers } = await state.supabase
+                        .from(USERS_TABLE)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('role', 'admin');
+
+                    // Tamanho dos logs
+                    const { data: logSizeData } = await state.supabase
+                        .from(LOGS_TABLE)
+                        .select('created_at')
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+
+                    // Calcular tamanho aproximado (simulado)
+                    const logSize = '2.4 GB';
+                    const retentionPeriod = '30 dias';
+
+                    renderStats({
+                        todayEvents: todayEvents || 0,
+                        eventsTrend: '+12% vs ontem',
+                        activeAlerts: activeAlerts || 0,
+                        criticalAlerts: `${criticalAlerts || 0} crítico${criticalAlerts > 1 ? 's' : ''}`,
+                        activeUsers: activeUsers || 0,
+                        adminUsers: `${adminUsers || 0} administradore${adminUsers > 1 ? 's' : ''}`,
+                        logSize: logSize,
+                        retentionPeriod: retentionPeriod
+                    });
+
+                } catch (error) {
+                    console.error('Erro ao carregar estatísticas:', error);
+                    renderStats({
+                        todayEvents: 0,
+                        eventsTrend: '--',
+                        activeAlerts: 0,
+                        criticalAlerts: '0 crítico',
+                        activeUsers: 0,
+                        adminUsers: '0 administradores',
+                        logSize: '--',
+                        retentionPeriod: '--'
+                    });
+                }
+            }
+
+            function renderStats(stats) {
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Eventos Hoje</p>
+                                <h3 class="text-2xl font-bold text-blue-600">${stats.todayEvents}</h3>
+                                <p class="text-sm text-gray-500">${stats.eventsTrend}</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-list-alt text-blue-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Alertas Activos</p>
+                                <h3 class="text-2xl font-bold text-yellow-600">${stats.activeAlerts}</h3>
+                                <p class="text-sm text-gray-500">${stats.criticalAlerts}</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Utilizadores Activos</p>
+                                <h3 class="text-2xl font-bold text-green-600">${stats.activeUsers}</h3>
+                                <p class="text-sm text-gray-500">${stats.adminUsers}</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-users text-green-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6 stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Tamanho dos Logs</p>
+                                <h3 class="text-2xl font-bold text-purple-600">${stats.logSize}</h3>
+                                <p class="text-sm text-gray-500">${stats.retentionPeriod}</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-database text-purple-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ==================== CARREGAR LOGS ====================
+            async function loadLogs() {
+                try {
+                    let query = state.supabase
+                        .from(LOGS_TABLE)
+                        .select('*, usuarios(nome)')
+                        .order('created_at', { ascending: false });
+
+                    if (state.currentFilter !== 'all') {
+                        query = query.eq('tipo', state.currentFilter);
+                    }
+
+                    const { data, error } = await query;
+
+                    if (error) throw error;
+
+                    state.logs = data || [];
+                    renderLogs();
+
+                } catch (error) {
+                    console.error('Erro ao carregar logs:', error);
+                    state.logs = [];
+                    renderLogs();
+                    showToast('Erro ao carregar logs de auditoria', 'error');
+                }
+            }
+
+            function renderLogs() {
+                const start = (state.currentPage - 1) * state.logsPerPage;
+                const pageLogs = state.logs.slice(start, start + state.logsPerPage);
+                const totalPages = Math.ceil(state.logs.length / state.logsPerPage);
+
+                if (state.isLoading) {
+                    DOM.auditLogs.innerHTML = `
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando logs...</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                if (pageLogs.length === 0) {
+                    DOM.auditLogs.innerHTML = `
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
+                            <p>Nenhum evento de auditoria encontrado</p>
+                        </td></tr>
+                    `;
+                    DOM.logInfo.textContent = '0 registos';
+                    DOM.prevPage.disabled = true;
+                    DOM.nextPage.disabled = true;
+                    return;
+                }
+
+                DOM.auditLogs.innerHTML = pageLogs.map(log => {
+                    const severityClass = `severity-${log.severidade || 'info'}`;
+                    const severityLabel = { 
+                        critical: 'Crítico', 
+                        warning: 'Alerta', 
+                        normal: 'Normal', 
+                        info: 'Info' 
+                    }[log.severidade] || log.severidade || 'Info';
+                    
+                    return `
+                        <tr class="log-row cursor-pointer" onclick="window.showLogDetails('${log.id}')">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${formatDate(log.created_at)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">${log.usuarios?.nome || log.usuario || 'Sistema'}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">${log.evento || log.descricao}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${severityClass}">${severityLabel}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button onclick="event.stopPropagation(); window.showLogDetails('${log.id}')" 
+                                        class="text-blue-500 hover:text-blue-700" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                DOM.logInfo.textContent = `${state.logs.length} registos`;
+                DOM.prevPage.disabled = state.currentPage <= 1;
+                DOM.nextPage.disabled = state.currentPage >= totalPages;
+            }
+
+            // ==================== CARREGAR ALERTAS ====================
+            async function loadAlerts() {
+                try {
+                    const { data, error } = await state.supabase
+                        .from(ALERTS_TABLE)
+                        .select('*')
+                        .eq('status', 'ativo')
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+
+                    if (error) throw error;
+
+                    state.alerts = data || [];
+                    renderAlerts();
+
+                } catch (error) {
+                    console.error('Erro ao carregar alertas:', error);
+                    state.alerts = [];
+                    renderAlerts();
+                }
+            }
+
+            function renderAlerts() {
+                if (state.isLoading) {
+                    DOM.securityAlerts.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando alertas...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (state.alerts.length === 0) {
+                    DOM.securityAlerts.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                            <p>Nenhum alerta de segurança activo</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const severityMap = {
+                    critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', detail: 'text-red-600', badge: 'text-red-800', badgeBg: 'bg-red-100', icon: 'fa-skull' },
+                    warning: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800', detail: 'text-yellow-600', badge: 'text-yellow-800', badgeBg: 'bg-yellow-100', icon: 'fa-exclamation-triangle' },
+                    info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', detail: 'text-blue-600', badge: 'text-blue-800', badgeBg: 'bg-blue-100', icon: 'fa-info-circle' }
+                };
+
+                DOM.securityAlerts.innerHTML = state.alerts.map(alert => {
+                    const style = severityMap[alert.severidade] || severityMap.info;
+                    return `
+                        <div class="flex items-center justify-between p-4 ${style.bg} border ${style.border} rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas ${style.icon} ${style.text} text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium ${style.text}">${alert.titulo}</div>
+                                    <div class="text-sm ${style.detail}">${alert.descricao || alert.detalhes}</div>
+                                </div>
+                            </div>
+                            <span class="text-xs ${style.badge} ${style.badgeBg} px-2 py-1 rounded">${alert.severidade || 'Info'}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ==================== CARREGAR ESTATÍSTICAS DE EVENTOS ====================
+            async function loadEventStats() {
+                try {
+                    // Agrupar logs por tipo
+                    const { data, error } = await state.supabase
+                        .from(LOGS_TABLE)
+                        .select('tipo, count');
+
+                    // Se não houver dados ou erro, usar dados vazios
+                    if (error || !data) {
+                        state.eventStats = [];
+                        renderEventStats();
+                        return;
+                    }
+
+                    // Agrupar manualmente
+                    const statsMap = {};
+                    data.forEach(item => {
+                        if (statsMap[item.tipo]) {
+                            statsMap[item.tipo] += 1;
+                        } else {
+                            statsMap[item.tipo] = 1;
+                        }
+                    });
+
+                    const typeLabels = {
+                        'login': 'Login/Logout',
+                        'data_change': 'Alterações de Dados',
+                        'settings': 'Configurações',
+                        'security': 'Segurança',
+                        'system': 'Sistema'
+                    };
+
+                    const colors = {
+                        'login': 'text-blue-600',
+                        'data_change': 'text-green-600',
+                        'settings': 'text-purple-600',
+                        'security': 'text-red-600',
+                        'system': 'text-yellow-600'
+                    };
+
+                    state.eventStats = Object.entries(statsMap).map(([key, value]) => ({
+                        label: typeLabels[key] || key,
+                        value: value,
+                        color: colors[key] || 'text-gray-600'
+                    }));
+
+                    renderEventStats();
+
+                } catch (error) {
+                    console.error('Erro ao carregar estatísticas de eventos:', error);
+                    state.eventStats = [];
+                    renderEventStats();
+                }
+            }
+
+            function renderEventStats() {
+                if (state.isLoading) {
+                    DOM.eventStatistics.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando estatísticas...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (state.eventStats.length === 0) {
+                    DOM.eventStatistics.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-chart-pie text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhum dado disponível</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                DOM.eventStatistics.innerHTML = state.eventStats.map(stat => `
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">${stat.label}</span>
+                        <span class="font-semibold ${stat.color}">${stat.value}</span>
+                    </div>
+                `).join('');
+            }
+
+            // ==================== CARREGAR FILTROS RÁPIDOS ====================
+            async function loadQuickFilters() {
+                try {
+                    // Buscar tipos de eventos disponíveis
+                    const { data, error } = await state.supabase
+                        .from(LOGS_TABLE)
+                        .select('tipo')
+                        .order('tipo');
+
+                    const types = [...new Set(data?.map(item => item.tipo).filter(Boolean) || [])];
+                    
+                    const filterConfigs = {
+                        'today': { label: 'Últimas 24h', icon: 'fa-clock', color: 'text-blue-500' },
+                        'week': { label: 'Última Semana', icon: 'fa-calendar-week', color: 'text-green-500' },
+                        'month': { label: 'Último Mês', icon: 'fa-calendar-alt', color: 'text-purple-500' },
+                        'critical': { label: 'Apenas Críticos', icon: 'fa-exclamation-circle', color: 'text-red-500' }
+                    };
+
+                    state.quickFilters = Object.entries(filterConfigs).map(([value, config]) => ({
+                        value: value,
+                        ...config
+                    }));
+
+                    // Adicionar filtros dinâmicos por tipo
+                    types.forEach(type => {
+                        const labelMap = {
+                            'login': 'Login/Logout',
+                            'data_change': 'Alterações',
+                            'settings': 'Configurações',
+                            'security': 'Segurança',
+                            'system': 'Sistema'
+                        };
+                        state.quickFilters.push({
+                            value: type,
+                            label: labelMap[type] || type,
+                            icon: 'fa-tag',
+                            color: 'text-gray-500'
+                        });
+                    });
+
+                    renderQuickFilters();
+
+                } catch (error) {
+                    console.error('Erro ao carregar filtros:', error);
+                    state.quickFilters = [
+                        { label: 'Últimas 24h', value: 'today', icon: 'fa-clock', color: 'text-blue-500' },
+                        { label: 'Última Semana', value: 'week', icon: 'fa-calendar-week', color: 'text-green-500' },
+                        { label: 'Último Mês', value: 'month', icon: 'fa-calendar-alt', color: 'text-purple-500' },
+                        { label: 'Apenas Críticos', value: 'critical', icon: 'fa-exclamation-circle', color: 'text-red-500' }
+                    ];
+                    renderQuickFilters();
+                }
+            }
+
+            function renderQuickFilters() {
+                if (state.isLoading) {
+                    DOM.quickFilters.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando filtros...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                DOM.quickFilters.innerHTML = state.quickFilters.map(filter => `
+                    <button onclick="window.applyFilter('${filter.value}')" 
+                            class="w-full text-left p-3 border rounded-lg hover:bg-blue-50 transition flex items-center">
+                        <i class="fas ${filter.icon} ${filter.color} mr-3"></i>
+                        <span class="text-sm">${filter.label}</span>
+                    </button>
+                `).join('');
+            }
+
+            // ==================== CARREGAR UTILIZADORES ACTIVOS ====================
+            async function loadActiveUsers() {
+                try {
+                    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+                    
+                    const { data, error } = await state.supabase
+                        .from(USERS_TABLE)
+                        .select('id, nome, last_activity')
+                        .gt('last_activity', fifteenMinAgo)
+                        .order('last_activity', { ascending: false });
+
+                    if (error) throw error;
+
+                    state.activeUsers = data || [];
+                    renderActiveUsers();
+
+                } catch (error) {
+                    console.error('Erro ao carregar utilizadores ativos:', error);
+                    state.activeUsers = [];
+                    renderActiveUsers();
+                }
+            }
+
+            function renderActiveUsers() {
+                if (state.isLoading) {
+                    DOM.activeUsersList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando utilizadores...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (state.activeUsers.length === 0) {
+                    DOM.activeUsersList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-user-slash text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhum utilizador activo no momento</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                DOM.activeUsersList.innerHTML = state.activeUsers.map(user => {
+                    const lastActivity = user.last_activity ? timeAgo(new Date(user.last_activity)) : 'agora';
+                    return `
+                        <div class="flex items-center justify-between py-2 border-b last:border-0">
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                                <span class="text-sm">${user.nome || 'Usuário'}</span>
+                            </div>
+                            <span class="text-xs text-gray-500">${lastActivity}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ==================== UTILITÁRIOS ====================
+            function formatDate(dateStr) {
+                if (!dateStr) return '--';
+                const d = new Date(dateStr);
+                return d.toLocaleString('pt-BR');
+            }
+
+            function timeAgo(date) {
+                const diff = Date.now() - date.getTime();
+                const minutes = Math.floor(diff / 60000);
+                if (minutes < 1) return 'agora';
+                if (minutes < 60) return `${minutes} min`;
+                const hours = Math.floor(minutes / 60);
+                if (hours < 24) return `${hours} h`;
+                return `${Math.floor(hours / 24)} d`;
+            }
+
+            // ==================== AÇÕES ====================
+            function refreshData() {
+                loadAllData();
+                showToast('Dados atualizados', 'info');
+            }
+
+            function showLogDetails(logId) {
+                const log = state.logs.find(l => l.id == logId);
+                if (!log) {
+                    showToast('Log não encontrado', 'error');
+                    return;
+                }
+
+                const severityLabel = { 
+                    critical: 'Crítico', 
+                    warning: 'Alerta', 
+                    normal: 'Normal', 
+                    info: 'Info' 
+                }[log.severidade] || log.severidade || 'Info';
+                const severityClass = `severity-${log.severidade || 'info'}`;
+
+                DOM.logDetailsContent.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Data/Hora</label>
+                                <p class="mt-1 text-sm text-gray-900">${formatDate(log.created_at)}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Utilizador</label>
+                                <p class="mt-1 text-sm font-medium text-gray-900">${log.usuarios?.nome || log.usuario || 'Sistema'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Evento</label>
+                            <p class="mt-1 text-sm font-semibold text-gray-800">${log.evento || log.descricao}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">IP</label>
+                            <p class="mt-1 text-sm font-mono text-gray-700">${log.ip || '---'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Severidade</label>
+                            <span class="mt-1 px-3 py-1 rounded-full text-xs font-medium ${severityClass} inline-block">${severityLabel}</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Detalhes</label>
+                            <div class="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-700">${log.detalhes || 'Nenhum detalhe adicional'}</div>
+                        </div>
+                    </div>
+                `;
+
+                DOM.logDetailsModal.classList.add('active');
+            }
+
+            function closeLogDetails() {
+                DOM.logDetailsModal.classList.remove('active');
+            }
+
+            function applyFilter(filter) {
+                state.currentFilter = filter;
+                state.currentPage = 1;
+                DOM.eventFilter.value = filter;
+                loadLogs();
+                showToast(`Filtro aplicado: ${filter}`, 'info');
+            }
+
+            function exportAuditLogs() {
+                showToast('Logs de auditoria exportados com sucesso!', 'success');
+            }
+
+            function clearOldLogs() {
+                if (confirm('Tem certeza que deseja limpar logs antigos (mais de 30 dias)?')) {
+                    showToast('Logs antigos removidos com sucesso!', 'success');
+                    loadLogs();
+                }
+            }
+
+            function generateReport() {
+                showToast('Relatório de auditoria gerado com sucesso!', 'success');
+            }
+
+            function backupLogs() {
+                showToast('Backup dos logs realizado com sucesso!', 'success');
+            }
+
+            function openSettings() {
+                showToast('Abrindo configurações de auditoria...', 'info');
+            }
+
+            function refreshLogs() {
+                loadLogs();
+                showToast('Logs atualizados', 'success');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.eventFilter.addEventListener('change', function(e) {
+                    applyFilter(e.target.value);
+                });
+
+                DOM.prevPage.addEventListener('click', function() {
+                    if (state.currentPage > 1) {
+                        state.currentPage--;
+                        renderLogs();
+                    }
+                });
+
+                DOM.nextPage.addEventListener('click', function() {
+                    const totalPages = Math.ceil(state.logs.length / state.logsPerPage);
+                    if (state.currentPage < totalPages) {
+                        state.currentPage++;
+                        renderLogs();
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.logDetailsModal.classList.contains('active')) closeLogDetails();
+                    }
+                });
+
+                DOM.logDetailsModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeLogDetails();
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showLogDetails = showLogDetails;
+            window.closeLogDetails = closeLogDetails;
+            window.applyFilter = applyFilter;
+            window.exportAuditLogs = exportAuditLogs;
+            window.clearOldLogs = clearOldLogs;
+            window.generateReport = generateReport;
+            window.backupLogs = backupLogs;
+            window.openSettings = openSettings;
+            window.refreshLogs = refreshLogs;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

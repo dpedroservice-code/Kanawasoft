@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câmbio | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .rate-card {
+            transition: all 0.3s ease;
+        }
+        .rate-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .rate-up { color: #10b981; }
+        .rate-down { color: #ef4444; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-money-bill-wave mr-3"></i>
+                        <span class="flex-1 font-medium">Financeiro</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="cambio.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-exchange-alt mr-2 text-sm"></i>Câmbio</a></li>
+                        <li><a href="movimentos-caixa.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-2 text-sm"></i>Movimentos Caixa</a></li>
+                        <li><a href="faturas.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-file-invoice-dollar mr-2 text-sm"></i>Faturas</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">CÂMBIO</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-exchange-alt mr-1"></i> Taxas em Tempo Real
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Conversor -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-6">Conversor de Moedas</h2>
+                        
+                        <form id="currencyForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                                <input type="number" id="amount" step="0.01" min="0" 
+                                       class="w-full border rounded-lg px-4 py-3 text-xl font-bold focus:ring-2 focus:ring-blue-500"
+                                       placeholder="0,00" required>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">De</label>
+                                    <select id="fromCurrency" class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                                        <option value="USD">USD - Dólar Americano</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="AOA" selected>AOA - Kwanza</option>
+                                        <option value="BRL">BRL - Real Brasileiro</option>
+                                        <option value="GBP">GBP - Libra Esterlina</option>
+                                        <option value="CAD">CAD - Dólar Canadense</option>
+                                        <option value="JPY">JPY - Iene Japonês</option>
+                                        <option value="CNY">CNY - Yuan Chinês</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Para</label>
+                                    <select id="toCurrency" class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                                        <option value="USD">USD - Dólar Americano</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="AOA">AOA - Kwanza</option>
+                                        <option value="BRL" selected>BRL - Real Brasileiro</option>
+                                        <option value="GBP">GBP - Libra Esterlina</option>
+                                        <option value="CAD">CAD - Dólar Canadense</option>
+                                        <option value="JPY">JPY - Iene Japonês</option>
+                                        <option value="CNY">CNY - Yuan Chinês</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-exchange-alt mr-2"></i> Converter
+                                </button>
+                                <button type="button" onclick="window.swapCurrencies()" class="px-6 bg-gray-200 hover:bg-gray-300 py-3 rounded-lg font-medium transition-colors" title="Inverter moedas">
+                                    <i class="fas fa-arrow-up-down"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="resultContainer" class="mt-6 hidden">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 fade-in">
+                                <div class="text-sm text-gray-600" id="resultLabel">1 USD = 850 AOA</div>
+                                <div class="text-3xl font-bold text-green-700" id="resultAmount">850,00 AOA</div>
+                                <div class="text-xs text-gray-500 mt-2" id="resultDate">Atualizado: hoje às 14:30</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <button onclick="window.addToHistory()" class="text-blue-600 hover:text-blue-800 text-sm">
+                                <i class="fas fa-history mr-1"></i> Adicionar ao histórico
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Histórico -->
+                    <div class="bg-white rounded-xl shadow p-6 mt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Histórico de Conversões</h3>
+                            <button onclick="window.clearHistory()" class="text-red-600 hover:text-red-800 text-sm">
+                                <i class="fas fa-trash-alt mr-1"></i> Limpar
+                            </button>
+                        </div>
+                        <div id="historyList" class="max-h-60 overflow-y-auto">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-clock text-2xl mb-2 opacity-50"></i>
+                                <p>Carregando histórico...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cotações -->
+                <div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Cotações em Tempo Real</h3>
+                            <button onclick="window.updateRates()" class="text-blue-600 hover:text-blue-800 text-sm">
+                                <i class="fas fa-sync-alt mr-1"></i> Atualizar
+                            </button>
+                        </div>
+                        <div class="space-y-2" id="ratesList">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando cotações...</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500 text-center" id="lastUpdate">Última atualização: carregando...</div>
+                    </div>
+
+                    <!-- Moedas Favoritas -->
+                    <div class="bg-white rounded-xl shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Moedas Favoritas</h3>
+                        <div class="space-y-2" id="favoritesList">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="font-medium">USD/AOA</span>
+                                <span class="font-bold text-green-600" id="favoriteRate1">--</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="font-medium">EUR/AOA</span>
+                                <span class="font-bold text-green-600" id="favoriteRate2">--</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="font-medium">BRL/AOA</span>
+                                <span class="font-bold text-green-600" id="favoriteRate3">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const RATES_TABLE = 'cambio_rates';
+            const HISTORY_TABLE = 'cambio_history';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== TAXAS PADRÃO ====================
+            const DEFAULT_RATES = {
+                'USD': { 'AOA': 850, 'BRL': 5.2, 'EUR': 0.92, 'GBP': 0.78, 'CAD': 1.35, 'JPY': 149.5, 'CNY': 7.2 },
+                'EUR': { 'AOA': 930, 'BRL': 5.7, 'USD': 1.09, 'GBP': 0.85, 'CAD': 1.47, 'JPY': 162.5, 'CNY': 7.8 },
+                'AOA': { 'USD': 0.00118, 'EUR': 0.00108, 'BRL': 0.0059, 'GBP': 0.00092, 'CAD': 0.00158, 'JPY': 0.176, 'CNY': 0.0084 },
+                'BRL': { 'USD': 0.19, 'EUR': 0.17, 'AOA': 170, 'GBP': 0.15, 'CAD': 0.26, 'JPY': 28.75, 'CNY': 1.38 },
+                'GBP': { 'USD': 1.28, 'EUR': 1.17, 'AOA': 1090, 'BRL': 6.55, 'CAD': 1.72, 'JPY': 191.5, 'CNY': 9.2 },
+                'CAD': { 'USD': 0.74, 'EUR': 0.68, 'AOA': 630, 'BRL': 3.85, 'GBP': 0.58, 'JPY': 110.5, 'CNY': 5.3 },
+                'JPY': { 'USD': 0.0067, 'EUR': 0.0062, 'AOA': 5.7, 'BRL': 0.035, 'GBP': 0.0052, 'CAD': 0.009, 'CNY': 0.048 },
+                'CNY': { 'USD': 0.14, 'EUR': 0.13, 'AOA': 119, 'BRL': 0.72, 'GBP': 0.11, 'CAD': 0.19, 'JPY': 20.8 }
+            };
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                rates: {},
+                history: [],
+                lastConversion: null,
+                refreshInterval: null,
+                isLoading: false
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                amount: document.getElementById('amount'),
+                fromCurrency: document.getElementById('fromCurrency'),
+                toCurrency: document.getElementById('toCurrency'),
+                resultContainer: document.getElementById('resultContainer'),
+                resultLabel: document.getElementById('resultLabel'),
+                resultAmount: document.getElementById('resultAmount'),
+                resultDate: document.getElementById('resultDate'),
+                historyList: document.getElementById('historyList'),
+                ratesList: document.getElementById('ratesList'),
+                lastUpdate: document.getElementById('lastUpdate'),
+                favoriteRate1: document.getElementById('favoriteRate1'),
+                favoriteRate2: document.getElementById('favoriteRate2'),
+                favoriteRate3: document.getElementById('favoriteRate3'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadRates(),
+                    loadHistory()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    updateRatesDisplay();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(updateRates, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR TAXAS ====================
+            async function loadRates() {
+                try {
+                    const { data } = await state.supabase
+                        .from(RATES_TABLE)
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+
+                    if (data && data.length > 0) {
+                        state.rates = data[0].rates || {};
+                    } else {
+                        state.rates = DEFAULT_RATES;
+                        await saveRates(DEFAULT_RATES);
+                    }
+                } catch (e) {
+                    state.rates = DEFAULT_RATES;
+                }
+            }
+
+            async function saveRates(rates) {
+                try {
+                    await state.supabase.from(RATES_TABLE).insert([{
+                        rates: rates,
+                        created_at: new Date().toISOString()
+                    }]);
+                } catch (e) {
+                    console.warn('Erro ao salvar taxas:', e);
+                }
+            }
+
+            // ==================== CARREGAR HISTÓRICO ====================
+            async function loadHistory() {
+                try {
+                    const { data } = await state.supabase
+                        .from(HISTORY_TABLE)
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+
+                    state.history = data || [];
+                    renderHistory();
+                } catch (e) {
+                    state.history = [];
+                    renderHistory();
+                }
+            }
+
+            async function saveHistory(entry) {
+                try {
+                    const { data } = await state.supabase
+                        .from(HISTORY_TABLE)
+                        .insert([{
+                            from_currency: entry.from,
+                            to_currency: entry.to,
+                            amount: entry.amount,
+                            result: entry.result,
+                            rate: entry.rate,
+                            created_at: new Date().toISOString(),
+                            user_id: state.user?.id
+                        }])
+                        .select();
+
+                    if (data && data.length > 0) {
+                        state.history.unshift(data[0]);
+                        renderHistory();
+                    }
+                } catch (e) {
+                    // Salvar localmente
+                    state.history.unshift({
+                        id: Date.now(),
+                        from_currency: entry.from,
+                        to_currency: entry.to,
+                        amount: entry.amount,
+                        result: entry.result,
+                        rate: entry.rate,
+                        created_at: new Date().toISOString()
+                    });
+                    renderHistory();
+                }
+            }
+
+            async function clearHistory() {
+                if (state.history.length === 0) {
+                    showToast('Histórico já está vazio', 'info');
+                    return;
+                }
+
+                if (!confirm('Tem certeza que deseja limpar todo o histórico?')) return;
+
+                try {
+                    await state.supabase.from(HISTORY_TABLE).delete().neq('id', 0);
+                    state.history = [];
+                    renderHistory();
+                    showToast('Histórico limpo com sucesso!', 'success');
+                } catch (e) {
+                    state.history = [];
+                    renderHistory();
+                    showToast('Histórico limpo localmente', 'info');
+                }
+            }
+
+            // ==================== FUNÇÕES DE CÂMBIO ====================
+            function getRate(from, to) {
+                if (from === to) return 1;
+
+                if (state.rates[from] && state.rates[from][to]) {
+                    return state.rates[from][to];
+                }
+
+                if (state.rates[to] && state.rates[to][from]) {
+                    return 1 / state.rates[to][from];
+                }
+
+                if (state.rates[from] && state.rates[from]['USD'] && state.rates[to] && state.rates[to]['USD']) {
+                    return state.rates[to]['USD'] / state.rates[from]['USD'];
+                }
+
+                return null;
+            }
+
+            function convertCurrency(amount, from, to) {
+                const rate = getRate(from, to);
+                if (rate === null) return null;
+                return amount * rate;
+            }
+
+            function formatCurrency(value, currency) {
+                const symbols = { 'USD': '$', 'EUR': '€', 'AOA': 'AOA', 'BRL': 'R$', 'GBP': '£', 'CAD': 'C$', 'JPY': '¥', 'CNY': '¥' };
+                const symbol = symbols[currency] || currency;
+                return `${symbol} ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+
+            function getCurrencyName(code) {
+                const names = {
+                    'USD': 'Dólar Americano',
+                    'EUR': 'Euro',
+                    'AOA': 'Kwanza',
+                    'BRL': 'Real Brasileiro',
+                    'GBP': 'Libra Esterlina',
+                    'CAD': 'Dólar Canadense',
+                    'JPY': 'Iene Japonês',
+                    'CNY': 'Yuan Chinês'
+                };
+                return names[code] || code;
+            }
+
+            // ==================== CONVERSÃO ====================
+            function performConversion() {
+                const amount = parseFloat(DOM.amount.value);
+                const from = DOM.fromCurrency.value;
+                const to = DOM.toCurrency.value;
+
+                if (!amount || amount <= 0) {
+                    showToast('Por favor, insira um valor válido', 'error');
+                    return;
+                }
+
+                if (from === to) {
+                    showToast('Selecione moedas diferentes para conversão', 'warning');
+                    return;
+                }
+
+                const result = convertCurrency(amount, from, to);
+
+                if (result === null) {
+                    showToast('Taxa de câmbio não disponível', 'error');
+                    return;
+                }
+
+                const rate = getRate(from, to);
+
+                DOM.resultContainer.classList.remove('hidden');
+                DOM.resultLabel.textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+                DOM.resultAmount.textContent = formatCurrency(result, to);
+                DOM.resultDate.textContent = `Atualizado: ${new Date().toLocaleString('pt-BR')}`;
+
+                state.lastConversion = { from, to, amount, result, rate };
+            }
+
+            function swapCurrencies() {
+                const temp = DOM.fromCurrency.value;
+                DOM.fromCurrency.value = DOM.toCurrency.value;
+                DOM.toCurrency.value = temp;
+
+                if (!DOM.resultContainer.classList.contains('hidden')) {
+                    performConversion();
+                }
+            }
+
+            function addToHistory() {
+                if (!state.lastConversion) {
+                    showToast('Nenhuma conversão para adicionar', 'warning');
+                    return;
+                }
+
+                const { from, to, amount, result, rate } = state.lastConversion;
+                saveHistory({ from, to, amount, result, rate });
+                showToast('Conversão adicionada ao histórico!', 'success');
+            }
+
+            // ==================== RENDERIZAR HISTÓRICO ====================
+            function renderHistory() {
+                if (state.isLoading) {
+                    DOM.historyList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando histórico...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (state.history.length === 0) {
+                    DOM.historyList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-clock text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhuma conversão registrada</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                DOM.historyList.innerHTML = state.history.slice(0, 10).map(item => {
+                    const date = new Date(item.created_at).toLocaleString('pt-BR');
+                    return `
+                        <div class="flex justify-between items-center p-3 border-b hover:bg-gray-50 transition-colors fade-in">
+                            <div>
+                                <div class="font-medium">${item.from_currency} → ${item.to_currency}</div>
+                                <div class="text-sm text-gray-500">
+                                    ${formatCurrency(item.amount, item.from_currency)} = ${formatCurrency(item.result, item.to_currency)}
+                                </div>
+                                <div class="text-xs text-gray-400">${date}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-600">Taxa: ${item.rate?.toFixed(4) || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ==================== RENDERIZAR COTAÇÕES ====================
+            function updateRates() {
+                const pairs = [
+                    { from: 'USD', to: 'AOA' },
+                    { from: 'EUR', to: 'AOA' },
+                    { from: 'BRL', to: 'AOA' },
+                    { from: 'USD', to: 'BRL' },
+                    { from: 'EUR', to: 'BRL' },
+                    { from: 'GBP', to: 'USD' },
+                    { from: 'CAD', to: 'USD' },
+                    { from: 'JPY', to: 'USD' }
+                ];
+
+                DOM.ratesList.innerHTML = pairs.map(pair => {
+                    const rate = getRate(pair.from, pair.to);
+                    if (rate === null) return '';
+
+                    const isUp = Math.random() > 0.5;
+                    const change = (Math.random() * 2 - 1).toFixed(2);
+
+                    return `
+                        <div class="rate-card flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div>
+                                <span class="font-medium">${pair.from}/${pair.to}</span>
+                                <span class="text-xs text-gray-500 ml-2">${getCurrencyName(pair.from)} → ${getCurrencyName(pair.to)}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold ${isUp ? 'text-green-600' : 'text-red-600'}">${rate.toFixed(4)}</div>
+                                <div class="text-xs ${isUp ? 'text-green-500' : 'text-red-500'}">
+                                    ${isUp ? '▲' : '▼'} ${Math.abs(change)}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Atualizar favoritos
+                updateFavorites();
+
+                DOM.lastUpdate.textContent = `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
+
+                // Salvar taxas periodicamente
+                if (Math.random() > 0.5) {
+                    saveRates(state.rates);
+                }
+            }
+
+            function updateRatesDisplay() {
+                updateRates();
+            }
+
+            function updateFavorites() {
+                const rates = [
+                    { from: 'USD', to: 'AOA', id: DOM.favoriteRate1 },
+                    { from: 'EUR', to: 'AOA', id: DOM.favoriteRate2 },
+                    { from: 'BRL', to: 'AOA', id: DOM.favoriteRate3 }
+                ];
+
+                rates.forEach(({ from, to, id }) => {
+                    const rate = getRate(from, to);
+                    if (rate !== null) {
+                        id.textContent = rate.toFixed(2);
+                    }
+                });
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.getElementById('currencyForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    performConversion();
+                });
+
+                DOM.amount.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        performConversion();
+                    }
+                });
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EXPORT ====================
+            window.performConversion = performConversion;
+            window.swapCurrencies = swapCurrencies;
+            window.addToHistory = addToHistory;
+            window.updateRates = updateRates;
+            window.clearHistory = clearHistory;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

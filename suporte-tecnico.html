@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suporte Técnico | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl">
+            <!-- ... mesma sidebar ... -->
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">SUPORTE TÉCNICO</h1>
+                        <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                            <i class="fas fa-headset mr-1"></i> Online
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <!-- Métricas de Suporte -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Tickets Abertos</p>
+                                <h3 class="text-2xl font-bold text-yellow-600">18</h3>
+                                <p class="text-sm text-gray-500">5 urgentes</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-ticket-alt text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Em Andamento</p>
+                                <h3 class="text-2xl font-bold text-blue-600">12</h3>
+                                <p class="text-sm text-gray-500">3 técnicos</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-cogs text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Resolvidos Hoje</p>
+                                <h3 class="text-2xl font-bold text-green-600">8</h3>
+                                <p class="text-sm text-gray-500">Média: 2h15m</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Satisfação</p>
+                                <h3 class="text-2xl font-bold text-purple-600">94%</h3>
+                                <p class="text-sm text-gray-500">Este mês</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fas fa-star text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Lista de Tickets -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <h2 class="text-xl font-bold text-gray-800">Tickets de Suporte</h2>
+                                <div class="flex space-x-2">
+                                    <select class="border rounded-lg px-3 py-2">
+                                        <option>Todos os Status</option>
+                                        <option>Abertos</option>
+                                        <option>Em Andamento</option>
+                                        <option>Resolvidos</option>
+                                    </select>
+                                    <button onclick="openNewTicketModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                        <i class="fas fa-plus mr-2"></i> Novo Ticket
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assunto</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ticketsTable" class="bg-white divide-y divide-gray-200">
+                                            <!-- Tickets carregados via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Base de Conhecimento -->
+                        <div class="bg-white rounded-lg shadow mt-6">
+                            <div class="p-6 border-b">
+                                <h2 class="text-xl font-bold text-gray-800">Base de Conhecimento</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="border rounded-lg p-4 hover:shadow-md cursor-pointer">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-file-alt text-blue-500 text-xl mt-1 mr-3"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800">Como fazer backup</h4>
+                                                <p class="text-sm text-gray-600 mt-1">Guia completo para backup do sistema</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border rounded-lg p-4 hover:shadow-md cursor-pointer">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-file-alt text-green-500 text-xl mt-1 mr-3"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800">Problemas de conexão</h4>
+                                                <p class="text-sm text-gray-600 mt-1">Solução para erros de rede</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border rounded-lg p-4 hover:shadow-md cursor-pointer">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-file-alt text-purple-500 text-xl mt-1 mr-3"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800">Configuração POS</h4>
+                                                <p class="text-sm text-gray-600 mt-1">Configurar terminal de pagamento</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border rounded-lg p-4 hover:shadow-md cursor-pointer">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-file-alt text-yellow-500 text-xl mt-1 mr-3"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800">Relatórios avançados</h4>
+                                                <p class="text-sm text-gray-600 mt-1">Gerar relatórios personalizados</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Controlo -->
+                    <div class="space-y-6">
+                        <!-- Técnicos Online -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Equipa de Suporte</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-2 bg-green-50 rounded">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span class="text-sm font-medium">Carlos Silva</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">3 tickets</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2 bg-green-50 rounded">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span class="text-sm font-medium">Ana Santos</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">5 tickets</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2 bg-yellow-50 rounded">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                                        <span class="text-sm font-medium">Miguel Costa</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Ausente</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Estatísticas</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Tempo Médio Resposta:</span>
+                                    <span class="font-semibold">15min</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Taxa de Resolução:</span>
+                                    <span class="font-semibold text-green-600">92%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Clientes Activos:</span>
+                                    <span class="font-semibold">45</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">SLA Cumprido:</span>
+                                    <span class="font-semibold text-green-600">98%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Rápido -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Chat Rápido</h3>
+                            <div class="space-y-3">
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="text-xs text-gray-500">Cliente: Hotel Miramar</div>
+                                    <div class="text-sm mt-1">Preciso de ajuda com o relatório de vendas</div>
+                                    <div class="text-xs text-gray-400 mt-1">há 2 minutos</div>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <div class="text-xs text-blue-500">Você</div>
+                                    <div class="text-sm mt-1">Já verifiquei as configurações?</div>
+                                    <div class="text-xs text-gray-400 mt-1">há 1 minuto</div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <input type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Digite sua mensagem...">
+                                    <button class="bg-blue-500 text-white px-3 py-2 rounded-lg">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ferramentas Rápidas -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Ferramentas</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button class="p-3 border rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-desktop text-blue-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Acesso Remoto</div>
+                                </button>
+                                <button class="p-3 border rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-chart-bar text-green-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Diagnóstico</div>
+                                </button>
+                                <button class="p-3 border rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-download text-purple-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Logs</div>
+                                </button>
+                                <button class="p-3 border rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-cog text-yellow-500 text-lg"></i>
+                                    <div class="text-xs mt-1">Configurações</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Novo Ticket -->
+    <div id="newTicketModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Novo Ticket de Suporte</h3>
+                <button onclick="closeNewTicketModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <form id="ticketForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
+                            <select class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="">Selecione o cliente...</option>
+                                <option value="1">Hotel Miramar</option>
+                                <option value="2">Restaurante Sabor</option>
+                                <option value="3">Café Central</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Assunto *</label>
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" placeholder="Descreva o assunto..." required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prioridade *</label>
+                            <select class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="low">Baixa</option>
+                                <option value="medium">Média</option>
+                                <option value="high">Alta</option>
+                                <option value="urgent">Urgente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                            <select class="w-full border rounded-lg px-3 py-2" required>
+                                <option value="technical">Problema Técnico</option>
+                                <option value="billing">Facturação</option>
+                                <option value="feature">Nova Funcionalidade</option>
+                                <option value="training">Treinamento</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição *</label>
+                            <textarea class="w-full border rounded-lg px-3 py-2" rows="4" placeholder="Descreva o problema em detalhes..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Anexos</label>
+                            <input type="file" class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="closeNewTicketModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-plus mr-2"></i> Criar Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let supportTickets = [
+            {
+                id: 'TKT-2024-001',
+                client: 'Hotel Miramar',
+                subject: 'Problema no relatório de vendas',
+                priority: 'high',
+                date: '2024-09-25',
+                status: 'open',
+                category: 'technical'
+            },
+            {
+                id: 'TKT-2024-002',
+                client: 'Restaurante Sabor',
+                subject: 'Dúvida sobre configuração do POS',
+                priority: 'medium',
+                date: '2024-09-24',
+                status: 'in_progress',
+                category: 'training'
+            },
+            {
+                id: 'TKT-2024-003',
+                client: 'Café Central',
+                subject: 'Erro no backup automático',
+                priority: 'urgent',
+                date: '2024-09-25',
+                status: 'open',
+                category: 'technical'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTicketsTable();
+            setupTicketForm();
+            loadCategoriesAndSuppliers();
+        });
+
+        async function loadCategoriesAndSuppliers() {
+            try {
+                const categories = await fetch('/api/categories').then(res => res.json());
+                const suppliers = await fetch('/api/suppliers').then(res => res.json());
+                console.log('Categorias:', categories);
+                console.log('Fornecedores:', suppliers);
+            } catch (error) {
+                console.error('Erro ao carregar categorias e fornecedores:', error);
+            }
+        }
+
+        function loadTicketsTable() {
+            const tbody = document.getElementById('ticketsTable');
+            tbody.innerHTML = '';
+
+            supportTickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${ticket.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${ticket.client}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${ticket.subject}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            ticket.priority === 'low' ? 'bg-green-100 text-green-800' :
+                            ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${getPriorityName(ticket.priority)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${ticket.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' :
+                            ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
+                        }">
+                            ${getStatusName(ticket.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewTicket('${ticket.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye mr-1"></i> Ver
+                        </button>
+                        <button onclick="assignTicket('${ticket.id}')" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-user-plus mr-1"></i> Atribuir
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getPriorityName(priority) {
+            const priorities = {
+                'low': 'Baixa',
+                'medium': 'Média',
+                'high': 'Alta',
+                'urgent': 'Urgente'
+            };
+            return priorities[priority] || priority;
+        }
+
+        function getStatusName(status) {
+            const statuses = {
+                'open': 'Aberto',
+                'in_progress': 'Em Andamento',
+                'resolved': 'Resolvido',
+                'closed': 'Fechado'
+            };
+            return statuses[status] || status;
+        }
+
+        function openNewTicketModal() {
+            document.getElementById('newTicketModal').classList.remove('hidden');
+        }
+
+        function closeNewTicketModal() {
+            document.getElementById('newTicketModal').classList.add('hidden');
+        }
+
+        function setupTicketForm() {
+            document.getElementById('ticketForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewTicket();
+            });
+        }
+
+        function createNewTicket() {
+            const newTicket = {
+                id: `TKT-2024-${String(supportTickets.length + 1).padStart(3, '0')}`,
+                client: 'Novo Cliente',
+                subject: 'Novo Problema Reportado',
+                priority: 'medium',
+                date: new Date().toISOString().split('T')[0],
+                status: 'open',
+                category: 'technical'
+            };
+
+            supportTickets.unshift(newTicket);
+            loadTicketsTable();
+            closeNewTicketModal();
+            showNotification('Ticket criado com sucesso!', 'success');
+        }
+
+        function viewTicket(ticketId) {
+            const ticket = supportTickets.find(t => t.id === ticketId);
+            if (ticket) {
+                alert(`Ticket: ${ticket.id}\n\nCliente: ${ticket.client}\nAssunto: ${ticket.subject}\nPrioridade: ${getPriorityName(ticket.priority)}\nStatus: ${getStatusName(ticket.status)}\nData: ${ticket.date}`);
+            }
+        }
+
+        function assignTicket(ticketId) {
+            const ticket = supportTickets.find(t => t.id === ticketId);
+            if (ticket) {
+                ticket.status = 'in_progress';
+                loadTicketsTable();
+                showNotification(`Ticket ${ticketId} atribuído com sucesso`, 'success');
+            }
+        }
+
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+    </script>
+    <script src="database.js"></script>
+</body>
+</html>

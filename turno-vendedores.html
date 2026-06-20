@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Turnos | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar-collapsed {
+            width: 70px;
+        }
+        .sidebar-expanded {
+            width: 280px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-rocket text-2xl mr-3 text-yellow-400"></i>
+                    <span class="text-xl font-bold">Kanawa Soft</span>
+                </div>
+                <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto py-2">
+                <ul class="space-y-1 px-2">
+                    <li>
+                        <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-cash-register mr-3"></i>
+                            <span class="font-medium">PDV</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="cadastro-funcionarios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-users mr-3"></i>
+                            <span class="font-medium">Funcionários</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="turno-vendedores.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700">
+                            <i class="fas fa-user-clock mr-3 text-yellow-400"></i>
+                            <span class="font-medium">Turnos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="agenda-empresa.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-calendar-alt mr-3"></i>
+                            <span class="font-medium">Agenda</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">GESTÃO DE TURNOS</h1>
+                        <div class="text-sm text-gray-600 bg-green-50 px-3 py-1 rounded-full">
+                            <i class="fas fa-clock mr-1"></i> ${new Date().toLocaleDateString('pt-BR')}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Turno Actual -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Turno Actual</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-user-clock text-green-600 mr-3"></i>
+                                    <div>
+                                        <div class="font-medium">Manhã</div>
+                                        <div class="text-sm text-gray-600">08:00 - 16:00</div>
+                                    </div>
+                                </div>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Activo</span>
+                            </div>
+                            <div class="text-center text-sm text-gray-500">
+                                Próximo turno: Tarde (16:00 - 00:00)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Vendedores no Turno</h3>
+                        <div id="currentShiftEmployees" class="space-y-2">
+                            <!-- Vendedores serão carregados aqui -->
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="space-y-2">
+                            <button onclick="startShift()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg">
+                                <i class="fas fa-play mr-2"></i> Iniciar Turno
+                            </button>
+                            <button onclick="endShift()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg">
+                                <i class="fas fa-stop mr-2"></i> Terminar Turno
+                            </button>
+                            <button onclick="openShiftModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg">
+                                <i class="fas fa-cog mr-2"></i> Gerir Turnos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Programação Semanal -->
+                <div class="bg-white rounded-xl shadow mb-6">
+                    <div class="p-6 border-b">
+                        <h2 class="text-xl font-bold text-gray-800">Programação Semanal</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left">Funcionário</th>
+                                        <th class="px-4 py-3 text-left">Segunda</th>
+                                        <th class="px-4 py-3 text-left">Terça</th>
+                                        <th class="px-4 py-3 text-left">Quarta</th>
+                                        <th class="px-4 py-3 text-left">Quinta</th>
+                                        <th class="px-4 py-3 text-left">Sexta</th>
+                                        <th class="px-4 py-3 text-left">Sábado</th>
+                                        <th class="px-4 py-3 text-left">Domingo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="weeklySchedule">
+                                    <!-- Programação será carregada aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Turnos -->
+                <div class="bg-white rounded-xl shadow">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-800">Histórico de Turnos</h2>
+                        <div class="flex space-x-2">
+                            <input type="date" id="historyDate" class="border rounded-lg px-3 py-2">
+                            <button onclick="loadShiftHistory()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-filter mr-2"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left">Data</th>
+                                        <th class="px-4 py-3 text-left">Turno</th>
+                                        <th class="px-4 py-3 text-left">Funcionário</th>
+                                        <th class="px-4 py-3 text-left">Entrada</th>
+                                        <th class="px-4 py-3 text-left">Saída</th>
+                                        <th class="px-4 py-3 text-left">Horas</th>
+                                        <th class="px-4 py-3 text-left">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="shiftHistory">
+                                    <!-- Histórico será carregado aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Gestão de Turnos -->
+    <div id="shiftModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Gestão de Turnos</h3>
+                <button onclick="closeShiftModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div class="space-y-6">
+                    <!-- Configuração de Turnos -->
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Configuração de Turnos</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border rounded-lg p-4">
+                                <h5 class="font-medium mb-2">Turno Manhã</h5>
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm">Início:</span>
+                                        <input type="time" value="08:00" class="border rounded px-2 py-1">
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm">Fim:</span>
+                                        <input type="time" value="16:00" class="border rounded px-2 py-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg p-4">
+                                <h5 class="font-medium mb-2">Turno Tarde</h5>
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm">Início:</span>
+                                        <input type="time" value="16:00" class="border rounded px-2 py-1">
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm">Fim:</span>
+                                        <input type="time" value="00:00" class="border rounded px-2 py-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atribuição de Funcionários -->
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Atribuição de Funcionários</h4>
+                        <div id="shiftAssignment">
+                            <!-- Atribuição será carregada aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end space-x-3">
+                <button onclick="closeShiftModal()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button onclick="saveShiftConfiguration()" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                    <i class="fas fa-save mr-2"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCurrentShift();
+            await loadWeeklySchedule();
+            await loadShiftHistory();
+            setupEventListeners();
+            loadCategoriesAndSuppliers();
+        });
+
+        function setupEventListeners() {
+            // Definir data padrão para hoje no histórico
+            document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        async function loadCurrentShift() {
+            try {
+                const funcionarios = await database.getFuncionarios();
+                const vendedoresActivos = funcionarios.filter(f => 
+                    f.cargo === 'vendedor' && f.activo !== false
+                );
+
+                const currentShiftDiv = document.getElementById('currentShiftEmployees');
+                
+                if (vendedoresActivos.length === 0) {
+                    currentShiftDiv.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-users text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhum vendedor activo</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentShiftDiv.innerHTML = vendedoresActivos.map(funcionario => `
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-2">
+                                ${funcionario.nome.charAt(0).toUpperCase()}
+                            </div>
+                            <span class="text-sm">${funcionario.nome}</span>
+                        </div>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Presente</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar turno actual:', error);
+            }
+        }
+
+        async function loadWeeklySchedule() {
+            try {
+                const funcionarios = await database.getFuncionarios();
+                const vendedores = funcionarios.filter(f => f.cargo === 'vendedor' && f.activo !== false);
+
+                const scheduleTable = document.getElementById('weeklySchedule');
+                
+                if (vendedores.length === 0) {
+                    scheduleTable.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                Nenhum vendedor para programação
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+                
+                scheduleTable.innerHTML = vendedores.map(funcionario => `
+                    <tr class="border-b">
+                        <td class="px-4 py-3">
+                            <div class="font-medium">${funcionario.nome}</div>
+                        </td>
+                        ${dias.map(dia => `
+                            <td class="px-4 py-3">
+                                <select class="w-full border rounded px-2 py-1 text-sm">
+                                    <option value="manha">Manhã (08-16)</option>
+                                    <option value="tarde">Tarde (16-00)</option>
+                                    <option value="folga">Folga</option>
+                                </select>
+                            </td>
+                        `).join('')}
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar programação semanal:', error);
+            }
+        }
+
+        async function loadShiftHistory() {
+            try {
+                // Em produção, buscaria do banco de dados
+                const historicoExemplo = [
+                    {
+                        data: '2024-01-15',
+                        turno: 'Manhã',
+                        funcionario: 'Maria Silva',
+                        entrada: '08:00',
+                        saida: '16:00',
+                        horas: '8h',
+                        status: 'Concluído'
+                    },
+                    {
+                        data: '2024-01-15',
+                        turno: 'Tarde',
+                        funcionario: 'Carlos Mendes',
+                        entrada: '16:00',
+                        saida: '00:00',
+                        horas: '8h',
+                        status: 'Concluído'
+                    }
+                ];
+
+                const historyTable = document.getElementById('shiftHistory');
+                
+                historyTable.innerHTML = historicoExemplo.map(registro => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm">${new Date(registro.data).toLocaleDateString('pt-BR')}</td>
+                        <td class="px-4 py-3">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                ${registro.turno}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm">${registro.funcionario}</td>
+                        <td class="px-4 py-3 text-sm">${registro.entrada}</td>
+                        <td class="px-4 py-3 text-sm">${registro.saida}</td>
+                        <td class="px-4 py-3 text-sm font-medium">${registro.horas}</td>
+                        <td class="px-4 py-3">
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                ${registro.status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+            }
+        }
+
+        async function loadCategoriesAndSuppliers() {
+            try {
+                const categories = await fetch('/api/categories').then(res => res.json());
+                const suppliers = await fetch('/api/suppliers').then(res => res.json());
+                console.log('Categorias:', categories);
+                console.log('Fornecedores:', suppliers);
+            } catch (error) {
+                console.error('Erro ao carregar categorias e fornecedores:', error);
+            }
+        }
+
+        function startShift() {
+            showNotification('Turno iniciado com sucesso!', 'success');
+        }
+
+        function endShift() {
+            if (confirm('Tem certeza que deseja terminar o turno actual?')) {
+                showNotification('Turno terminado com sucesso!', 'success');
+            }
+        }
+
+        function openShiftModal() {
+            loadShiftAssignment();
+            document.getElementById('shiftModal').classList.remove('hidden');
+        }
+
+        function closeShiftModal() {
+            document.getElementById('shiftModal').classList.add('hidden');
+        }
+
+        async function loadShiftAssignment() {
+            try {
+                const funcionarios = await database.getFuncionarios();
+                const vendedores = funcionarios.filter(f => f.cargo === 'vendedor' && f.activo !== false);
+
+                const assignmentDiv = document.getElementById('shiftAssignment');
+                
+                assignmentDiv.innerHTML = `
+                    <div class="space-y-4">
+                        ${vendedores.map(funcionario => `
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                        ${funcionario.nome.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">${funcionario.nome}</div>
+                                        <div class="text-sm text-gray-600">${funcionario.email}</div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <select class="border rounded px-2 py-1 text-sm">
+                                        <option value="manha">Turno Manhã</option>
+                                        <option value="tarde">Turno Tarde</option>
+                                        <option value="folga">Folga</option>
+                                    </select>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar atribuição:', error);
+            }
+        }
+
+        function saveShiftConfiguration() {
+            showNotification('Configuração de turnos guardada com sucesso!', 'success');
+            closeShiftModal();
+        }
+
+        function showNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 transform transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+        }
+    </script>
+</body>
+</html>

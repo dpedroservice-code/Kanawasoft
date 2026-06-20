@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Financeiros | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar-collapsed {
+            width: 70px;
+        }
+        .sidebar-expanded {
+            width: 280px;
+        }
+        .chart-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar sidebar-expanded bg-gradient-to-b from-blue-900 to-blue-800 text-white flex flex-col shadow-xl">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-rocket text-2xl mr-3 text-yellow-400"></i>
+                    <span class="text-xl font-bold">Kanawa Soft</span>
+                </div>
+                <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto py-2">
+                <ul class="space-y-1 px-2">
+                    <li>
+                        <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="relatorios-financeiros.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700">
+                            <i class="fas fa-chart-pie mr-3 text-yellow-400"></i>
+                            <span class="font-medium">Relatórios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="movimentos-caixa.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-cash-register mr-3"></i>
+                            <span class="font-medium">Movimentos Caixa</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span class="font-medium">Vendas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="faturas-recibos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                            <i class="fas fa-file-invoice-dollar mr-3"></i>
+                            <span class="font-medium">Faturas</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10 border-b">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-xl font-bold text-gray-800">RELATÓRIOS FINANCEIROS</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Filtros -->
+                <div class="bg-white rounded-xl shadow p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Filtros do Relatório</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data Início</label>
+                            <input type="date" id="startDate" class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data Fim</label>
+                            <input type="date" id="endDate" class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Relatório</label>
+                            <select id="reportType" class="w-full border rounded-lg px-3 py-2">
+                                <option value="vendas">Vendas</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="estoque">Estoque</option>
+                                <option value="clientes">Clientes</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="generateReport()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg">
+                                <i class="fas fa-chart-bar mr-2"></i> Gerar Relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Métricas Principais -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Faturamento Total</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalRevenue">AOA 0</h3>
+                                <p class="text-green-500 text-sm flex items-center mt-1">
+                                    <i class="fas fa-arrow-up mr-1"></i> 12% vs mês anterior
+                                </p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-xl">
+                                <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Lucro Líquido</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="netProfit">AOA 0</h3>
+                                <p class="text-green-500 text-sm flex items-center mt-1">
+                                    <i class="fas fa-chart-line mr-1"></i> 8% margem
+                                </p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-xl">
+                                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Despesas Totais</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalExpenses">AOA 0</h3>
+                                <p class="text-red-500 text-sm flex items-center mt-1">
+                                    <i class="fas fa-arrow-up mr-1"></i> 5% vs mês anterior
+                                </p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-xl">
+                                <i class="fas fa-arrow-up text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Ticket Médio</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="averageTicket">AOA 0</h3>
+                                <p class="text-green-500 text-sm flex items-center mt-1">
+                                    <i class="fas fa-arrow-up mr-1"></i> 3% vs mês anterior
+                                </p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-xl">
+                                <i class="fas fa-shopping-cart text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Gráfico de Vendas -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-gray-800">Vendas por Dia</h3>
+                            <select id="chartPeriod" class="border rounded-lg px-3 py-1 text-sm">
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30" selected>Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                            </select>
+                        </div>
+                        <div class="chart-container rounded-lg p-4 text-white">
+                            <div id="salesChart" class="h-64 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-bar text-4xl mb-2 opacity-50"></i>
+                                    <p>Gere o relatório para ver o gráfico</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Produtos -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Top 5 Produtos Mais Vendidos</h3>
+                        <div id="topProducts" class="space-y-3">
+                            <div class="text-center text-gray-500 py-8">
+                                <i class="fas fa-boxes text-4xl mb-2 opacity-50"></i>
+                                <p>Nenhum dado disponível</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relatório Detalhado -->
+                <div class="bg-white rounded-xl shadow">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-800">Relatório Detalhado</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="exportToPDF()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-pdf mr-2"></i> PDF
+                            </button>
+                            <button onclick="exportToExcel()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-excel mr-2"></i> Excel
+                            </button>
+                            <button onclick="printReport()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-print mr-2"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-3 text-left">Data</th>
+                                        <th class="px-4 py-3 text-left">Descrição</th>
+                                        <th class="px-4 py-3 text-left">Categoria</th>
+                                        <th class="px-4 py-3 text-left">Entradas</th>
+                                        <th class="px-4 py-3 text-left">Saídas</th>
+                                        <th class="px-4 py-3 text-left">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTable">
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                            <i class="fas fa-chart-line text-4xl mb-2 opacity-50"></i>
+                                            <p>Selecione os filtros e gere o relatório</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-gray-50 font-semibold">
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-3 text-right">Totais:</td>
+                                        <td class="px-4 py-3 text-green-600" id="totalIncome">AOA 0</td>
+                                        <td class="px-4 py-3 text-red-600" id="totalOutcome">AOA 0</td>
+                                        <td class="px-4 py-3 font-bold" id="finalBalance">AOA 0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análises Adicionais -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Métodos de Pagamento -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Métodos de Pagamento</h3>
+                        <div id="paymentMethods" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-credit-card text-2xl mb-2 opacity-50"></i>
+                                <p>Nenhum dado disponível</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desempenho por Vendedor -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Desempenho por Vendedor</h3>
+                        <div id="sellerPerformance" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-users text-2xl mb-2 opacity-50"></i>
+                                <p>Nenhum dado disponível</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="database.js"></script>
+    <script>
+        let reportData = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            setDefaultDates();
+        });
+
+        function setupEventListeners() {
+            // Definir datas padrão (mês actual)
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+
+            document.getElementById('chartPeriod').addEventListener('change', function() {
+                if (reportData.length > 0) {
+                    updateSalesChart();
+                }
+            });
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+        }
+
+        async function generateReport() {
+            try {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const reportType = document.getElementById('reportType').value;
+
+                if (!startDate || !endDate) {
+                    showNotification('Selecione as datas de início e fim', 'error');
+                    return;
+                }
+
+                // Simular geração de relatório
+                reportData = await generateSampleReportData(startDate, endDate);
+                
+                updateReportTable(reportData);
+                updateMetrics(reportData);
+                updateSalesChart();
+                updateTopProducts();
+                updatePaymentMethods();
+                updateSellerPerformance();
+                
+                showNotification('Relatório gerado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao gerar relatório:', error);
+                showNotification('Erro ao gerar relatório', 'error');
+            }
+        }
+
+        async function generateSampleReportData(startDate, endDate) {
+            // Simular dados do relatório - em produção viria da API
+            return [
+                {
+                    data: '2024-01-15',
+                    descricao: 'Vendas do dia',
+                    categoria: 'Vendas',
+                    entrada: 125000,
+                    saida: 0,
+                    saldo: 125000
+                },
+                {
+                    data: '2024-01-15',
+                    descricao: 'Compras de stock',
+                    categoria: 'Compras',
+                    entrada: 0,
+                    saida: 50000,
+                    saldo: 75000
+                },
+                {
+                    data: '2024-01-14',
+                    descricao: 'Vendas do dia',
+                    categoria: 'Vendas',
+                    entrada: 98000,
+                    saida: 0,
+                    saldo: 173000
+                },
+                {
+                    data: '2024-01-14',
+                    descricao: 'Despesas operacionais',
+                    categoria: 'Despesas',
+                    entrada: 0,
+                    saida: 15000,
+                    saldo: 158000
+                }
+            ];
+        }
+
+        function updateReportTable(data) {
+            const table = document.getElementById('reportTable');
+            
+            table.innerHTML = data.map(row => {
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm">${new Date(row.data).toLocaleDateString('pt-BR')}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium">${row.descricao}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                ${row.categoria}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-green-600 font-medium">
+                            ${row.entrada > 0 ? `AOA ${row.entrada.toLocaleString('pt-BR')}` : '-'}
+                        </td>
+                        <td class="px-4 py-3 text-red-600 font-medium">
+                            ${row.saida > 0 ? `AOA ${row.saida.toLocaleString('pt-BR')}` : '-'}
+                        </td>
+                        <td class="px-4 py-3 font-bold ${row.saldo >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            AOA ${row.saldo.toLocaleString('pt-BR')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Atualizar totais
+            const totalIncome = data.reduce((sum, row) => sum + row.entrada, 0);
+            const totalOutcome = data.reduce((sum, row) => sum + row.saida, 0);
+            const finalBalance = totalIncome - totalOutcome;
+
+            document.getElementById('totalIncome').textContent = `AOA ${totalIncome.toLocaleString('pt-BR')}`;
+            document.getElementById('totalOutcome').textContent = `AOA ${totalOutcome.toLocaleString('pt-BR')}`;
+            document.getElementById('finalBalance').textContent = `AOA ${finalBalance.toLocaleString('pt-BR')}`;
+            document.getElementById('finalBalance').className = `px-4 py-3 font-bold ${finalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        function updateMetrics(data) {
+            const totalRevenue = data.filter(row => row.categoria === 'Vendas')
+                .reduce((sum, row) => sum + row.entrada, 0);
+            
+            const totalExpenses = data.filter(row => row.categoria === 'Compras' || row.categoria === 'Despesas')
+                .reduce((sum, row) => sum + row.saida, 0);
+            
+            const netProfit = totalRevenue - totalExpenses;
+            const averageTicket = totalRevenue / (data.filter(row => row.categoria === 'Vendas').length || 1);
+
+            document.getElementById('totalRevenue').textContent = `AOA ${totalRevenue.toLocaleString('pt-BR')}`;
+            document.getElementById('netProfit').textContent = `AOA ${netProfit.toLocaleString('pt-BR')}`;
+            document.getElementById('totalExpenses').textContent = `AOA ${totalExpenses.toLocaleString('pt-BR')}`;
+            document.getElementById('averageTicket').textContent = `AOA ${averageTicket.toLocaleString('pt-BR', {maximumFractionDigits: 2})}`;
+        }
+
+        function updateSalesChart() {
+            const chartContainer = document.getElementById('salesChart');
+            const period = parseInt(document.getElementById('chartPeriod').value);
+            
+            // Simular dados do gráfico
+            const chartData = Array.from({length: period}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (period - i - 1));
+                return {
+                    date: date.toLocaleDateString('pt-BR'),
+                    sales: Math.floor(Math.random() * 100000) + 50000
+                };
+            });
+
+            chartContainer.innerHTML = `
+                <div class="w-full h-full flex items-end justify-between space-x-1">
+                    ${chartData.map(day => `
+                        <div class="flex-1 flex flex-col items-center">
+                            <div class="bg-white bg-opacity-20 rounded-t w-full" 
+                                 style="height: ${(day.sales / 150000) * 100}%">
+                            </div>
+                            <div class="text-white text-xs mt-1">${day.date.split('/')[0]}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="absolute bottom-2 left-2 text-white text-sm">
+                    <i class="fas fa-chart-bar mr-1"></i> Vendas por Dia
+                </div>
+            `;
+        }
+
+        function updateTopProducts() {
+            const container = document.getElementById('topProducts');
+            
+            const topProducts = [
+                { nome: 'Arroz Super 5kg', vendas: 45, valor: 112500 },
+                { nome: 'Óleo Vegetal 900ml', vendas: 32, valor: 48000 },
+                { nome: 'Açúcar Refinado 1kg', vendas: 28, valor: 22400 },
+                { nome: 'Feijão Manteiga 1kg', vendas: 25, valor: 30000 },
+                { nome: 'Leite em Pó 400g', vendas: 20, valor: 36000 }
+            ];
+
+            container.innerHTML = topProducts.map((produto, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                            ${index + 1}
+                        </span>
+                        <div>
+                            <div class="font-medium">${produto.nome}</div>
+                            <div class="text-xs text-gray-600">${produto.vendas} unidades</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-green-600">AOA ${produto.valor.toLocaleString('pt-BR')}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePaymentMethods() {
+            const container = document.getElementById('paymentMethods');
+            
+            const methods = [
+                { metodo: 'Dinheiro', valor: 150000, percentual: 45 },
+                { metodo: 'Multicaixa', valor: 120000, percentual: 36 },
+                { metodo: 'Transferência', valor: 50000, percentual: 15 },
+                { metodo: 'Cartão', valor: 15000, percentual: 4 }
+            ];
+
+            container.innerHTML = methods.map(method => `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas ${getPaymentMethodIcon(method.metodo)} text-gray-600 mr-3 w-4"></i>
+                        <span class="text-sm">${method.metodo}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-20 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${method.percentual}%"></div>
+                        </div>
+                        <span class="text-sm font-medium w-16 text-right">${method.percentual}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSellerPerformance() {
+            const container = document.getElementById('sellerPerformance');
+            
+            const sellers = [
+                { nome: 'Maria Silva', vendas: 85, valor: 212500 },
+                { nome: 'Carlos Mendes', vendas: 72, valor: 180000 },
+                { nome: 'Ana Paula', vendas: 68, valor: 170000 }
+            ];
+
+            container.innerHTML = sellers.map(seller => {
+                const performance = seller.vendas > 80 ? 'high' : seller.vendas > 60 ? 'medium' : 'low';
+                const performanceClass = {
+                    'high': 'bg-green-100 text-green-800',
+                    'medium': 'bg-yellow-100 text-yellow-800',
+                    'low': 'bg-red-100 text-red-800'
+                }[performance];
+
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                                ${seller.nome.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <div class="font-medium">${seller.nome}</div>
+                                <div class="text-xs text-gray-600">${seller.vendas} vendas</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-green-600">AOA ${seller.valor.toLocaleString('pt-BR')}</div>
+                            <span class="${performanceClass} px-2 py-1 rounded text-xs">
+                                ${performance === 'high' ? 'Alto' : performance === 'medium' ? 'Médio' : 'Baixo'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getPaymentMethodIcon(method) {
+            const icons = {
+                'Dinheiro': 'fa-money-bill-wave',
+                'Multicaixa': 'fa-mobile-alt',
+                'Transferência': 'fa-university',
+                'Cartão': 'fa-credit-card'
+            };
+            return icons[method] || 'fa-money-bill-wave';
+        }
+
+        function exportToPDF() {
+            showNotification('PDF gerado com sucesso!', 'success');
+        }
+
+        function exportToExcel() {
+            showNotification('Excel gerado com sucesso!', 'success');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function showNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 transform transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+        }
+    </script>
+</body>
+</html>

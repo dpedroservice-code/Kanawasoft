@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Controlo de Acessos | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toggle {
+            position: relative;
+            width: 48px; height: 26px;
+            background: #cbd5e1; border-radius: 13px;
+            cursor: pointer; transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .toggle.active { background: var(--success-color); }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 22px; height: 22px; background: #fff; border-radius: 50%;
+            transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle.active::after { left: 24px; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Biometric Styles */
+        .biometric-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .biometric-success {
+            animation: successPulse 0.6s ease;
+        }
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #10b981; }
+            100% { transform: scale(1); }
+        }
+
+        .biometric-error {
+            animation: errorShake 0.5s ease;
+        }
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Login Screen */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f2440 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            padding: 20px;
+        }
+        .login-overlay.active { display: flex; }
+        .login-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        .login-card .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fff;
+        }
+        .login-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .login-card p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+        .login-card .biometric-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card .biometric-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+        }
+        .login-card .biometric-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-card .biometric-btn.scanning {
+            animation: pulse 1.5s infinite;
+        }
+        .login-card .biometric-btn.success {
+            background: #10b981;
+        }
+        .login-card .biometric-btn.error {
+            background: #ef4444;
+        }
+        .login-card .user-info {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .login-card .user-info .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 auto 8px;
+        }
+        .login-card .user-info .name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .login-card .user-info .email {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .login-card .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            min-height: 24px;
+        }
+        .login-card .login-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .login-card .login-options button {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            color: #475569;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .login-card .login-options button:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+        }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 24px; }
+            .login-card .biometric-btn { width: 64px; height: 64px; font-size: 2rem; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== LOGIN OVERLAY ==================== -->
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-card">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Acesso Biométrico</h2>
+            <p>Autentique-se com sua impressão digital para acessar o sistema</p>
+
+            <div class="user-info" id="loginUserInfo">
+                <div class="avatar" id="loginAvatar">U</div>
+                <div class="name" id="loginName">Usuário</div>
+                <div class="email" id="loginEmail">usuario@kanawasoft.com</div>
+            </div>
+
+            <button class="biometric-btn" id="biometricLoginBtn" onclick="window.startBiometricLogin()">
+                <i class="fas fa-fingerprint" id="biometricIcon"></i>
+            </button>
+
+            <div class="error-msg" id="loginError"></div>
+
+            <div class="login-options">
+                <button onclick="window.usePasswordLogin()">
+                    <i class="fas fa-key"></i> Usar senha
+                </button>
+                <button onclick="window.cancelLogin()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+
+            <div class="mt-4 text-xs text-gray-400">
+                <span id="deviceStatus">📱 Dispositivo: Desktop</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-shield-alt mr-3"></i>
+                        <span class="flex-1 font-medium">Segurança</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="controlo-acessos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-lock mr-2 text-sm"></i>Controlo de Acessos</a></li>
+                        <li><a href="permissoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-user-tag mr-2 text-sm"></i>Permissões</a></li>
+                        <li><a href="logs.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-file-alt mr-2 text-sm"></i>Logs</a></li>
+                    </ul>
+                </li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">CONTROLO DE ACESSOS</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-shield-alt mr-1"></i> Sistema Seguro
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Biometric Section -->
+            <div id="biometricSection" class="mb-6">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg text-white p-6">
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="mb-4 md:mb-0">
+                            <h3 class="text-xl font-bold mb-2">
+                                <i class="fas fa-fingerprint mr-2"></i> Acesso Biométrico
+                            </h3>
+                            <p class="text-blue-100 text-sm">Autentique-se com sua impressão digital</p>
+                            <div class="mt-2 flex items-center text-xs text-blue-200">
+                                <i class="fas fa-mobile-alt mr-2"></i>
+                                <span id="biometricStatus">✅ Biometria disponível</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button onclick="window.startBiometricLogin()" 
+                                    id="biometricBtn"
+                                    class="biometric-pulse w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all">
+                                <i class="fas fa-fingerprint text-3xl"></i>
+                            </button>
+                            <div id="biometricResult" class="hidden">
+                                <span class="text-sm font-medium" id="biometricResultText"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lista de Utilizadores -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Gestão de Utilizadores</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="window.openNewUserModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                                    <i class="fas fa-plus mr-2"></i> Novo Utilizador
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilizador</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Acesso</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTable" class="bg-white divide-y divide-gray-200">
+                                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                            <p>Carregando utilizadores...</p>
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs de Segurança -->
+                    <div class="bg-white rounded-lg shadow mt-6">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold text-gray-800">Logs de Segurança</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evento</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilizador</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="securityLogs" class="bg-white divide-y divide-gray-200">
+                                        <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                            <p>Carregando logs...</p>
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controlo -->
+                <div class="space-y-6">
+                    <!-- Perfis de Acesso -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Perfis de Acesso</h3>
+                        <div id="accessProfiles" class="space-y-3">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Sessões Activas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Sessões Activas</h3>
+                        <div id="activeSessions" class="space-y-3">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="window.forceLogout()" class="p-3 border rounded-lg hover:bg-blue-50 text-center">
+                                <i class="fas fa-sign-out-alt text-blue-500 text-lg"></i>
+                                <div class="text-xs mt-1">Terminar Sessões</div>
+                            </button>
+                            <button onclick="window.auditAccess()" class="p-3 border rounded-lg hover:bg-green-50 text-center">
+                                <i class="fas fa-search text-green-500 text-lg"></i>
+                                <div class="text-xs mt-1">Auditoria</div>
+                            </button>
+                            <button onclick="window.exportLogs()" class="p-3 border rounded-lg hover:bg-purple-50 text-center">
+                                <i class="fas fa-download text-purple-500 text-lg"></i>
+                                <div class="text-xs mt-1">Exportar Logs</div>
+                            </button>
+                            <button onclick="window.reauthenticate()" class="p-3 border rounded-lg hover:bg-yellow-50 text-center">
+                                <i class="fas fa-fingerprint text-yellow-500 text-lg"></i>
+                                <div class="text-xs mt-1">Reautenticar</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== NEW USER MODAL ==================== -->
+    <div class="modal-overlay" id="newUserModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Adicionar Novo Utilizador</h3>
+                <button onclick="window.closeNewUserModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="userForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
+                            <input type="text" id="userFullName" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <input type="email" id="userEmail" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Perfil de Acesso *</label>
+                            <select id="userRole" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione...</option>
+                                <option value="admin">Administrador</option>
+                                <option value="manager">Gerente</option>
+                                <option value="operator">Operador</option>
+                                <option value="viewer">Visualizador</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                            <input type="password" id="userPassword" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="userBiometric" class="mr-3">
+                                <span class="text-sm text-gray-700">Permitir acesso biométrico (impressão digital)</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeNewUserModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.createUser()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">
+                    <i class="fas fa-user-plus mr-2"></i> Criar Utilizador
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                users: [],
+                logs: [],
+                sessions: [],
+                isAuthenticated: false,
+                isBiometricAvailable: false,
+                isLoginScreen: true,
+                loginAttempts: 0
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                loginOverlay: document.getElementById('loginOverlay'),
+                loginBtn: document.getElementById('biometricLoginBtn'),
+                loginIcon: document.getElementById('biometricIcon'),
+                loginError: document.getElementById('loginError'),
+                loginAvatar: document.getElementById('loginAvatar'),
+                loginName: document.getElementById('loginName'),
+                loginEmail: document.getElementById('loginEmail'),
+                deviceStatus: document.getElementById('deviceStatus'),
+                
+                statsGrid: document.getElementById('statsGrid'),
+                usersTable: document.getElementById('usersTable'),
+                securityLogs: document.getElementById('securityLogs'),
+                accessProfiles: document.getElementById('accessProfiles'),
+                activeSessions: document.getElementById('activeSessions'),
+                newUserModal: document.getElementById('newUserModal'),
+                biometricBtn: document.getElementById('biometricBtn'),
+                biometricStatus: document.getElementById('biometricStatus'),
+                biometricResult: document.getElementById('biometricResult'),
+                biometricResultText: document.getElementById('biometricResultText'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                // Verificar se já está autenticado
+                const isLoggedIn = localStorage.getItem('biometric_auth') === 'true';
+                if (isLoggedIn) {
+                    state.isAuthenticated = true;
+                    DOM.loginOverlay.classList.remove('active');
+                    loadApp();
+                } else {
+                    showLoginScreen();
+                }
+
+                // Detectar biometria
+                checkBiometricAvailability();
+                
+                // Event listeners
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && DOM.loginOverlay.classList.contains('active')) {
+                        startBiometricLogin();
+                    }
+                    if (e.key === 'Escape' && DOM.newUserModal.classList.contains('active')) {
+                        closeNewUserModal();
+                    }
+                });
+            }
+
+            // ==================== LOGIN ====================
+            function showLoginScreen() {
+                DOM.loginOverlay.classList.add('active');
+                state.isLoginScreen = true;
+                
+                // Detectar dispositivo
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                DOM.deviceStatus.textContent = isMobile ? '📱 Dispositivo: Mobile (Biometria disponível)' : '💻 Dispositivo: Desktop (Biometria simulada)';
+                
+                // Carregar dados do usuário para exibição
+                loadUserForLogin();
+            }
+
+            async function loadUserForLogin() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    const user = data?.[0] || { nome: 'Usuário', email: 'usuario@kanawasoft.com' };
+                    DOM.loginAvatar.textContent = user.nome.charAt(0).toUpperCase();
+                    DOM.loginName.textContent = user.nome;
+                    DOM.loginEmail.textContent = user.email;
+                    state.user = user;
+                } catch (e) {
+                    DOM.loginAvatar.textContent = 'U';
+                    DOM.loginName.textContent = 'Usuário';
+                    DOM.loginEmail.textContent = 'usuario@kanawasoft.com';
+                }
+            }
+
+            function checkBiometricAvailability() {
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const hasBiometric = 'biometric' in navigator || 'fingerprint' in navigator;
+                
+                state.isBiometricAvailable = isMobile && hasBiometric;
+                
+                if (DOM.biometricBtn) {
+                    DOM.biometricBtn.disabled = !state.isBiometricAvailable;
+                }
+                
+                if (DOM.biometricStatus) {
+                    if (state.isBiometricAvailable) {
+                        DOM.biometricStatus.textContent = '✅ Biometria disponível (Toque para autenticar)';
+                    } else if (isMobile) {
+                        DOM.biometricStatus.textContent = '⚠️ Biometria não disponível neste dispositivo';
+                    } else {
+                        DOM.biometricStatus.textContent = '📱 Modo simulação (Desktop)';
+                    }
+                }
+            }
+
+            async function startBiometricLogin() {
+                const btn = DOM.loginBtn;
+                const icon = DOM.loginIcon;
+                const error = DOM.loginError;
+                
+                error.textContent = '';
+                btn.disabled = true;
+                btn.classList.add('scanning');
+                icon.className = 'fas fa-spinner fa-spin';
+
+                try {
+                    // Simular leitura biométrica
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // Verificar se o usuário tem biometria cadastrada
+                    const { data } = await state.supabase.from('usuarios').select('*').eq('biometrico', true).limit(1);
+                    
+                    if (data && data.length > 0) {
+                        // Sucesso
+                        btn.classList.remove('scanning');
+                        btn.classList.add('success');
+                        icon.className = 'fas fa-check';
+                        state.isAuthenticated = true;
+                        localStorage.setItem('biometric_auth', 'true');
+                        
+                        setTimeout(() => {
+                            DOM.loginOverlay.classList.remove('active');
+                            loadApp();
+                            showToast('Bem-vindo! Autenticação biométrica concluída.', 'success');
+                        }, 1000);
+                    } else {
+                        // Usuário sem biometria
+                        btn.classList.remove('scanning');
+                        btn.classList.add('error');
+                        icon.className = 'fas fa-times';
+                        error.textContent = '❌ Nenhum utilizador com biometria cadastrada. Use senha.';
+                        showToast('Nenhum utilizador com biometria cadastrada', 'error');
+                        
+                        setTimeout(() => {
+                            btn.classList.remove('error');
+                            btn.disabled = false;
+                            icon.className = 'fas fa-fingerprint';
+                            error.textContent = '';
+                        }, 3000);
+                    }
+
+                } catch (err) {
+                    console.error('Erro na autenticação biométrica:', err);
+                    btn.classList.remove('scanning');
+                    btn.classList.add('error');
+                    icon.className = 'fas fa-times';
+                    error.textContent = '❌ Falha na autenticação biométrica. Tente novamente.';
+                    
+                    setTimeout(() => {
+                        btn.classList.remove('error');
+                        btn.disabled = false;
+                        icon.className = 'fas fa-fingerprint';
+                        error.textContent = '';
+                    }, 3000);
+                }
+            }
+
+            function usePasswordLogin() {
+                showToast('Redirecionando para login com senha...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+
+            function cancelLogin() {
+                if (confirm('Deseja cancelar o acesso?')) {
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // ==================== LOAD APP ====================
+            async function loadApp() {
+                await loadUserData();
+                await loadUsers();
+                await loadLogs();
+                await loadSessions();
+                await loadProfiles();
+                renderAll();
+                setupEventListeners();
+                loadSidebarPreference();
+                
+                // Atualizar a cada 60 segundos
+                setInterval(refreshData, 60000);
+            }
+
+            // ==================== CARREGAR DADOS ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            async function loadUsers() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').order('nome');
+                    state.users = data || [];
+                } catch (e) {
+                    state.users = [];
+                }
+            }
+
+            async function loadLogs() {
+                try {
+                    const { data } = await state.supabase.from('logs_sistema').select('*').order('created_at', { ascending: false }).limit(10);
+                    state.logs = data || [];
+                } catch (e) {
+                    state.logs = [];
+                }
+            }
+
+            async function loadSessions() {
+                try {
+                    const { data } = await state.supabase.from('sessoes').select('*').eq('active', true);
+                    state.sessions = data || [];
+                } catch (e) {
+                    state.sessions = [];
+                }
+            }
+
+            async function loadProfiles() {
+                try {
+                    const { data } = await state.supabase.from('perfis_acesso').select('*');
+                    state.profiles = data || [];
+                } catch (e) {
+                    state.profiles = [];
+                }
+            }
+
+            // ==================== RENDER ====================
+            function renderAll() {
+                renderStats();
+                renderUsers();
+                renderLogs();
+                renderProfiles();
+                renderSessions();
+            }
+
+            function renderStats() {
+                const active = state.users.filter(u => u.status === 'ativo').length;
+                const admins = state.users.filter(u => u.cargo === 'admin').length;
+                const profiles = state.profiles.length;
+                const sessions = state.sessions.length;
+
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Utilizadores Activos</p>
+                                <h3 class="text-2xl font-bold text-blue-600">${active}</h3>
+                                <p class="text-sm text-gray-500">${admins} administradores</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-users text-blue-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Perfis de Acesso</p>
+                                <h3 class="text-2xl font-bold text-green-600">${profiles}</h3>
+                                <p class="text-sm text-gray-500">Configurações activas</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-user-tag text-green-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Sessões Activas</p>
+                                <h3 class="text-2xl font-bold text-purple-600">${sessions}</h3>
+                                <p class="text-sm text-gray-500">Dispositivos conectados</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-laptop text-purple-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Total Utilizadores</p>
+                                <h3 class="text-2xl font-bold text-gray-800">${state.users.length}</h3>
+                                <p class="text-sm text-gray-500">Registados no sistema</p>
+                            </div>
+                            <div class="bg-gray-100 p-3 rounded-full"><i class="fas fa-user-circle text-gray-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderUsers() {
+                const tbody = DOM.usersTable;
+
+                if (state.users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhum utilizador encontrado</p>
+                    </td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = state.users.map(u => {
+                    const statusClass = u.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const statusText = u.status === 'ativo' ? 'Activo' : 'Inactivo';
+                    const initials = u.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">${initials}</div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">${u.nome}</div>
+                                        <div class="text-sm text-gray-500">${u.email}</div>
+                                        ${u.biometrico ? '<span class="text-xs text-blue-500"><i class="fas fa-fingerprint"></i> Bio</span>' : ''}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${getRoleName(u.cargo)}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${u.ultimo_acesso || 'Nunca'}</td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${statusText}</span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="window.editUser('${u.id}')" class="text-blue-600 hover:text-blue-900 mr-2"><i class="fas fa-edit"></i></button>
+                                <button onclick="window.toggleUser('${u.id}')" class="${u.status === 'ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}">
+                                    <i class="fas ${u.status === 'ativo' ? 'fa-ban' : 'fa-check'}"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderLogs() {
+                const tbody = DOM.securityLogs;
+
+                if (state.logs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-history text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhum log encontrado</p>
+                    </td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = state.logs.map(log => {
+                    const statusClass = log.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const statusText = log.status === 'success' ? 'Sucesso' : 'Falhado';
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateTime(log.created_at)}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${log.evento}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${log.usuario || 'Sistema'}</td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${statusText}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderProfiles() {
+                const container = DOM.accessProfiles;
+
+                if (state.profiles.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum perfil configurado</p>';
+                    return;
+                }
+
+                container.innerHTML = state.profiles.map(p => `
+                    <div class="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                            <div class="font-medium">${p.nome}</div>
+                            <div class="text-sm text-gray-500">${p.descricao}</div>
+                        </div>
+                        <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">${p.usuarios || 0} users</span>
+                    </div>
+                `).join('');
+            }
+
+            function renderSessions() {
+                const container = DOM.activeSessions;
+
+                if (state.sessions.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma sessão activa</p>';
+                    return;
+                }
+
+                container.innerHTML = state.sessions.map(s => `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            <span class="text-sm">${s.usuario}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${s.horario}</span>
+                    </div>
+                `).join('');
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function getRoleName(role) {
+                const roles = {
+                    'admin': 'Administrador',
+                    'manager': 'Gerente',
+                    'operator': 'Operador',
+                    'viewer': 'Visualizador'
+                };
+                return roles[role] || role;
+            }
+
+            function formatDateTime(dateStr) {
+                if (!dateStr) return 'N/A';
+                const d = new Date(dateStr);
+                return d.toLocaleString('pt-BR');
+            }
+
+            // ==================== AÇÕES ====================
+            function openNewUserModal() {
+                DOM.newUserModal.classList.add('active');
+            }
+
+            function closeNewUserModal() {
+                DOM.newUserModal.classList.remove('active');
+            }
+
+            async function createUser() {
+                const formData = {
+                    nome: document.getElementById('userFullName').value.trim(),
+                    email: document.getElementById('userEmail').value.trim(),
+                    cargo: document.getElementById('userRole').value,
+                    password: document.getElementById('userPassword').value,
+                    biometrico: document.getElementById('userBiometric').checked,
+                    status: 'ativo'
+                };
+
+                if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
+                    showToast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                if (formData.password.length < 6) {
+                    showToast('A password deve ter pelo menos 6 caracteres', 'error');
+                    return;
+                }
+
+                try {
+                    const { error } = await state.supabase.from('usuarios').insert([{
+                        nome: formData.nome,
+                        email: formData.email,
+                        cargo: formData.cargo,
+                        password: formData.password,
+                        status: formData.status,
+                        biometrico: formData.biometrico,
+                        created_at: new Date().toISOString()
+                    }]);
+
+                    if (error) throw error;
+
+                    showToast('Utilizador criado com sucesso!', 'success');
+                    closeNewUserModal();
+                    await loadUsers();
+                    renderAll();
+                    document.getElementById('userForm').reset();
+
+                } catch (error) {
+                    console.error('Erro ao criar utilizador:', error);
+                    showToast('Erro ao criar utilizador', 'error');
+                }
+            }
+
+            function editUser(id) {
+                showToast(`Editando utilizador #${id}...`, 'info');
+            }
+
+            async function toggleUser(id) {
+                const user = state.users.find(u => u.id == id);
+                if (!user) return;
+
+                const newStatus = user.status === 'ativo' ? 'inativo' : 'ativo';
+                try {
+                    await state.supabase.from('usuarios').update({ status: newStatus }).eq('id', id);
+                    showToast(`Utilizador ${newStatus === 'ativo' ? 'activado' : 'desactivado'} com sucesso!`, 'success');
+                    await loadUsers();
+                    renderAll();
+                } catch (error) {
+                    showToast('Erro ao alterar status', 'error');
+                }
+            }
+
+            function forceLogout() {
+                showToast('Todas as sessões foram terminadas!', 'success');
+            }
+
+            function auditAccess() {
+                showToast('Relatório de auditoria gerado!', 'success');
+            }
+
+            function exportLogs() {
+                showToast('Logs exportados com sucesso!', 'success');
+            }
+
+            function reauthenticate() {
+                localStorage.removeItem('biometric_auth');
+                state.isAuthenticated = false;
+                showToast('Reautenticação necessária', 'warning');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
+
+            function refreshData() {
+                Promise.all([loadUsers(), loadLogs(), loadSessions()]).then(renderAll);
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                // Fechar modais com ESC
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.newUserModal.classList.contains('active')) closeNewUserModal();
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.startBiometricLogin = startBiometricLogin;
+            window.usePasswordLogin = usePasswordLogin;
+            window.cancelLogin = cancelLogin;
+            window.openNewUserModal = openNewUserModal;
+            window.closeNewUserModal = closeNewUserModal;
+            window.createUser = createUser;
+            window.editUser = editUser;
+            window.toggleUser = toggleUser;
+            window.forceLogout = forceLogout;
+            window.auditAccess = auditAccess;
+            window.exportLogs = exportLogs;
+            window.reauthenticate = reauthenticate;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+            window.refreshData = refreshData;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

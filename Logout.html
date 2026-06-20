@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --primary-dark: #0f2440;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --radius: 12px;
+            --shadow: 0 8px 40px rgba(0,0,0,0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f2440 100%);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .logout-container {
+            background: #ffffff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 480px;
+            width: 100%;
+            padding: 40px 36px 32px;
+            text-align: center;
+            animation: fadeInUp 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .logout-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--danger));
+        }
+        .logout-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 24px; }
+        .logout-logo img { height: 48px; width: auto; border-radius: 8px; }
+        .logout-logo span { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .logout-logo span span { color: var(--secondary); }
+        .logout-icon {
+            width: 80px; height: 80px; border-radius: 50%; background: #fee2e2;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; font-size: 32px; color: var(--danger);
+            animation: pulse 2s infinite;
+        }
+        .logout-title { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .logout-subtitle { font-size: 0.95rem; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
+        .user-info {
+            background: #f8fafc; border-radius: 10px; padding: 16px 20px;
+            margin-bottom: 24px; display: flex; align-items: center; gap: 14px;
+            border: 1px solid #e2e8f0;
+        }
+        .user-avatar {
+            width: 48px; height: 48px; border-radius: 50%; background: var(--primary);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.1rem; flex-shrink: 0;
+        }
+        .user-details { text-align: left; flex: 1; min-width: 0; }
+        .user-details .name { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+        .user-details .email { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; word-break: break-all; }
+        .user-details .role {
+            font-size: 0.7rem; color: var(--info); font-weight: 500;
+            background: #dbeafe; padding: 2px 10px; border-radius: 12px;
+            display: inline-block; margin-top: 3px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 12px 24px; border-radius: 8px;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            transition: var(--transition); border: none; width: 100%;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(30, 58, 95, 0.3); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #dc2626; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3); }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+        .btn .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+        .btn.loading .spinner { display: block; }
+        .btn.loading .btn-text { display: none; }
+        .btn-group { display: flex; gap: 12px; margin-top: 16px; }
+        .btn-group .btn { width: auto; flex: 1; }
+        .toast-container {
+            position: fixed; top: 20px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px;
+            max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: 8px; color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+            background: #1e293b;
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: #f59e0b; }
+        .toast.info { background: var(--info); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99998;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(255,255,255,0.15);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .confirm-check {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; background: #f8fafc; border-radius: 8px;
+            border: 1px solid #e2e8f0; margin-bottom: 16px;
+            cursor: pointer; transition: var(--transition);
+        }
+        .confirm-check:hover { background: #f1f5f9; }
+        .confirm-check input[type="checkbox"] {
+            width: 18px; height: 18px; cursor: pointer;
+            accent-color: var(--danger); flex-shrink: 0;
+        }
+        .confirm-check label { font-size: 0.85rem; color: #475569; cursor: pointer; user-select: none; }
+        .logout-footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 0.7rem; color: #94a3b8; }
+        .logout-footer .version { font-weight: 500; color: #64748b; }
+        @media (max-width: 480px) {
+            .logout-container { padding: 28px 20px 24px; }
+            .logout-icon { width: 64px; height: 64px; font-size: 26px; }
+            .logout-title { font-size: 1.2rem; }
+            .btn-group { flex-direction: column; }
+            .user-info { padding: 12px 14px; }
+            .user-avatar { width: 40px; height: 40px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Logout Container -->
+    <div class="logout-container" id="logoutContainer">
+
+        <div class="logout-logo">
+            <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Kanawa Soft">
+            <span>Kanawa <span>Soft</span></span>
+        </div>
+
+        <div class="logout-icon">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+
+        <h1 class="logout-title">Sair do Sistema</h1>
+        <p class="logout-subtitle">
+            Tem certeza que deseja encerrar sua sessão?<br>
+            Você será redirecionado para a tela de login.
+        </p>
+
+        <div class="user-info" id="userInfo">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-details">
+                <div class="name" id="userName">Carregando...</div>
+                <div class="email" id="userEmail">usuario@email.com</div>
+                <div class="role" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <div class="confirm-check" onclick="toggleConfirm()">
+            <input type="checkbox" id="confirmLogout">
+            <label for="confirmLogout">Sim, eu confirmo que desejo sair</label>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="cancelLogout()">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </button>
+            <button class="btn btn-danger" id="logoutBtn" onclick="performLogout()" disabled>
+                <span class="spinner"></span>
+                <span class="btn-text"><i class="fas fa-sign-out-alt"></i> Sair</span>
+            </button>
+        </div>
+
+        <div class="logout-footer">
+            <span class="version">Kanawa Soft v1.0</span>
+            <span style="margin:0 6px;">•</span>
+            <span id="currentTime"></span>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+        import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaAx3METrSTYvQdW4KXv-lrNDjiN7nU9Q",
+            authDomain: "kanawasoft-f21aa.firebaseapp.com",
+            projectId: "kanawasoft-f21aa",
+            storageBucket: "kanawasoft-f21aa.firebasestorage.app",
+            messagingSenderId: "633383250051",
+            appId: "1:633383250051:web:26443d4ab364912b26d3b6",
+            measurementId: "G-PXCNSRX3VT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        window.db = db;
+        window.auth = auth;
+        window.getDoc = getDoc;
+        window.addDoc = addDoc;
+        window.collection = collection;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signOut = signOut;
+
+        console.log('🔥 Firebase inicializado para Logout!');
+        document.dispatchEvent(new CustomEvent('firebase-ready-logout'));
+    </script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== ESTADO ====================
+            const state = {
+                currentUser: null,
+                db: null,
+                auth: null,
+                isLoggingOut: false,
+                isLoaded: false
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                userAvatar: document.getElementById('userAvatar'),
+                userName: document.getElementById('userName'),
+                userEmail: document.getElementById('userEmail'),
+                userRole: document.getElementById('userRole'),
+                logoutBtn: document.getElementById('logoutBtn'),
+                confirmLogout: document.getElementById('confirmLogout'),
+                loadingOverlay: document.getElementById('loadingOverlay'),
+                toastContainer: document.getElementById('toastContainer'),
+                currentTime: document.getElementById('currentTime')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            document.addEventListener('firebase-ready-logout', function() {
+                state.db = window.db;
+                state.auth = window.auth;
+                console.log('✅ Firebase pronto para Logout');
+                initializeApp();
+            });
+
+            if (window.db && window.auth) {
+                state.db = window.db;
+                state.auth = window.auth;
+                initializeApp();
+            }
+
+            function initializeApp() {
+                loadUserData();
+                updateClock();
+                setInterval(updateClock, 1000);
+                setupEventListeners();
+            }
+
+            // ==================== RELÓGIO ====================
+            function updateClock() {
+                if (!DOM.currentTime) return;
+                const now = new Date();
+                const options = { 
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                };
+                DOM.currentTime.textContent = now.toLocaleString('pt-BR', options);
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toastContainer;
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+            window.showToast = showToast;
+
+            // ==================== LOADING ====================
+            function showLoading(show) {
+                if (DOM.loadingOverlay) {
+                    DOM.loadingOverlay.classList.toggle('active', show);
+                }
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            function loadUserData() {
+                // Tentar do localStorage primeiro
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    try {
+                        state.currentUser = JSON.parse(savedUser);
+                        updateUserUI();
+                        enableLogout(true);
+                        state.isLoaded = true;
+                        return;
+                    } catch (e) {}
+                }
+
+                // Tentar do Firebase Auth
+                if (state.auth && window.onAuthStateChanged) {
+                    window.onAuthStateChanged(state.auth, async (user) => {
+                        if (user) {
+                            state.currentUser = {
+                                id: user.uid,
+                                nome: user.displayName || 'Usuário',
+                                email: user.email || 'usuario@email.com',
+                                foto: user.photoURL || null
+                            };
+                            
+                            // Buscar dados adicionais no Firestore
+                            try {
+                                if (state.db) {
+                                    const userRef = doc(state.db, 'usuarios', user.uid);
+                                    const userSnap = await getDoc(userRef);
+                                    if (userSnap.exists()) {
+                                        const data = userSnap.data();
+                                        state.currentUser = { ...state.currentUser, ...data };
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Erro ao buscar dados do Firestore:', e);
+                            }
+                            
+                            updateUserUI();
+                            enableLogout(true);
+                            state.isLoaded = true;
+                            // Salvar no localStorage para cache
+                            localStorage.setItem('user', JSON.stringify(state.currentUser));
+                        } else {
+                            // Fallback para dados de exemplo
+                            loadSampleUserData();
+                        }
+                    });
+                } else {
+                    loadSampleUserData();
+                }
+            }
+
+            function loadSampleUserData() {
+                state.currentUser = {
+                    id: '1',
+                    nome: 'Usuário Teste',
+                    email: 'usuario@kanawasoft.co.ao',
+                    cargo: 'Administrador',
+                    empresa: 'Kanawa Soft'
+                };
+                localStorage.setItem('user', JSON.stringify(state.currentUser));
+                updateUserUI();
+                enableLogout(true);
+                state.isLoaded = true;
+                showToast('Dados carregados em modo offline', 'warning');
+            }
+
+            // ==================== ATUALIZAR UI ====================
+            function updateUserUI() {
+                if (!state.currentUser) return;
+                const user = state.currentUser;
+                
+                const initial = user.nome ? user.nome.charAt(0).toUpperCase() : 'U';
+                if (DOM.userAvatar) DOM.userAvatar.textContent = initial;
+                if (DOM.userName) DOM.userName.textContent = user.nome || 'Usuário';
+                if (DOM.userEmail) DOM.userEmail.textContent = user.email || 'usuario@email.com';
+                if (DOM.userRole) DOM.userRole.textContent = user.cargo || 'Usuário';
+            }
+
+            // ==================== CONFIRMAÇÃO ====================
+            window.toggleConfirm = function() {
+                if (!DOM.confirmLogout) return;
+                DOM.confirmLogout.checked = !DOM.confirmLogout.checked;
+                enableLogout(DOM.confirmLogout.checked);
+            };
+
+            function enableLogout(enabled) {
+                if (DOM.logoutBtn) {
+                    DOM.logoutBtn.disabled = !enabled;
+                }
+            }
+
+            // ==================== LOGOUT ====================
+            window.performLogout = async function() {
+                if (state.isLoggingOut) return;
+                
+                if (!DOM.confirmLogout || !DOM.confirmLogout.checked) {
+                    showToast('Confirme que deseja sair', 'warning');
+                    return;
+                }
+
+                state.isLoggingOut = true;
+                const btn = DOM.logoutBtn;
+                if (btn) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                }
+                showLoading(true);
+
+                try {
+                    // Registrar atividade de logout
+                    await registerLogoutActivity();
+
+                    // Deslogar do Firebase Auth
+                    if (state.auth && window.signOut) {
+                        try {
+                            await window.signOut(state.auth);
+                            console.log('✅ Usuário deslogado do Firebase');
+                        } catch (authError) {
+                            console.warn('Erro ao deslogar do Firebase:', authError);
+                        }
+                    }
+
+                    // Limpar dados locais
+                    clearLocalData();
+
+                    showToast('Logout realizado com sucesso!', 'success');
+
+                    await sleep(1200);
+                    window.location.href = 'login.html';
+
+                } catch (error) {
+                    console.error('Erro durante logout:', error);
+                    showToast('Erro ao realizar logout. Tente novamente.', 'error');
+                    
+                    if (btn) {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    }
+                    state.isLoggingOut = false;
+                    showLoading(false);
+                }
+            };
+
+            // ==================== REGISTRAR LOGOUT ====================
+            async function registerLogoutActivity() {
+                try {
+                    if (state.db) {
+                        const activityData = {
+                            usuario_id: state.currentUser?.id || 'unknown',
+                            usuario_nome: state.currentUser?.nome || 'Usuário',
+                            acao: 'logout',
+                            detalhes: 'Usuário saiu do sistema',
+                            created_at: new Date().toISOString()
+                        };
+                        const logsRef = collection(state.db, 'logs_sistema');
+                        await addDoc(logsRef, activityData);
+                        console.log('✅ Logout registrado no sistema');
+                    }
+                } catch (error) {
+                    console.warn('Erro ao registrar logout:', error);
+                }
+            }
+
+            // ==================== LIMPAR DADOS ====================
+            function clearLocalData() {
+                const keysToRemove = ['user_token', 'session_data', 'auth_data', 'cart_data', 'user'];
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                });
+
+                // Limpar cookies de autenticação
+                document.cookie.split(';').forEach(cookie => {
+                    const name = cookie.split('=')[0].trim();
+                    if (name.startsWith('kanawa_') || name.startsWith('auth_')) {
+                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                    }
+                });
+
+                // Manter configurações de tema e preferências
+                console.log('✅ Dados locais limpos');
+            }
+
+            // ==================== CANCELAR ====================
+            window.cancelLogout = function() {
+                showToast('Logout cancelado', 'info');
+                setTimeout(() => { window.location.href = 'index.html'; }, 500);
+            };
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && DOM.logoutBtn && !DOM.logoutBtn.disabled) {
+                        window.performLogout();
+                    }
+                    if (e.key === 'Escape') {
+                        window.cancelLogout();
+                    }
+                });
+
+                // Fechar toasts com clique fora
+                document.addEventListener('click', function(e) {
+                    if (e.target.closest('.toast-close')) {
+                        e.target.closest('.toast').remove();
+                    }
+                });
+            }
+
+            // ==================== UTILITÁRIOS ====================
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // ==================== EXPORTAÇÃO GLOBAL ====================
+            window.performLogout = window.performLogout;
+            window.cancelLogout = window.cancelLogout;
+            window.toggleConfirm = window.toggleConfirm;
+
+            // ==================== INICIALIZAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (!state.isLoaded) {
+                        loadUserData();
+                        updateClock();
+                        setInterval(updateClock, 1000);
+                        setupEventListeners();
+                    }
+                });
+            } else {
+                if (!state.isLoaded) {
+                    loadUserData();
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                    setupEventListeners();
+                }
+            }
+
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licenciamento | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== LICENSE STATUS ==================== */
+        .license-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .license-status .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .license-status .status-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .license-status .status-badge.expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .license-status .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* ==================== LICENSE DETAILS ==================== */
+        .license-details {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .license-details tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .license-details td {
+            padding: 0.75rem 0.5rem;
+        }
+        .license-details td:first-child {
+            font-weight: 500;
+            color: #475569;
+            width: 40%;
+        }
+        .license-details td:last-child {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="flex-1 font-medium">Sistema</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="configuracoes.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-sliders-h mr-2 text-sm"></i>Configurações</a></li>
+                        <li><a href="licenciamento.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-key mr-2 text-sm"></i>Licenciamento</a></li>
+                        <li><a href="backup.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-database mr-2 text-sm"></i>Backup</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">LICENCIAMENTO</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-key mr-1"></i> Gestão de Licenças
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div class="max-w-5xl mx-auto">
+                <!-- Status da Licença -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Status da Licença</h2>
+                    <div id="licenseStatus" class="license-status">
+                        <!-- Carregado via JavaScript -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Informações da Licença -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i> Informações da Licença
+                            </h3>
+                            <table id="licenseDetails" class="license-details">
+                                <!-- Carregado via JavaScript -->
+                            </table>
+                            
+                            <!-- Módulos -->
+                            <div class="mt-6 pt-6 border-t">
+                                <h4 class="font-medium text-gray-800 mb-3">Módulos Licenciados</h4>
+                                <div id="modulesList" class="grid grid-cols-2 gap-2">
+                                    <!-- Carregado via JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-tools text-purple-500 mr-2"></i> Ações
+                            </h3>
+                            <div class="space-y-3">
+                                <button onclick="checkUpdates()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center">
+                                    <i class="fas fa-sync-alt mr-2"></i> Verificar Atualizações
+                                </button>
+                                <button onclick="generateLicenseProof()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center">
+                                    <i class="fas fa-file-invoice mr-2"></i> Gerar Comprovante
+                                </button>
+                                <button onclick="openRenewModal()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center">
+                                    <i class="fas fa-key mr-2"></i> Renovar Licença
+                                </button>
+                                <button onclick="openChangeKeyModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-lg transition-colors flex items-center justify-center">
+                                    <i class="fas fa-lock mr-2"></i> Alterar Chave
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Suporte -->
+                        <div class="bg-white rounded-lg shadow p-6 mt-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-headset text-green-500 mr-2"></i> Suporte Técnico
+                            </h3>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <p class="flex items-center"><i class="fas fa-phone text-blue-500 w-6"></i> +244 923 456 789</p>
+                                <p class="flex items-center"><i class="fas fa-envelope text-blue-500 w-6"></i> suporte@kanawasoft.com</p>
+                                <p class="flex items-center"><i class="fas fa-globe text-blue-500 w-6"></i> www.kanawasoft.com</p>
+                                <p class="flex items-center"><i class="fas fa-clock text-blue-500 w-6"></i> Seg-Sex: 08:00 - 17:00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== CHANGE KEY MODAL ==================== -->
+    <div class="modal-overlay" id="changeKeyModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Alterar Chave de Licença</h3>
+                <button onclick="closeChangeKeyModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nova Chave de Licença</label>
+                    <input type="text" id="newLicenseKey" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="XXXXX-XXXXX-XXXXX-XXXXX">
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                    <div class="flex">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                        <div>
+                            <p class="text-sm text-yellow-800">Ao alterar a chave de licença, o sistema será reiniciado para validar a nova licença.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeChangeKeyModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="changeLicenseKey()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RENEW MODAL ==================== -->
+    <div class="modal-overlay" id="renewModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Renovar Licença</h3>
+                <button onclick="closeRenewModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Período de Renovação</label>
+                    <select id="renewalPeriod" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" onchange="updateRenewalSummary()">
+                        <option value="1">1 Ano</option>
+                        <option value="2">2 Anos</option>
+                        <option value="3">3 Anos</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pagamento</label>
+                    <select id="paymentMethod" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="transferencia">Transferência Bancária</option>
+                        <option value="cartao">Cartão de Crédito</option>
+                        <option value="mbway">MB Way</option>
+                    </select>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-800 mb-3">Resumo da Renovação</h4>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Valor por ano:</span>
+                        <span class="font-medium" id="renewalAmount">250.000 AOA</span>
+                    </div>
+                    <div class="flex justify-between text-sm mt-1">
+                        <span class="text-gray-600">Total:</span>
+                        <span class="font-bold text-blue-600" id="renewalTotal">250.000 AOA</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeRenewModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="processRenewal()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i> Confirmar Renovação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Licenciamento!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentUser = null;
+        let licenseData = null;
+        let companyData = null;
+        let modules = [];
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadCompanyData();
+            await loadLicenseData();
+            await loadModules();
+            loadSidebarPreference();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadCompanyData() {
+            try {
+                const { data, error } = await supabase
+                    .from('empresa')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    companyData = data[0];
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados da empresa:', error);
+                companyData = { id: 1, nome: 'Minha Empresa', nif: '123456789' };
+            }
+        }
+
+        async function loadLicenseData() {
+            try {
+                const { data, error } = await supabase
+                    .from('licencas')
+                    .select('*')
+                    .eq('empresa_id', companyData?.id || 1)
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                licenseData = (data && data.length > 0) ? data[0] : null;
+                
+                if (!licenseData) {
+                    // Criar licença padrão se não existir
+                    const today = new Date();
+                    const expiry = new Date(today);
+                    expiry.setFullYear(expiry.getFullYear() + 1);
+                    
+                    const { data: newLicense, error: insertError } = await supabase
+                        .from('licencas')
+                        .insert([{
+                            empresa_id: companyData?.id || 1,
+                            chave: 'KANAWA-SOFT-DEMO-2024',
+                            tipo: 'demo',
+                            status: 'ativa',
+                            data_ativacao: today.toISOString(),
+                            data_expiracao: expiry.toISOString(),
+                            versao: 'v1.0'
+                        }])
+                        .select();
+                    
+                    if (!insertError && newLicense && newLicense.length > 0) {
+                        licenseData = newLicense[0];
+                    }
+                }
+                
+                renderLicense();
+                
+            } catch (error) {
+                console.error('Erro ao carregar licença:', error);
+                licenseData = null;
+                renderLicense();
+            }
+        }
+
+        async function loadModules() {
+            try {
+                const { data, error } = await supabase
+                    .from('modulos')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                modules = data || [];
+                renderModules();
+                
+            } catch (error) {
+                console.error('Erro ao carregar módulos:', error);
+                modules = getSampleModules();
+                renderModules();
+            }
+        }
+
+        async function updateLicense(licenseId, data) {
+            try {
+                const { error } = await supabase
+                    .from('licencas')
+                    .update(data)
+                    .eq('id', licenseId);
+                
+                if (error) throw error;
+                return true;
+                
+            } catch (error) {
+                console.error('Erro ao atualizar licença:', error);
+                return false;
+            }
+        }
+
+        async function logAction(action, description) {
+            try {
+                await supabase
+                    .from('logs_sistema')
+                    .insert([{
+                        user_id: currentUser?.id || 1,
+                        acao: action,
+                        modulo: 'licenciamento',
+                        descricao: description,
+                        created_at: new Date().toISOString()
+                    }]);
+            } catch (error) {
+                console.error('Erro ao registrar log:', error);
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleModules() {
+            return [
+                { id: 1, nome: 'Core System', descricao: 'Sistema principal', ativo: true },
+                { id: 2, nome: 'PDV', descricao: 'Ponto de Venda', ativo: true },
+                { id: 3, nome: 'Gestão de Estoque', descricao: 'Controle de estoque', ativo: true },
+                { id: 4, nome: 'CRM', descricao: 'Gestão de clientes', ativo: true },
+                { id: 5, nome: 'Financeiro', descricao: 'Módulo financeiro', ativo: false }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderLicense() {
+            const statusContainer = document.getElementById('licenseStatus');
+            const detailsContainer = document.getElementById('licenseDetails');
+            
+            if (!licenseData) {
+                statusContainer.innerHTML = `
+                    <div class="status-badge expired">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Licença Não Encontrada</span>
+                    </div>
+                    <p class="text-red-500">Nenhuma licença encontrada para esta empresa.</p>
+                `;
+                detailsContainer.innerHTML = `
+                    <tr><td colspan="2" class="text-center py-4 text-gray-500">Nenhuma informação disponível</td></tr>
+                `;
+                return;
+            }
+            
+            const hoje = new Date();
+            const dataExpiracao = licenseData.data_expiracao ? new Date(licenseData.data_expiracao) : null;
+            const diasRestantes = dataExpiracao ? Math.floor((dataExpiracao - hoje) / (1000 * 60 * 60 * 24)) : 0;
+            const ativa = licenseData.status === 'ativa' && dataExpiracao && dataExpiracao > hoje;
+            
+            let statusBadge = '';
+            let statusMessage = '';
+            
+            if (ativa) {
+                statusBadge = `
+                    <div class="status-badge active">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Licença Ativa</span>
+                    </div>
+                `;
+                statusMessage = `<p class="mt-2">Sistema licenciado para: <strong>${companyData?.nome || 'Empresa'}</strong></p>`;
+                if (diasRestantes <= 30) {
+                    statusMessage += `<p class="text-yellow-600 mt-2">⚠️ Sua licença expira em ${diasRestantes} dias. Renove para continuar usando todos os recursos.</p>`;
+                }
+            } else {
+                statusBadge = `
+                    <div class="status-badge expired">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Licença Expirada</span>
+                    </div>
+                `;
+                statusMessage = `<p class="text-red-500 mt-2">Sua licença expirou. Renove para continuar usando todos os recursos.</p>`;
+            }
+            
+            statusContainer.innerHTML = statusBadge + statusMessage;
+            
+            // Detalhes
+            const tipoLabels = {
+                'demo': 'Demo',
+                'comercial': 'Comercial',
+                'premium': 'Premium',
+                'enterprise': 'Enterprise'
+            };
+            
+            detailsContainer.innerHTML = `
+                <tr>
+                    <td>Número da Licença</td>
+                    <td>${licenseData.chave || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td>Tipo</td>
+                    <td>${tipoLabels[licenseData.tipo] || licenseData.tipo || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td>Data de Ativação</td>
+                    <td>${formatDate(licenseData.data_ativacao)}</td>
+                </tr>
+                <tr>
+                    <td>Expira em</td>
+                    <td>${formatDate(licenseData.data_expiracao)} ${dataExpiracao ? `(faltam ${diasRestantes} dias)` : ''}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td><span class="px-2 py-1 rounded-full text-xs font-medium ${ativa ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${ativa ? 'Ativa' : 'Expirada'}</span></td>
+                </tr>
+                <tr>
+                    <td>Versão</td>
+                    <td>${licenseData.versao || 'v1.0'}</td>
+                </tr>
+            `;
+        }
+
+        function renderModules() {
+            const container = document.getElementById('modulesList');
+            
+            if (modules.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-2 text-gray-500 text-sm">Nenhum módulo disponível</div>
+                `;
+                return;
+            }
+            
+            const activeModules = modules.filter(m => m.ativo !== false);
+            
+            container.innerHTML = modules.map(mod => {
+                const isActive = mod.ativo !== false;
+                return `
+                    <div class="flex items-center justify-between p-2 ${isActive ? 'bg-green-50' : 'bg-gray-50'} rounded">
+                        <span class="text-sm font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}">${mod.nome}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-500'}">
+                            ${isActive ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== AÇÕES ====================
+        function checkUpdates() {
+            showToast('Verificando atualizações...', 'info');
+            setTimeout(() => {
+                showToast('Sistema atualizado com a versão mais recente.', 'success');
+            }, 2000);
+        }
+
+        function generateLicenseProof() {
+            if (!licenseData || !companyData) {
+                showToast('Nenhuma licença encontrada', 'error');
+                return;
+            }
+            
+            const content = `
+                =================================
+                COMPROVANTE DE LICENÇA KANAWA SOFT
+                =================================
+                
+                Empresa: ${companyData.nome || 'N/A'}
+                NIF: ${companyData.nif || 'N/A'}
+                Chave: ${licenseData.chave || 'N/A'}
+                Tipo: ${licenseData.tipo || 'N/A'}
+                Data de Ativação: ${formatDate(licenseData.data_ativacao)}
+                Data de Expiração: ${formatDate(licenseData.data_expiracao)}
+                Versão: ${licenseData.versao || 'v1.0'}
+                Status: ${licenseData.status || 'N/A'}
+                
+                Módulos Licenciados:
+                ${modules.filter(m => m.ativo !== false).map(m => `- ${m.nome} (${m.descricao || ''})`).join('\n')}
+                
+                Este documento serve como comprovante de licenciamento do software Kanawa Soft.
+                Gerado em: ${new Date().toLocaleString('pt-BR')}
+            `;
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Comprovante_Licenca_Kanawa_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Comprovante gerado com sucesso!', 'success');
+            logAction('comprovante', 'Gerou comprovante de licença');
+        }
+
+        function openRenewModal() {
+            document.getElementById('renewModal').classList.add('active');
+            updateRenewalSummary();
+        }
+
+        function closeRenewModal() {
+            document.getElementById('renewModal').classList.remove('active');
+        }
+
+        function openChangeKeyModal() {
+            document.getElementById('changeKeyModal').classList.add('active');
+            document.getElementById('newLicenseKey').value = '';
+        }
+
+        function closeChangeKeyModal() {
+            document.getElementById('changeKeyModal').classList.remove('active');
+        }
+
+        function updateRenewalSummary() {
+            const period = parseInt(document.getElementById('renewalPeriod').value) || 1;
+            const amountPerYear = 250000;
+            const total = period * amountPerYear;
+            
+            document.getElementById('renewalAmount').textContent = `${amountPerYear.toLocaleString('pt-BR')} AOA`;
+            document.getElementById('renewalTotal').textContent = `${total.toLocaleString('pt-BR')} AOA`;
+        }
+
+        async function processRenewal() {
+            const period = parseInt(document.getElementById('renewalPeriod').value) || 1;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            if (!licenseData) {
+                showToast('Nenhuma licença encontrada para renovar', 'error');
+                return;
+            }
+            
+            const hoje = new Date();
+            const dataExpiracaoAtual = licenseData.data_expiracao ? new Date(licenseData.data_expiracao) : hoje;
+            const novaDataExpiracao = new Date(dataExpiracaoAtual > hoje ? dataExpiracaoAtual : hoje);
+            novaDataExpiracao.setFullYear(novaDataExpiracao.getFullYear() + period);
+            
+            const success = await updateLicense(licenseData.id, {
+                data_expiracao: novaDataExpiracao.toISOString(),
+                status: 'ativa'
+            });
+            
+            if (success) {
+                showToast(`Licença renovada com sucesso por ${period} ano(s)!`, 'success');
+                await logAction('renovacao', `Licença renovada por ${period} ano(s). Novo vencimento: ${formatDate(novaDataExpiracao)}`);
+                closeRenewModal();
+                await loadLicenseData();
+            } else {
+                showToast('Erro ao renovar licença', 'error');
+            }
+        }
+
+        async function changeLicenseKey() {
+            const newKey = document.getElementById('newLicenseKey').value.trim();
+            
+            if (!newKey) {
+                showToast('Digite a nova chave de licença', 'error');
+                return;
+            }
+            
+            if (!licenseData) {
+                showToast('Nenhuma licença encontrada', 'error');
+                return;
+            }
+            
+            if (!confirm('ATENÇÃO: Ao alterar a chave de licença, o sistema será reiniciado. Deseja continuar?')) {
+                return;
+            }
+            
+            const success = await updateLicense(licenseData.id, {
+                chave: newKey,
+                data_ativacao: new Date().toISOString()
+            });
+            
+            if (success) {
+                showToast('Chave de licença alterada com sucesso!', 'success');
+                await logAction('alteracao_chave', `Chave de licença alterada para: ${newKey.substring(0, 10)}...`);
+                closeChangeKeyModal();
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                showToast('Erro ao alterar chave de licença', 'error');
+            }
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== UTILITÁRIOS ====================
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.checkUpdates = checkUpdates;
+        window.generateLicenseProof = generateLicenseProof;
+        window.openRenewModal = openRenewModal;
+        window.closeRenewModal = closeRenewModal;
+        window.openChangeKeyModal = openChangeKeyModal;
+        window.closeChangeKeyModal = closeChangeKeyModal;
+        window.changeLicenseKey = changeLicenseKey;
+        window.processRenewal = processRenewal;
+        window.updateRenewalSummary = updateRenewalSummary;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadLicenseData = loadLicenseData;
+        window.loadModules = loadModules;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compras | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .status-pendente { background: #fef3c7; color: #92400e; }
+        .status-aprovado { background: #d1fae5; color: #065f46; }
+        .status-cancelado { background: #fee2e2; color: #991b1b; }
+        .status-recebido { background: #dbeafe; color: #1e40af; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover { background: #f3f4f6; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-box mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="fornecedores.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-truck mr-3"></i><span class="font-medium">Fornecedores</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">COMPRAS A FORNECEDORES</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-lg shadow" id="tabContainer">
+                <button onclick="window.switchTab('pedidos')" class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white" data-tab="pedidos">
+                    <i class="fas fa-list mr-2"></i> Pedidos
+                </button>
+                <button onclick="window.switchTab('recebimento')" class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors text-gray-600 hover:bg-gray-100" data-tab="recebimento">
+                    <i class="fas fa-check-double mr-2"></i> Recebimento
+                </button>
+                <button onclick="window.switchTab('fornecedores')" class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors text-gray-600 hover:bg-gray-100" data-tab="fornecedores">
+                    <i class="fas fa-truck mr-2"></i> Fornecedores
+                </button>
+                <button onclick="window.switchTab('historico')" class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors text-gray-600 hover:bg-gray-100" data-tab="historico">
+                    <i class="fas fa-history mr-2"></i> Histórico
+                </button>
+            </div>
+
+            <!-- Conteúdo das Tabs carregado via JavaScript -->
+            <div id="tabContent"></div>
+        </main>
+    </div>
+
+    <!-- ==================== ORDER MODAL ==================== -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="orderModalTitle">Novo Pedido de Compra</h3>
+                <button onclick="window.closeOrderModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fornecedor *</label>
+                            <select id="orderFornecedor" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data do Pedido *</label>
+                            <input type="date" id="orderData" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Previsão de Entrega</label>
+                            <input type="date" id="orderPrevisao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Forma de Pagamento</label>
+                            <select id="orderFormaPagamento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="a_vista">À vista</option>
+                                <option value="30_dias">30 dias</option>
+                                <option value="60_dias">60 dias</option>
+                                <option value="90_dias">90 dias</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                            <textarea id="orderObservacoes" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Produto</label>
+                            <div class="flex">
+                                <input type="text" id="searchProduto" placeholder="Código ou nome..." 
+                                       class="flex-1 rounded-l-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <button onclick="window.searchProduto()" class="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="searchResults" class="border border-gray-200 rounded-lg max-h-64 overflow-y-auto hidden"></div>
+                        <div id="produtoSelecionado" class="border border-gray-200 rounded-lg p-4 hidden">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <h4 class="font-medium" id="selectedProdutoNome"></h4>
+                                    <p class="text-sm text-gray-600" id="selectedProdutoCodigo"></p>
+                                    <p class="text-sm text-gray-600">Estoque: <span id="selectedProdutoEstoque">0</span></p>
+                                </div>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade *</label>
+                                    <input type="number" id="itemQuantidade" min="1" step="1" value="1" class="w-full border rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Preço Unitário *</label>
+                                    <input type="number" id="itemPreco" min="0.01" step="0.01" class="w-full border rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Desconto (%)</label>
+                                <input type="number" id="itemDesconto" min="0" max="100" step="1" value="0" class="w-full border rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="mt-3 flex justify-end gap-2">
+                                <button onclick="window.clearSelectedProduto()" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Cancelar</button>
+                                <button onclick="window.addItemToOrder()" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                                <h4 class="font-medium text-sm">Itens do Pedido (<span id="orderItemCount">0</span>)</h4>
+                            </div>
+                            <div id="orderItemsList" class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                                <div class="p-4 text-center text-gray-500 text-sm">Nenhum item adicionado</div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                                <div class="flex justify-between font-medium"><span>Subtotal:</span><span id="orderSubtotal">AOA 0</span></div>
+                                <div class="flex justify-between font-medium text-green-600 text-sm"><span>Desconto:</span><span id="orderDesconto">AOA 0</span></div>
+                                <div class="flex justify-between font-bold text-lg mt-1"><span>Total:</span><span id="orderTotal">AOA 0</span></div>
+                            </div>
+                        </div>
+                        <button onclick="window.saveOrder()" id="btnSaveOrder" class="w-full mt-4 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-save mr-2"></i> Salvar Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RECEBIMENTO MODAL ==================== -->
+    <div class="modal-overlay" id="recebimentoModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Recebimento Rápido</h3>
+                <button onclick="window.closeRecebimentoModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Número do Pedido</label>
+                    <div class="flex">
+                        <input type="text" id="recebimentoCodigo" placeholder="Digite o número do pedido" 
+                               class="flex-1 rounded-l-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <button onclick="window.buscarPedidoRecebimento()" class="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="pedidoRecebimentoInfo" class="border border-gray-200 rounded-lg p-4 mb-4 hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-medium">Pedido #<span id="recebimentoPedidoNumero"></span></h4>
+                        <span class="text-sm text-gray-500" id="recebimentoPedidoData"></span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">Fornecedor: <span id="recebimentoFornecedor"></span></p>
+                    <p class="text-sm text-gray-600">Total: <span id="recebimentoTotal"></span></p>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nota Fiscal</label>
+                        <input type="text" id="recebimentoNotaFiscal" placeholder="Número da nota fiscal" 
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div id="recebimentoItensList" class="border border-gray-200 rounded-lg overflow-hidden hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <h4 class="font-medium text-sm">Itens para Receber</h4>
+                    </div>
+                    <div id="recebimentoItensBody" class="divide-y divide-gray-200 max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeRecebimentoModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.confirmarRecebimento()" id="btnConfirmarRecebimento" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-check mr-2"></i> Confirmar Recebimento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== FORNECEDOR MODAL ==================== -->
+    <div class="modal-overlay" id="fornecedorModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="fornecedorModalTitle">Novo Fornecedor</h3>
+                <button onclick="window.closeFornecedorModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <input type="hidden" id="fornecedorId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                        <input type="text" id="fornecedorNome" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento</label>
+                        <select id="fornecedorTipoDoc" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="cnpj">CNPJ</option>
+                            <option value="cpf">CPF</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Documento *</label>
+                        <input type="text" id="fornecedorDocumento" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Inscrição Estadual</label>
+                        <input type="text" id="fornecedorIE" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="fornecedorEmail" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone *</label>
+                        <input type="text" id="fornecedorTelefone" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                        <input type="text" id="fornecedorEndereco" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                        <input type="text" id="fornecedorCidade" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                        <input type="text" id="fornecedorEstado" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="fornecedorObservacoes" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="fornecedorAtivo" checked class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Fornecedor Ativo</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="window.closeFornecedorModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="window.saveFornecedor()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const ORDERS_TABLE = 'compras_pedidos';
+            const SUPPLIERS_TABLE = 'fornecedores';
+            const PRODUCTS_TABLE = 'produtos';
+            const RECEIVEMENTS_TABLE = 'compras_recebimentos';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                orders: [],
+                suppliers: [],
+                products: [],
+                currentTab: 'pedidos',
+                editingOrderId: null,
+                editingSupplierId: null,
+                selectedProduct: null,
+                currentRecebimentoPedido: null,
+                orderItems: [],
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                mainContent: document.getElementById('mainContent'),
+                tabContent: document.getElementById('tabContent'),
+                toast: document.getElementById('toastContainer'),
+                orderModal: document.getElementById('orderModal'),
+                recebimentoModal: document.getElementById('recebimentoModal'),
+                fornecedorModal: document.getElementById('fornecedorModal'),
+                orderModalTitle: document.getElementById('orderModalTitle'),
+                orderFornecedor: document.getElementById('orderFornecedor'),
+                orderData: document.getElementById('orderData'),
+                orderPrevisao: document.getElementById('orderPrevisao'),
+                orderFormaPagamento: document.getElementById('orderFormaPagamento'),
+                orderObservacoes: document.getElementById('orderObservacoes'),
+                orderItemsList: document.getElementById('orderItemsList'),
+                orderItemCount: document.getElementById('orderItemCount'),
+                orderSubtotal: document.getElementById('orderSubtotal'),
+                orderDesconto: document.getElementById('orderDesconto'),
+                orderTotal: document.getElementById('orderTotal'),
+                btnSaveOrder: document.getElementById('btnSaveOrder'),
+                searchProduto: document.getElementById('searchProduto'),
+                searchResults: document.getElementById('searchResults'),
+                produtoSelecionado: document.getElementById('produtoSelecionado'),
+                selectedProdutoNome: document.getElementById('selectedProdutoNome'),
+                selectedProdutoCodigo: document.getElementById('selectedProdutoCodigo'),
+                selectedProdutoEstoque: document.getElementById('selectedProdutoEstoque'),
+                itemQuantidade: document.getElementById('itemQuantidade'),
+                itemPreco: document.getElementById('itemPreco'),
+                itemDesconto: document.getElementById('itemDesconto'),
+                recebimentoCodigo: document.getElementById('recebimentoCodigo'),
+                pedidoRecebimentoInfo: document.getElementById('pedidoRecebimentoInfo'),
+                recebimentoPedidoNumero: document.getElementById('recebimentoPedidoNumero'),
+                recebimentoPedidoData: document.getElementById('recebimentoPedidoData'),
+                recebimentoFornecedor: document.getElementById('recebimentoFornecedor'),
+                recebimentoTotal: document.getElementById('recebimentoTotal'),
+                recebimentoNotaFiscal: document.getElementById('recebimentoNotaFiscal'),
+                recebimentoItensList: document.getElementById('recebimentoItensList'),
+                recebimentoItensBody: document.getElementById('recebimentoItensBody'),
+                btnConfirmarRecebimento: document.getElementById('btnConfirmarRecebimento'),
+                fornecedorId: document.getElementById('fornecedorId'),
+                fornecedorNome: document.getElementById('fornecedorNome'),
+                fornecedorTipoDoc: document.getElementById('fornecedorTipoDoc'),
+                fornecedorDocumento: document.getElementById('fornecedorDocumento'),
+                fornecedorIE: document.getElementById('fornecedorIE'),
+                fornecedorEmail: document.getElementById('fornecedorEmail'),
+                fornecedorTelefone: document.getElementById('fornecedorTelefone'),
+                fornecedorEndereco: document.getElementById('fornecedorEndereco'),
+                fornecedorCidade: document.getElementById('fornecedorCidade'),
+                fornecedorEstado: document.getElementById('fornecedorEstado'),
+                fornecedorObservacoes: document.getElementById('fornecedorObservacoes'),
+                fornecedorAtivo: document.getElementById('fornecedorAtivo'),
+                fornecedorModalTitle: document.getElementById('fornecedorModalTitle')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadSuppliers(),
+                    loadProducts(),
+                    loadOrders()
+                ]).then(() => {
+                    renderTabContent();
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Data padrão
+                    DOM.orderData.value = new Date().toISOString().split('T')[0];
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR DADOS ====================
+            async function loadSuppliers() {
+                try {
+                    const { data } = await state.supabase.from(SUPPLIERS_TABLE).select('*').order('nome');
+                    state.suppliers = data || [];
+                } catch (e) {
+                    state.suppliers = [];
+                }
+            }
+
+            async function loadProducts() {
+                try {
+                    const { data } = await state.supabase.from(PRODUCTS_TABLE).select('*').order('nome');
+                    state.products = data || [];
+                } catch (e) {
+                    state.products = [];
+                }
+            }
+
+            async function loadOrders() {
+                state.isLoading = true;
+                try {
+                    const { data } = await state.supabase
+                        .from(ORDERS_TABLE)
+                        .select('*, fornecedores(nome, documento)')
+                        .order('data', { ascending: false });
+
+                    state.orders = data || [];
+                    if (state.currentTab === 'pedidos') renderPedidos();
+                    else if (state.currentTab === 'recebimento') renderRecebimento();
+                    else if (state.currentTab === 'historico') renderHistorico();
+                    renderStats();
+                } catch (e) {
+                    state.orders = [];
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            async function loadRecebimentos() {
+                try {
+                    const { data } = await state.supabase
+                        .from(RECEIVEMENTS_TABLE)
+                        .select('*, compras_pedidos(numero), usuarios(nome)')
+                        .order('data', { ascending: false })
+                        .limit(10);
+                    return data || [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            // ==================== RENDER TABS ====================
+            function renderTabContent() {
+                switchTab(state.currentTab);
+            }
+
+            function switchTab(tab) {
+                state.currentTab = tab;
+                
+                document.querySelectorAll('.tab-btn').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white');
+                    el.classList.add('text-gray-600');
+                    if (el.dataset.tab === tab) {
+                        el.classList.add('bg-blue-600', 'text-white');
+                        el.classList.remove('text-gray-600');
+                    }
+                });
+
+                switch(tab) {
+                    case 'pedidos': renderPedidos(); break;
+                    case 'recebimento': renderRecebimento(); break;
+                    case 'fornecedores': renderFornecedores(); break;
+                    case 'historico': renderHistorico(); break;
+                }
+            }
+
+            // ==================== RENDER PEDIDOS ====================
+            function renderPedidos() {
+                const filtered = getFilteredOrders();
+                
+                DOM.tabContent.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-2xl font-bold text-gray-800">Pedidos de Compra</h2>
+                            <button onclick="window.openOrderModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center transition-colors">
+                                <i class="fas fa-plus mr-2"></i> Novo Pedido
+                            </button>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select id="filterStatus" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todos</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="aprovado">Aprovado</option>
+                                        <option value="recebido">Recebido</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
+                                    <select id="filterFornecedor" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
+                                    <input type="date" id="filterDataInicial" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+                                    <input type="date" id="filterDataFinal" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-end gap-2">
+                                <button onclick="window.applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Aplicar Filtros</button>
+                                <button onclick="window.clearFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Limpar</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Pedido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersTableBody">
+                                        ${filtered.length === 0 ? `
+                                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-file-invoice text-4xl mb-2 opacity-50"></i>
+                                                <p>Nenhum pedido encontrado</p>
+                                            </td></tr>
+                                        ` : filtered.map(order => `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${order.numero}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.fornecedores?.nome || 'N/A'}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(order.data)}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(order.total || 0)}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}">${formatStatus(order.status)}</span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <button onclick="window.viewOrder('${order.id}')" class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-eye"></i></button>
+                                                    ${order.status === 'pendente' ? `
+                                                        <button onclick="window.approveOrder('${order.id}')" class="text-green-600 hover:text-green-900 mr-3"><i class="fas fa-check"></i></button>
+                                                        <button onclick="window.cancelOrder('${order.id}')" class="text-red-600 hover:text-red-900"><i class="fas fa-times"></i></button>
+                                                    ` : ''}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="px-6 py-3 border-t flex justify-between items-center">
+                                <span class="text-sm text-gray-500">${filtered.length} pedidos</span>
+                                <button onclick="window.loadOrders()" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                updateSupplierSelects();
+                setupFilterListeners();
+            }
+
+            // ==================== RENDER RECEBIMENTO ====================
+            function renderRecebimento() {
+                const toReceive = state.orders.filter(o => o.status === 'aprovado' && 
+                    o.itens?.some(i => (i.quantidade_recebida || 0) < i.quantidade));
+
+                DOM.tabContent.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-2xl font-bold text-gray-800">Recebimento de Mercadorias</h2>
+                            <button onclick="window.openRecebimentoModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center transition-colors">
+                                <i class="fas fa-barcode mr-2"></i> Recebimento Rápido
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="p-4 border-b bg-gray-50">
+                                <h3 class="text-lg font-medium">Pedidos Prontos para Recebimento</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Pedido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Pedido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itens</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${toReceive.length === 0 ? `
+                                            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-box-open text-4xl mb-2 opacity-50"></i>
+                                                <p>Nenhum pedido pronto para recebimento</p>
+                                            </td></tr>
+                                        ` : toReceive.map(order => `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${order.numero}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.fornecedores?.nome || 'N/A'}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(order.data)}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.itens?.length || 0} itens</td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <button onclick="window.openRecebimentoPedido('${order.id}')" class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Receber</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="p-4 border-b bg-gray-50">
+                                <h3 class="text-lg font-medium">Recebimentos Recentes</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Recebimento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itens</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recebimentoHistoryBody">
+                                        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                            <p>Carregando recebimentos...</p>
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Carregar recebimentos
+                loadRecebimentos().then(data => {
+                    const tbody = document.getElementById('recebimentoHistoryBody');
+                    if (data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-history text-4xl mb-2 opacity-50"></i>
+                                <p>Nenhum recebimento registrado</p>
+                            </td></tr>
+                        `;
+                    } else {
+                        tbody.innerHTML = data.map(r => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${r.numero}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#${r.compras_pedidos?.numero || 'N/A'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(r.data)}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.itens?.length || 0} itens</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.usuarios?.nome || 'N/A'}</td>
+                            </tr>
+                        `).join('');
+                    }
+                });
+            }
+
+            // ==================== RENDER FORNECEDORES ====================
+            function renderFornecedores() {
+                const filtered = getFilteredSuppliers();
+
+                DOM.tabContent.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-2xl font-bold text-gray-800">Fornecedores</h2>
+                            <button onclick="window.openFornecedorModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center transition-colors">
+                                <i class="fas fa-plus mr-2"></i> Novo Fornecedor
+                            </button>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                    <input type="text" id="filterFornecedorNome" placeholder="Buscar por nome" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+                                    <input type="text" id="filterFornecedorDoc" placeholder="Buscar por documento" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select id="filterFornecedorStatus" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todos</option>
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-end gap-2">
+                                <button onclick="window.applyFornecedorFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Buscar</button>
+                                <button onclick="window.clearFornecedorFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Limpar</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${filtered.length === 0 ? `
+                                            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-truck text-4xl mb-2 opacity-50"></i>
+                                                <p>Nenhum fornecedor encontrado</p>
+                                            </td></tr>
+                                        ` : filtered.map(s => `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                                            <i class="fas fa-truck"></i>
+                                                        </div>
+                                                        <div class="ml-4">
+                                                            <div class="text-sm font-medium text-gray-900">${s.nome}</div>
+                                                            <div class="text-sm text-gray-500">${s.email || ''}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-500">${formatDocumento(s.documento)}</td>
+                                                <td class="px-6 py-4 text-sm text-gray-500">${s.telefone}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${s.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                                        ${s.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm font-medium">
+                                                    <button onclick="window.editSupplier('${s.id}')" class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="window.toggleSupplier('${s.id}')" class="${s.status === 'ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}">
+                                                        <i class="fas ${s.status === 'ativo' ? 'fa-ban' : 'fa-check'}"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="px-6 py-3 border-t flex justify-between items-center">
+                                <span class="text-sm text-gray-500">${filtered.length} fornecedores</span>
+                                <button onclick="window.loadSuppliers()" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                setupSupplierFilterListeners();
+            }
+
+            // ==================== RENDER HISTÓRICO ====================
+            function renderHistorico() {
+                const filtered = getFilteredHistorico();
+
+                DOM.tabContent.innerHTML = `
+                    <div class="space-y-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Histórico de Compras</h2>
+
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                                    <select id="filterHistoricoPeriodo" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="30">Últimos 30 dias</option>
+                                        <option value="90">Últimos 90 dias</option>
+                                        <option value="365">Últimos 12 meses</option>
+                                        <option value="custom">Personalizado</option>
+                                    </select>
+                                </div>
+                                <div id="historicoDataInicial" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
+                                    <input type="date" id="filterHistoricoDataInicial" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div id="historicoDataFinal" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+                                    <input type="date" id="filterHistoricoDataFinal" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
+                                    <select id="filterHistoricoFornecedor" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-end gap-2">
+                                <button onclick="window.applyHistoricoFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Aplicar Filtros</button>
+                                <button onclick="window.clearHistoricoFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Limpar</button>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="statsGrid">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-500">Total em Compras</p><p class="text-2xl font-semibold text-gray-900" id="statsTotalCompras">AOA 0</p></div>
+                                    <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-shopping-cart text-blue-600 text-xl"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-500">Pedidos Realizados</p><p class="text-2xl font-semibold text-gray-900" id="statsTotalPedidos">0</p></div>
+                                    <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-clipboard-list text-green-600 text-xl"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-500">Fornecedores Ativos</p><p class="text-2xl font-semibold text-gray-900" id="statsFornecedoresAtivos">0</p></div>
+                                    <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-truck text-purple-600 text-xl"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-500">Taxa de Recebimento</p><p class="text-2xl font-semibold text-green-600" id="statsTaxaRecebimento">0%</p></div>
+                                    <div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-percentage text-yellow-600 text-xl"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Pedido</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${filtered.length === 0 ? `
+                                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p>Carregando histórico...</p>
+                                            </td></tr>
+                                        ` : filtered.map(order => `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${order.numero}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.fornecedores?.nome || 'N/A'}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(order.data)}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(order.total || 0)}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}">${formatStatus(order.status)}</span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <button onclick="window.viewOrder('${order.id}')" class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-eye"></i></button>
+                                                    <button onclick="window.printOrder('${order.id}')" class="text-gray-600 hover:text-gray-900"><i class="fas fa-print"></i></button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                updateSupplierSelects();
+                setupHistoricoListeners();
+                renderStats();
+            }
+
+            // ==================== STATS ====================
+            function renderStats() {
+                const total = state.orders.reduce((sum, o) => sum + (o.total || 0), 0);
+                const totalPedidos = state.orders.length;
+                const ativos = state.suppliers.filter(s => s.status === 'ativo').length;
+                const recebidos = state.orders.filter(o => o.status === 'recebido').length;
+                const taxa = totalPedidos > 0 ? Math.round((recebidos / totalPedidos) * 100) : 0;
+
+                document.getElementById('statsTotalCompras').textContent = formatCurrency(total);
+                document.getElementById('statsTotalPedidos').textContent = totalPedidos;
+                document.getElementById('statsFornecedoresAtivos').textContent = ativos;
+                document.getElementById('statsTaxaRecebimento').textContent = `${taxa}%`;
+            }
+
+            // ==================== FILTROS ====================
+            function getFilteredOrders() {
+                const status = document.getElementById('filterStatus')?.value || '';
+                const fornecedor = document.getElementById('filterFornecedor')?.value || '';
+                const dataInicial = document.getElementById('filterDataInicial')?.value || '';
+                const dataFinal = document.getElementById('filterDataFinal')?.value || '';
+                
+                return state.orders.filter(o => {
+                    if (status && o.status !== status) return false;
+                    if (fornecedor && o.fornecedor_id != fornecedor) return false;
+                    if (dataInicial && new Date(o.data) < new Date(dataInicial)) return false;
+                    if (dataFinal && new Date(o.data) > new Date(dataFinal)) return false;
+                    return true;
+                });
+            }
+
+            function getFilteredSuppliers() {
+                const nome = document.getElementById('filterFornecedorNome')?.value?.toLowerCase() || '';
+                const doc = document.getElementById('filterFornecedorDoc')?.value?.toLowerCase() || '';
+                const status = document.getElementById('filterFornecedorStatus')?.value || '';
+                
+                return state.suppliers.filter(s => {
+                    if (nome && !s.nome.toLowerCase().includes(nome)) return false;
+                    if (doc && !s.documento.toLowerCase().includes(doc)) return false;
+                    if (status && s.status !== status) return false;
+                    return true;
+                });
+            }
+
+            function getFilteredHistorico() {
+                const periodo = document.getElementById('filterHistoricoPeriodo')?.value || '30';
+                const fornecedor = document.getElementById('filterHistoricoFornecedor')?.value || '';
+                let dataInicial = null;
+                let dataFinal = null;
+                
+                if (periodo === 'custom') {
+                    dataInicial = document.getElementById('filterHistoricoDataInicial')?.value || null;
+                    dataFinal = document.getElementById('filterHistoricoDataFinal')?.value || null;
+                } else {
+                    const hoje = new Date();
+                    const inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - parseInt(periodo));
+                    dataInicial = inicio.toISOString().split('T')[0];
+                }
+                
+                return state.orders.filter(o => {
+                    if (fornecedor && o.fornecedor_id != fornecedor) return false;
+                    if (dataInicial && new Date(o.data) < new Date(dataInicial)) return false;
+                    if (dataFinal && new Date(o.data) > new Date(dataFinal)) return false;
+                    return true;
+                });
+            }
+
+            // ==================== SUPPLIER SELECTS ====================
+            function updateSupplierSelects() {
+                const selects = ['filterFornecedor', 'filterHistoricoFornecedor', 'orderFornecedor'];
+                selects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (!select) return;
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    state.suppliers.filter(s => s.status === 'ativo').forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.id;
+                        option.textContent = s.nome;
+                        select.appendChild(option);
+                    });
+                    if (currentValue) select.value = currentValue;
+                });
+            }
+
+            // ==================== LISTENERS ====================
+            function setupFilterListeners() {
+                document.getElementById('filterStatus')?.addEventListener('change', renderPedidos);
+                document.getElementById('filterFornecedor')?.addEventListener('change', renderPedidos);
+                document.getElementById('filterDataInicial')?.addEventListener('change', renderPedidos);
+                document.getElementById('filterDataFinal')?.addEventListener('change', renderPedidos);
+            }
+
+            function setupSupplierFilterListeners() {
+                document.getElementById('filterFornecedorNome')?.addEventListener('input', renderFornecedores);
+                document.getElementById('filterFornecedorDoc')?.addEventListener('input', renderFornecedores);
+                document.getElementById('filterFornecedorStatus')?.addEventListener('change', renderFornecedores);
+            }
+
+            function setupHistoricoListeners() {
+                document.getElementById('filterHistoricoPeriodo')?.addEventListener('change', function() {
+                    const isCustom = this.value === 'custom';
+                    document.getElementById('historicoDataInicial').classList.toggle('hidden', !isCustom);
+                    document.getElementById('historicoDataFinal').classList.toggle('hidden', !isCustom);
+                    renderHistorico();
+                });
+                document.getElementById('filterHistoricoFornecedor')?.addEventListener('change', renderHistorico);
+                document.getElementById('filterHistoricoDataInicial')?.addEventListener('change', renderHistorico);
+                document.getElementById('filterHistoricoDataFinal')?.addEventListener('change', renderHistorico);
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'AOA' }).format(value);
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr) return 'N/A';
+                return new Date(dateStr).toLocaleDateString('pt-BR');
+            }
+
+            function formatStatus(status) {
+                const map = { 'pendente': 'Pendente', 'aprovado': 'Aprovado', 'recebido': 'Recebido', 'cancelado': 'Cancelado' };
+                return map[status] || status;
+            }
+
+            function getStatusClass(status) {
+                const map = { 'pendente': 'status-pendente', 'aprovado': 'status-aprovado', 'recebido': 'status-recebido', 'cancelado': 'status-cancelado' };
+                return map[status] || '';
+            }
+
+            function formatDocumento(doc) {
+                if (!doc) return '';
+                if (doc.length === 11) return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                if (doc.length === 14) return doc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                return doc;
+            }
+
+            // ==================== AÇÕES DE PEDIDOS ====================
+            function applyFilters() { renderPedidos(); }
+            function clearFilters() {
+                document.getElementById('filterStatus').value = '';
+                document.getElementById('filterFornecedor').value = '';
+                document.getElementById('filterDataInicial').value = '';
+                document.getElementById('filterDataFinal').value = '';
+                renderPedidos();
+            }
+
+            function applyFornecedorFilters() { renderFornecedores(); }
+            function clearFornecedorFilters() {
+                document.getElementById('filterFornecedorNome').value = '';
+                document.getElementById('filterFornecedorDoc').value = '';
+                document.getElementById('filterFornecedorStatus').value = '';
+                renderFornecedores();
+            }
+
+            function applyHistoricoFilters() { renderHistorico(); }
+            function clearHistoricoFilters() {
+                document.getElementById('filterHistoricoPeriodo').value = '30';
+                document.getElementById('filterHistoricoDataInicial').value = '';
+                document.getElementById('filterHistoricoDataFinal').value = '';
+                document.getElementById('filterHistoricoFornecedor').value = '';
+                document.getElementById('historicoDataInicial').classList.add('hidden');
+                document.getElementById('historicoDataFinal').classList.add('hidden');
+                renderHistorico();
+            }
+
+            // ==================== CRUD PEDIDOS ====================
+            function openOrderModal(order = null) {
+                DOM.orderModal.classList.add('active');
+                DOM.orderModalTitle.textContent = order ? 'Editar Pedido' : 'Novo Pedido de Compra';
+                
+                if (order) {
+                    state.editingOrderId = order.id;
+                    DOM.orderFornecedor.value = order.fornecedor_id;
+                    DOM.orderData.value = order.data;
+                    DOM.orderPrevisao.value = order.previsao_entrega || '';
+                    DOM.orderFormaPagamento.value = order.forma_pagamento || '30_dias';
+                    DOM.orderObservacoes.value = order.observacoes || '';
+                    state.orderItems = order.itens || [];
+                } else {
+                    state.editingOrderId = null;
+                    DOM.orderFornecedor.value = '';
+                    DOM.orderData.value = new Date().toISOString().split('T')[0];
+                    DOM.orderPrevisao.value = '';
+                    DOM.orderFormaPagamento.value = '30_dias';
+                    DOM.orderObservacoes.value = '';
+                    state.orderItems = [];
+                }
+                
+                renderOrderItems();
+                updateOrderTotals();
+                updateSupplierSelects();
+            }
+
+            function closeOrderModal() {
+                DOM.orderModal.classList.remove('active');
+                state.editingOrderId = null;
+                state.orderItems = [];
+                DOM.searchProduto.value = '';
+                DOM.searchResults.classList.add('hidden');
+                DOM.produtoSelecionado.classList.add('hidden');
+                state.selectedProduct = null;
+            }
+
+            function searchProduto() {
+                const term = DOM.searchProduto.value.toLowerCase();
+                const results = DOM.searchResults;
+                
+                if (!term) {
+                    results.classList.add('hidden');
+                    return;
+                }
+                
+                const found = state.products.filter(p => 
+                    p.nome.toLowerCase().includes(term) || 
+                    (p.codigo && p.codigo.toLowerCase().includes(term))
+                );
+                
+                if (found.length === 0) {
+                    results.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum produto encontrado</div>';
+                } else {
+                    results.innerHTML = found.map(p => `
+                        <div onclick="window.selectProduto(${p.id})" class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-medium text-sm">${p.nome}</p>
+                                    <p class="text-xs text-gray-500">${p.codigo || 'Sem código'} | Estoque: ${p.current_stock || 0}</p>
+                                </div>
+                                <span class="text-sm font-medium text-green-600">${formatCurrency(p.preco_compra || 0)}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                results.classList.remove('hidden');
+            }
+
+            function selectProduto(id) {
+                const product = state.products.find(p => p.id == id);
+                if (!product) return;
+                
+                state.selectedProduct = product;
+                DOM.searchResults.classList.add('hidden');
+                DOM.produtoSelecionado.classList.remove('hidden');
+                DOM.selectedProdutoNome.textContent = product.nome;
+                DOM.selectedProdutoCodigo.textContent = product.codigo || 'Sem código';
+                DOM.selectedProdutoEstoque.textContent = product.current_stock || 0;
+                DOM.itemQuantidade.value = 1;
+                DOM.itemPreco.value = product.preco_compra || 0;
+                DOM.itemDesconto.value = 0;
+            }
+
+            function clearSelectedProduto() {
+                DOM.produtoSelecionado.classList.add('hidden');
+                state.selectedProduct = null;
+                DOM.searchProduto.value = '';
+                DOM.searchResults.classList.add('hidden');
+            }
+
+            function addItemToOrder() {
+                if (!state.selectedProduct) return;
+                
+                const quantidade = parseInt(DOM.itemQuantidade.value) || 1;
+                const preco = parseFloat(DOM.itemPreco.value) || 0;
+                const desconto = parseFloat(DOM.itemDesconto.value) || 0;
+                
+                if (quantidade <= 0 || preco <= 0) {
+                    showToast('Quantidade e preço devem ser maiores que zero', 'error');
+                    return;
+                }
+                
+                const existing = state.orderItems.find(i => i.produto_id == state.selectedProduct.id);
+                if (existing) {
+                    existing.quantidade += quantidade;
+                    existing.preco_unitario = preco;
+                    existing.desconto = desconto;
+                } else {
+                    state.orderItems.push({
+                        id: Date.now(),
+                        produto_id: state.selectedProduct.id,
+                        produto_nome: state.selectedProduct.nome,
+                        produto_codigo: state.selectedProduct.codigo,
+                        quantidade: quantidade,
+                        preco_unitario: preco,
+                        desconto: desconto,
+                        quantidade_recebida: 0
+                    });
+                }
+                
+                renderOrderItems();
+                updateOrderTotals();
+                clearSelectedProduto();
+                showToast('Item adicionado ao pedido', 'success');
+            }
+
+            function removeOrderItem(index) {
+                state.orderItems.splice(index, 1);
+                renderOrderItems();
+                updateOrderTotals();
+            }
+
+            function renderOrderItems() {
+                const container = DOM.orderItemsList;
+                const count = DOM.orderItemCount;
+                
+                count.textContent = state.orderItems.length;
+                
+                if (state.orderItems.length === 0) {
+                    container.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">Nenhum item adicionado</div>';
+                    return;
+                }
+                
+                container.innerHTML = state.orderItems.map((item, index) => `
+                    <div class="p-3 hover:bg-gray-50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-sm">${item.produto_nome}</p>
+                                <p class="text-xs text-gray-600">${item.produto_codigo || ''}</p>
+                                <p class="text-xs text-gray-600 mt-1">
+                                    ${item.quantidade} x ${formatCurrency(item.preco_unitario)} = ${formatCurrency(item.quantidade * item.preco_unitario * (1 - item.desconto/100))}
+                                    ${item.desconto > 0 ? `<span class="text-green-600"> (${item.desconto}% desc.)</span>` : ''}
+                                </p>
+                            </div>
+                            <button onclick="window.removeOrderItem(${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function updateOrderTotals() {
+                const subtotal = state.orderItems.reduce((sum, i) => sum + (i.quantidade * i.preco_unitario), 0);
+                const desconto = state.orderItems.reduce((sum, i) => sum + (i.quantidade * i.preco_unitario * i.desconto / 100), 0);
+                const total = subtotal - desconto;
+                
+                DOM.orderSubtotal.textContent = formatCurrency(subtotal);
+                DOM.orderDesconto.textContent = formatCurrency(desconto);
+                DOM.orderTotal.textContent = formatCurrency(total);
+                
+                const hasItems = state.orderItems.length > 0;
+                const hasFornecedor = DOM.orderFornecedor.value !== '';
+                DOM.btnSaveOrder.disabled = !(hasItems && hasFornecedor);
+            }
+
+            async function saveOrder() {
+                const fornecedorId = DOM.orderFornecedor.value;
+                const data = DOM.orderData.value;
+                const previsao = DOM.orderPrevisao.value;
+                const formaPagamento = DOM.orderFormaPagamento.value;
+                const observacoes = DOM.orderObservacoes.value;
+                
+                if (!fornecedorId || !data || state.orderItems.length === 0) {
+                    showToast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+                
+                const subtotal = state.orderItems.reduce((sum, i) => sum + (i.quantidade * i.preco_unitario), 0);
+                const descontoTotal = state.orderItems.reduce((sum, i) => sum + (i.quantidade * i.preco_unitario * i.desconto / 100), 0);
+                const total = subtotal - descontoTotal;
+                
+                const orderData = {
+                    fornecedor_id: parseInt(fornecedorId),
+                    data: data,
+                    previsao_entrega: previsao || null,
+                    forma_pagamento: formaPagamento,
+                    observacoes: observacoes || null,
+                    status: 'pendente',
+                    subtotal: subtotal,
+                    desconto_total: descontoTotal,
+                    total: total,
+                    itens: state.orderItems.map(i => ({
+                        produto_id: i.produto_id,
+                        quantidade: i.quantidade,
+                        preco_unitario: i.preco_unitario,
+                        desconto: i.desconto || 0,
+                        quantidade_recebida: 0
+                    }))
+                };
+                
+                try {
+                    if (state.editingOrderId) {
+                        await state.supabase.from(ORDERS_TABLE).update(orderData).eq('id', state.editingOrderId);
+                        showToast('Pedido atualizado com sucesso!', 'success');
+                    } else {
+                        const numero = String(state.orders.length + 1001).padStart(4, '0');
+                        await state.supabase.from(ORDERS_TABLE).insert([{ ...orderData, numero }]);
+                        showToast('Pedido criado com sucesso!', 'success');
+                    }
+                    
+                    closeOrderModal();
+                    await loadOrders();
+                    
+                } catch (error) {
+                    console.error('Erro ao salvar pedido:', error);
+                    showToast('Erro ao salvar pedido', 'error');
+                }
+            }
+
+            // ==================== AÇÕES DE PEDIDOS (LISTA) ====================
+            async function viewOrder(id) {
+                const order = state.orders.find(o => o.id == id);
+                if (!order) { showToast('Pedido não encontrado', 'error'); return; }
+                
+                const details = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><p class="text-sm text-gray-600">Nº Pedido</p><p class="font-medium">#${order.numero}</p></div>
+                            <div><p class="text-sm text-gray-600">Status</p><span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}">${formatStatus(order.status)}</span></div>
+                            <div><p class="text-sm text-gray-600">Fornecedor</p><p class="font-medium">${order.fornecedores?.nome || 'N/A'}</p></div>
+                            <div><p class="text-sm text-gray-600">Data</p><p class="font-medium">${formatDate(order.data)}</p></div>
+                            <div><p class="text-sm text-gray-600">Previsão Entrega</p><p class="font-medium">${formatDate(order.previsao_entrega) || 'N/A'}</p></div>
+                            <div><p class="text-sm text-gray-600">Forma Pagamento</p><p class="font-medium">${order.forma_pagamento?.replace('_', ' ') || 'N/A'}</p></div>
+                        </div>
+                        ${order.observacoes ? `<div><p class="text-sm text-gray-600">Observações</p><p class="font-medium">${order.observacoes}</p></div>` : ''}
+                        <div><p class="text-sm text-gray-600 mb-2">Itens do Pedido</p>
+                            <div class="border rounded-lg overflow-hidden">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left">Produto</th><th class="px-4 py-2 text-center">Qtd</th><th class="px-4 py-2 text-right">Preço</th><th class="px-4 py-2 text-right">Total</th></tr></thead>
+                                    <tbody>${(order.itens || []).map(i => `
+                                        <tr class="border-t"><td class="px-4 py-2">${i.produto_nome}</td><td class="px-4 py-2 text-center">${i.quantidade}</td><td class="px-4 py-2 text-right">${formatCurrency(i.preco_unitario)}</td><td class="px-4 py-2 text-right font-medium">${formatCurrency(i.quantidade * i.preco_unitario * (1 - i.desconto/100))}</td></tr>
+                                    `).join('')}</tbody>
+                                    <tfoot class="bg-gray-50 border-t">
+                                        <tr><td colspan="3" class="px-4 py-2 text-right font-medium">Subtotal:</td><td class="px-4 py-2 text-right">${formatCurrency(order.subtotal || 0)}</td></tr>
+                                        ${order.desconto_total > 0 ? `<tr><td colspan="3" class="px-4 py-2 text-right text-green-600">Desconto:</td><td class="px-4 py-2 text-right text-green-600">-${formatCurrency(order.desconto_total)}</td></tr>` : ''}
+                                        <tr><td colspan="3" class="px-4 py-2 text-right font-bold">Total:</td><td class="px-4 py-2 text-right font-bold">${formatCurrency(order.total || 0)}</td></tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                showToast(details, 'info', true);
+            }
+
+            async function approveOrder(id) {
+                if (!confirm('Deseja aprovar este pedido?')) return;
+                try {
+                    await state.supabase.from(ORDERS_TABLE).update({ status: 'aprovado' }).eq('id', id);
+                    showToast('Pedido aprovado com sucesso!', 'success');
+                    await loadOrders();
+                } catch (error) {
+                    showToast('Erro ao aprovar pedido', 'error');
+                }
+            }
+
+            async function cancelOrder(id) {
+                if (!confirm('Deseja cancelar este pedido?')) return;
+                try {
+                    await state.supabase.from(ORDERS_TABLE).update({ status: 'cancelado' }).eq('id', id);
+                    showToast('Pedido cancelado com sucesso!', 'success');
+                    await loadOrders();
+                } catch (error) {
+                    showToast('Erro ao cancelar pedido', 'error');
+                }
+            }
+
+            function printOrder(id) {
+                showToast('Imprimindo pedido...', 'info');
+            }
+
+            // ==================== RECEBIMENTO ====================
+            function openRecebimentoModal() {
+                DOM.recebimentoModal.classList.add('active');
+                DOM.recebimentoCodigo.value = '';
+                DOM.pedidoRecebimentoInfo.classList.add('hidden');
+                DOM.recebimentoItensList.classList.add('hidden');
+                DOM.btnConfirmarRecebimento.disabled = true;
+                state.currentRecebimentoPedido = null;
+            }
+
+            function closeRecebimentoModal() {
+                DOM.recebimentoModal.classList.remove('active');
+            }
+
+            function openRecebimentoPedido(id) {
+                const order = state.orders.find(o => o.id == id);
+                if (!order) { showToast('Pedido não encontrado', 'error'); return; }
+                
+                openRecebimentoModal();
+                DOM.recebimentoCodigo.value = order.numero;
+                buscarPedidoRecebimento();
+            }
+
+            function buscarPedidoRecebimento() {
+                const codigo = DOM.recebimentoCodigo.value;
+                if (!codigo) { showToast('Digite o número do pedido', 'error'); return; }
+                
+                const order = state.orders.find(o => o.numero === codigo);
+                if (!order) { showToast('Pedido não encontrado', 'error'); return; }
+                
+                if (order.status !== 'aprovado') {
+                    showToast('Este pedido não está pronto para recebimento', 'error');
+                    return;
+                }
+                
+                state.currentRecebimentoPedido = order;
+                
+                DOM.recebimentoPedidoNumero.textContent = order.numero;
+                DOM.recebimentoPedidoData.textContent = formatDate(order.data);
+                DOM.recebimentoFornecedor.textContent = order.fornecedores?.nome || 'N/A';
+                DOM.recebimentoTotal.textContent = formatCurrency(order.total || 0);
+                
+                DOM.pedidoRecebimentoInfo.classList.remove('hidden');
+                
+                const items = (order.itens || []).filter(i => (i.quantidade_recebida || 0) < i.quantidade);
+                
+                if (items.length === 0) {
+                    DOM.recebimentoItensBody.innerHTML = '<div class="p-4 text-center text-gray-500">Todos os itens já foram recebidos</div>';
+                    DOM.btnConfirmarRecebimento.disabled = true;
+                } else {
+                    DOM.recebimentoItensBody.innerHTML = items.map((item, index) => `
+                        <div class="p-3 flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-sm">${item.produto_nome}</p>
+                                <p class="text-xs text-gray-600">Pedido: ${item.quantidade} | Recebido: ${item.quantidade_recebida || 0}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">Receber:</span>
+                                <input type="number" id="receber_qtd_${index}" value="${item.quantidade - (item.quantidade_recebida || 0)}" 
+                                       min="0" max="${item.quantidade - (item.quantidade_recebida || 0)}"
+                                       class="w-20 border rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500"
+                                       onchange="window.checkRecebimentoItems()">
+                            </div>
+                        </div>
+                    `).join('');
+                    DOM.recebimentoItensList.classList.remove('hidden');
+                    DOM.btnConfirmarRecebimento.disabled = false;
+                }
+            }
+
+            function checkRecebimentoItems() {
+                const inputs = document.querySelectorAll('#recebimentoItensBody input[type="number"]');
+                let hasItems = false;
+                inputs.forEach(input => {
+                    if (parseInt(input.value) > 0) hasItems = true;
+                });
+                DOM.btnConfirmarRecebimento.disabled = !hasItems;
+            }
+
+            async function confirmarRecebimento() {
+                if (!state.currentRecebimentoPedido) {
+                    showToast('Nenhum pedido selecionado', 'error');
+                    return;
+                }
+                
+                const inputs = document.querySelectorAll('#recebimentoItensBody input[type="number"]');
+                const items = [];
+                let hasItems = false;
+                
+                inputs.forEach((input, index) => {
+                    const qtd = parseInt(input.value) || 0;
+                    if (qtd > 0) {
+                        const item = state.currentRecebimentoPedido.itens[index];
+                        items.push({
+                            produto_id: item.produto_id,
+                            produto_nome: item.produto_nome,
+                            quantidade: qtd,
+                            preco_unitario: item.preco_unitario,
+                            desconto: item.desconto || 0
+                        });
+                        hasItems = true;
+                    }
+                });
+                
+                if (!hasItems) {
+                    showToast('Selecione pelo menos um item para receber', 'error');
+                    return;
+                }
+                
+                const notaFiscal = DOM.recebimentoNotaFiscal.value || 'N/A';
+                
+                try {
+                    await state.supabase.from(RECEIVEMENTS_TABLE).insert([{
+                        pedido_id: state.currentRecebimentoPedido.id,
+                        data: new Date().toISOString(),
+                        nota_fiscal: notaFiscal,
+                        itens: items,
+                        user_id: state.user?.id || 1
+                    }]);
+                    
+                    const updatedItems = state.currentRecebimentoPedido.itens.map(item => {
+                        const received = items.find(i => i.produto_id === item.produto_id);
+                        if (received) {
+                            return { ...item, quantidade_recebida: (item.quantidade_recebida || 0) + received.quantidade };
+                        }
+                        return item;
+                    });
+                    
+                    const allReceived = updatedItems.every(i => (i.quantidade_recebida || 0) >= i.quantidade);
+                    const status = allReceived ? 'recebido' : 'aprovado';
+                    
+                    await state.supabase.from(ORDERS_TABLE).update({
+                        itens: updatedItems,
+                        status: status
+                    }).eq('id', state.currentRecebimentoPedido.id);
+                    
+                    // Atualizar estoque
+                    for (const item of items) {
+                        const { data: produto } = await state.supabase.from(PRODUCTS_TABLE).select('current_stock').eq('id', item.produto_id).single();
+                        const newStock = (produto?.current_stock || 0) + item.quantidade;
+                        await state.supabase.from(PRODUCTS_TABLE).update({ current_stock: newStock }).eq('id', item.produto_id);
+                    }
+                    
+                    showToast('Recebimento registrado com sucesso!', 'success');
+                    closeRecebimentoModal();
+                    await loadOrders();
+                    
+                } catch (error) {
+                    console.error('Erro ao confirmar recebimento:', error);
+                    showToast('Erro ao confirmar recebimento', 'error');
+                }
+            }
+
+            // ==================== CRUD FORNECEDORES ====================
+            function openFornecedorModal(supplier = null) {
+                DOM.fornecedorModal.classList.add('active');
+                DOM.fornecedorModalTitle.textContent = supplier ? 'Editar Fornecedor' : 'Novo Fornecedor';
+                
+                if (supplier) {
+                    state.editingSupplierId = supplier.id;
+                    DOM.fornecedorId.value = supplier.id;
+                    DOM.fornecedorNome.value = supplier.nome;
+                    DOM.fornecedorTipoDoc.value = supplier.tipo_documento || 'cnpj';
+                    DOM.fornecedorDocumento.value = supplier.documento;
+                    DOM.fornecedorIE.value = supplier.ie || '';
+                    DOM.fornecedorEmail.value = supplier.email || '';
+                    DOM.fornecedorTelefone.value = supplier.telefone;
+                    DOM.fornecedorEndereco.value = supplier.endereco || '';
+                    DOM.fornecedorCidade.value = supplier.cidade || '';
+                    DOM.fornecedorEstado.value = supplier.estado || '';
+                    DOM.fornecedorObservacoes.value = supplier.observacoes || '';
+                    DOM.fornecedorAtivo.checked = supplier.status === 'ativo';
+                } else {
+                    state.editingSupplierId = null;
+                    DOM.fornecedorId.value = '';
+                    DOM.fornecedorNome.value = '';
+                    DOM.fornecedorTipoDoc.value = 'cnpj';
+                    DOM.fornecedorDocumento.value = '';
+                    DOM.fornecedorIE.value = '';
+                    DOM.fornecedorEmail.value = '';
+                    DOM.fornecedorTelefone.value = '';
+                    DOM.fornecedorEndereco.value = '';
+                    DOM.fornecedorCidade.value = '';
+                    DOM.fornecedorEstado.value = '';
+                    DOM.fornecedorObservacoes.value = '';
+                    DOM.fornecedorAtivo.checked = true;
+                }
+            }
+
+            function closeFornecedorModal() {
+                DOM.fornecedorModal.classList.remove('active');
+                state.editingSupplierId = null;
+            }
+
+            async function saveFornecedor() {
+                const data = {
+                    nome: DOM.fornecedorNome.value.trim(),
+                    tipo_documento: DOM.fornecedorTipoDoc.value,
+                    documento: DOM.fornecedorDocumento.value.trim(),
+                    ie: DOM.fornecedorIE.value.trim() || null,
+                    email: DOM.fornecedorEmail.value.trim() || null,
+                    telefone: DOM.fornecedorTelefone.value.trim(),
+                    endereco: DOM.fornecedorEndereco.value.trim() || null,
+                    cidade: DOM.fornecedorCidade.value.trim() || null,
+                    estado: DOM.fornecedorEstado.value.trim() || null,
+                    observacoes: DOM.fornecedorObservacoes.value.trim() || null,
+                    status: DOM.fornecedorAtivo.checked ? 'ativo' : 'inativo'
+                };
+                
+                if (!data.nome || !data.documento || !data.telefone) {
+                    showToast('Preencha os campos obrigatórios: Nome, Documento e Telefone', 'error');
+                    return;
+                }
+                
+                try {
+                    if (state.editingSupplierId) {
+                        await state.supabase.from(SUPPLIERS_TABLE).update(data).eq('id', state.editingSupplierId);
+                        showToast('Fornecedor atualizado com sucesso!', 'success');
+                    } else {
+                        await state.supabase.from(SUPPLIERS_TABLE).insert([data]);
+                        showToast('Fornecedor criado com sucesso!', 'success');
+                    }
+                    closeFornecedorModal();
+                    await loadSuppliers();
+                } catch (error) {
+                    showToast('Erro ao salvar fornecedor', 'error');
+                }
+            }
+
+            function editSupplier(id) {
+                const supplier = state.suppliers.find(s => s.id == id);
+                if (supplier) openFornecedorModal(supplier);
+                else showToast('Fornecedor não encontrado', 'error');
+            }
+
+            async function toggleSupplier(id) {
+                const supplier = state.suppliers.find(s => s.id == id);
+                if (!supplier) return;
+                
+                const newStatus = supplier.status === 'ativo' ? 'inativo' : 'ativo';
+                if (!confirm(`Deseja ${newStatus === 'ativo' ? 'ativar' : 'inativar'} o fornecedor ${supplier.nome}?`)) return;
+                
+                try {
+                    await state.supabase.from(SUPPLIERS_TABLE).update({ status: newStatus }).eq('id', id);
+                    showToast(`Fornecedor ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso!`, 'success');
+                    await loadSuppliers();
+                } catch (error) {
+                    showToast('Erro ao alterar status', 'error');
+                }
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info', isHtml = false) {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = isHtml ? `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <div>${message}</div>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                ` : `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+            }
+
+            // ==================== REFRESH ====================
+            function refreshData() {
+                loadOrders();
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.orderFornecedor.addEventListener('change', updateOrderTotals);
+                
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.orderModal.classList.contains('active')) closeOrderModal();
+                        if (DOM.recebimentoModal.classList.contains('active')) closeRecebimentoModal();
+                        if (DOM.fornecedorModal.classList.contains('active')) closeFornecedorModal();
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.switchTab = switchTab;
+            window.applyFilters = applyFilters;
+            window.clearFilters = clearFilters;
+            window.applyFornecedorFilters = applyFornecedorFilters;
+            window.clearFornecedorFilters = clearFornecedorFilters;
+            window.applyHistoricoFilters = applyHistoricoFilters;
+            window.clearHistoricoFilters = clearHistoricoFilters;
+            window.openOrderModal = openOrderModal;
+            window.closeOrderModal = closeOrderModal;
+            window.searchProduto = searchProduto;
+            window.selectProduto = selectProduto;
+            window.clearSelectedProduto = clearSelectedProduto;
+            window.addItemToOrder = addItemToOrder;
+            window.removeOrderItem = removeOrderItem;
+            window.saveOrder = saveOrder;
+            window.viewOrder = viewOrder;
+            window.approveOrder = approveOrder;
+            window.cancelOrder = cancelOrder;
+            window.printOrder = printOrder;
+            window.openRecebimentoModal = openRecebimentoModal;
+            window.closeRecebimentoModal = closeRecebimentoModal;
+            window.openRecebimentoPedido = openRecebimentoPedido;
+            window.buscarPedidoRecebimento = buscarPedidoRecebimento;
+            window.checkRecebimentoItems = checkRecebimentoItems;
+            window.confirmarRecebimento = confirmarRecebimento;
+            window.openFornecedorModal = openFornecedorModal;
+            window.closeFornecedorModal = closeFornecedorModal;
+            window.saveFornecedor = saveFornecedor;
+            window.editSupplier = editSupplier;
+            window.toggleSupplier = toggleSupplier;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.loadOrders = loadOrders;
+            window.loadSuppliers = loadSuppliers;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

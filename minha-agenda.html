@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Agenda | Kanawa Soft</title>
+	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS ==================== */
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --primary-color: #1e3a5f;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-expanded { width: 280px; }
+        .sidebar-hidden { display: none; }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .submenu-open { max-height: 500px; }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== AGENDA ==================== */
+        .appointment-item {
+            transition: var(--transition);
+            border-left: 4px solid var(--info-color);
+        }
+        .appointment-item:hover {
+            background-color: #f8fafc;
+        }
+        .appointment-item.passed {
+            border-left-color: #94a3b8;
+            opacity: 0.6;
+        }
+        .appointment-item.today {
+            border-left-color: var(--success-color);
+        }
+        .appointment-item.urgent {
+            border-left-color: var(--danger-color);
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        /* ==================== CALENDAR ==================== */
+        .calendar-day {
+            transition: var(--transition);
+            cursor: pointer;
+            min-height: 60px;
+        }
+        .calendar-day:hover {
+            background-color: #f3f4f6;
+        }
+        .calendar-day.today {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 8px;
+        }
+        .calendar-day.today .day-number {
+            color: white;
+        }
+        .calendar-day.has-event {
+            background-color: #eff6ff;
+            border-radius: 8px;
+        }
+        .calendar-day .day-number {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .calendar-day .event-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 1px;
+        }
+        .calendar-day .event-dot.urgent { background: var(--danger-color); }
+        .calendar-day .event-dot.important { background: var(--warning-color); }
+        .calendar-day .event-dot.normal { background: var(--success-color); }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+            .calendar-day { min-height: 40px; }
+            .calendar-day .day-number { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-store mr-3"></i>
+                        <span class="flex-1 font-medium">Gestão Comercial</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-calendar-alt mr-3"></i>
+                        <span class="flex-1 font-medium">Agenda</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
+                        <li><a href="minha-agenda.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-calendar-check mr-2 text-sm"></i>Minha Agenda</a></li>
+                        <li><a href="eventos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-calendar-plus mr-2 text-sm"></i>Eventos</a></li>
+                        <li><a href="compromissos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tasks mr-2 text-sm"></i>Compromissos</a></li>
+                    </ul>
+                </li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">MINHA AGENDA</h1>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full text-sm text-blue-700">
+                        <i class="fas fa-calendar-day mr-1"></i> <span id="todayDate">Carregando...</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Estatísticas Rápidas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Compromissos Hoje</p>
+                            <h3 class="text-2xl font-bold text-blue-600" id="appointmentsToday">0</h3>
+                            <p class="text-sm text-gray-500" id="urgentToday">0 urgentes</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Esta Semana</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="appointmentsWeek">0</h3>
+                            <p class="text-sm text-gray-500">Próximos 7 dias</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-calendar-week text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Este Mês</p>
+                            <h3 class="text-2xl font-bold text-purple-600" id="appointmentsMonth">0</h3>
+                            <p class="text-sm text-gray-500" id="currentMonthLabel">Carregando...</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Total de Participantes</p>
+                            <h3 class="text-2xl font-bold text-yellow-600" id="totalParticipants">0</h3>
+                            <p class="text-sm text-gray-500">Em compromissos</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-users text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lista de Compromissos -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex flex-wrap justify-between items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-800">Próximos Compromissos</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="filterType" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <option value="">Todos</option>
+                                    <option value="reuniao">Reunião</option>
+                                    <option value="visita">Visita</option>
+                                    <option value="entrevista">Entrevista</option>
+                                    <option value="entrega">Entrega</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                                <button onclick="openAppointmentModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors text-sm">
+                                    <i class="fas fa-plus mr-2"></i> Novo
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div id="appointmentsList" class="space-y-3">
+                                <!-- Carregado via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel Lateral -->
+                <div class="space-y-6">
+                    <!-- Calendário -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800" id="calendarTitle">Setembro 2024</h3>
+                            <div class="flex gap-1">
+                                <button onclick="prevMonth()" class="p-1 hover:bg-gray-100 rounded transition-colors" title="Mês anterior">
+                                    <i class="fas fa-chevron-left text-sm"></i>
+                                </button>
+                                <button onclick="goToToday()" class="p-1 hover:bg-gray-100 rounded transition-colors text-xs text-blue-600" title="Hoje">
+                                    Hoje
+                                </button>
+                                <button onclick="nextMonth()" class="p-1 hover:bg-gray-100 rounded transition-colors" title="Próximo mês">
+                                    <i class="fas fa-chevron-right text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 mb-2">
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Dom</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Seg</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Ter</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Qua</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Qui</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Sex</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-1">Sáb</div>
+                        </div>
+                        <div id="calendarGrid" class="grid grid-cols-7 gap-1">
+                            <!-- Carregado via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Compromissos do Dia -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4" id="dayAppointmentsTitle">Compromissos de Hoje</h3>
+                        <div id="dayAppointments" class="space-y-2">
+                            <div class="text-center text-gray-500 py-4 text-sm">Carregando...</div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                        <div class="space-y-2">
+                            <button onclick="openAppointmentModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors text-sm flex items-center justify-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Novo Compromisso
+                            </button>
+                            <button onclick="syncCalendar()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg transition-colors text-sm flex items-center justify-center">
+                                <i class="fas fa-sync-alt mr-2"></i> Sincronizar
+                            </button>
+                            <button onclick="exportAppointments()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors text-sm flex items-center justify-center">
+                                <i class="fas fa-file-export mr-2"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== APPOINTMENT MODAL ==================== -->
+    <div class="modal-overlay" id="appointmentModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="appointmentModalTitle">Novo Compromisso</h3>
+                <button onclick="closeAppointmentModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="appointmentForm" onsubmit="saveAppointment(event)">
+                    <input type="hidden" id="appointment_id" value="">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Assunto *</label>
+                            <input type="text" id="app_assunto" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                            <select id="app_tipo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                <option value="reuniao">Reunião</option>
+                                <option value="visita">Visita</option>
+                                <option value="entrevista">Entrevista</option>
+                                <option value="entrega">Entrega</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data *</label>
+                            <input type="date" id="app_data" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hora *</label>
+                            <input type="time" id="app_hora" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duração (minutos)</label>
+                            <input type="number" id="app_duracao" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" min="15" value="60">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Local</label>
+                            <input type="text" id="app_local" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Participantes</label>
+                        <div id="participantsContainer" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" class="participant-input flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Nome do participante">
+                                <button type="button" onclick="addParticipantField()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="app_observacoes" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div class="mt-4 flex items-center">
+                        <input type="checkbox" id="app_notificacao" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" checked>
+                        <label class="ml-2 text-sm text-gray-700">Enviar notificação</label>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeAppointmentModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="saveAppointment()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-save mr-2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE SDK ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+
+        console.log('✅ Supabase inicializado em Minha Agenda!');
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let appointments = [];
+        let currentUser = null;
+        let editingAppointmentId = null;
+        let calendarDate = new Date();
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            await loadAppointments();
+            setupEventListeners();
+            loadSidebarPreference();
+            updateHeaderDate();
+            renderCalendar();
+        });
+
+        // ==================== FUNÇÕES SUPABASE ====================
+        async function loadUserData() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    currentUser = data[0];
+                }
+                
+                if (!currentUser) {
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+                
+                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
+                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
+                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
+                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+                
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+            }
+        }
+
+        async function loadAppointments() {
+            try {
+                const filterType = document.getElementById('filterType')?.value || '';
+                
+                let query = supabase
+                    .from('compromissos')
+                    .select('*')
+                    .order('data', { ascending: true })
+                    .order('hora', { ascending: true });
+                
+                if (filterType) {
+                    query = query.eq('tipo', filterType);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                appointments = data || [];
+                renderAppointments();
+                updateStats();
+                renderDayAppointments();
+                renderCalendar();
+                
+            } catch (error) {
+                console.error('Erro ao carregar compromissos:', error);
+                appointments = getSampleAppointments();
+                renderAppointments();
+                updateStats();
+                renderDayAppointments();
+                renderCalendar();
+            }
+        }
+
+        async function saveAppointmentToDB(appointmentData) {
+            try {
+                if (editingAppointmentId) {
+                    const { data, error } = await supabase
+                        .from('compromissos')
+                        .update(appointmentData)
+                        .eq('id', editingAppointmentId)
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Compromisso atualizado com sucesso!', 'success');
+                    return data;
+                } else {
+                    const { data, error } = await supabase
+                        .from('compromissos')
+                        .insert([appointmentData])
+                        .select();
+                    
+                    if (error) throw error;
+                    showToast('Compromisso criado com sucesso!', 'success');
+                    return data;
+                }
+            } catch (error) {
+                console.error('Erro ao salvar compromisso:', error);
+                showToast('Erro ao salvar compromisso', 'error');
+                throw error;
+            }
+        }
+
+        async function deleteAppointmentFromDB(id) {
+            try {
+                const { error } = await supabase
+                    .from('compromissos')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                showToast('Compromisso removido com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao deletar compromisso:', error);
+                showToast('Erro ao deletar compromisso', 'error');
+                throw error;
+            }
+        }
+
+        // ==================== DADOS DE EXEMPLO ====================
+        function getSampleAppointments() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 5);
+            
+            return [
+                { id: 1, assunto: 'Reunião com Cliente', tipo: 'reuniao', data: today.toISOString().split('T')[0], hora: '09:00', duracao: 60, local: 'Sala de Reuniões', participantes: ['João Silva', 'Maria Santos'], observacoes: 'Apresentar proposta comercial', notificar: true, status: 'pendente' },
+                { id: 2, assunto: 'Apresentação de Projeto', tipo: 'reuniao', data: tomorrow.toISOString().split('T')[0], hora: '14:30', duracao: 90, local: 'Sala de Conferências', participantes: ['Equipe de Desenvolvimento'], observacoes: 'Apresentar resultados do projeto', notificar: true, status: 'pendente' },
+                { id: 3, assunto: 'Visita ao Cliente', tipo: 'visita', data: nextWeek.toISOString().split('T')[0], hora: '10:00', duracao: 120, local: 'Escritório do Cliente', participantes: ['João Silva'], observacoes: 'Visita de acompanhamento', notificar: true, status: 'pendente' }
+            ];
+        }
+
+        // ==================== RENDERIZAR ====================
+        function renderAppointments() {
+            const container = document.getElementById('appointmentsList');
+            
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-calendar-check text-4xl mb-2 opacity-50"></i>
+                        <p>Nenhum compromisso agendado</p>
+                        <p class="text-sm">Clique em "Novo" para adicionar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const tipoLabels = {
+                'reuniao': 'Reunião',
+                'visita': 'Visita',
+                'entrevista': 'Entrevista',
+                'entrega': 'Entrega',
+                'outro': 'Outro'
+            };
+            
+            const tipoColors = {
+                'reuniao': 'bg-blue-100 text-blue-800',
+                'visita': 'bg-green-100 text-green-800',
+                'entrevista': 'bg-purple-100 text-purple-800',
+                'entrega': 'bg-yellow-100 text-yellow-800',
+                'outro': 'bg-gray-100 text-gray-800'
+            };
+            
+            container.innerHTML = appointments.slice(0, 10).map(app => {
+                const isToday = app.data === today;
+                const isPassed = app.data < today;
+                const itemClass = isPassed ? 'appointment-item passed' : isToday ? 'appointment-item today' : 'appointment-item';
+                const tipoLabel = tipoLabels[app.tipo] || app.tipo;
+                const tipoColor = tipoColors[app.tipo] || 'bg-gray-100 text-gray-800';
+                const participants = app.participantes?.length || 0;
+                
+                return `
+                    <div class="${itemClass} bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div class="flex-1 min-w-[150px]">
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <h3 class="font-semibold text-gray-800">${app.assunto}</h3>
+                                    <span class="${tipoColor} px-2 py-0.5 rounded text-xs font-medium">${tipoLabel}</span>
+                                    ${isToday ? '<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">Hoje</span>' : ''}
+                                    ${isPassed ? '<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-xs font-medium">Passado</span>' : ''}
+                                </div>
+                                <div class="flex flex-wrap gap-3 text-sm text-gray-600">
+                                    <span><i class="far fa-calendar mr-1"></i> ${formatDate(app.data)}</span>
+                                    <span><i class="far fa-clock mr-1"></i> ${app.hora}</span>
+                                    ${app.local ? `<span><i class="fas fa-map-marker-alt mr-1"></i> ${app.local}</span>` : ''}
+                                    ${participants > 0 ? `<span><i class="fas fa-users mr-1"></i> ${participants} participante(s)</span>` : ''}
+                                </div>
+                                ${app.observacoes ? `<p class="text-sm text-gray-500 mt-1">${app.observacoes}</p>` : ''}
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="openAppointmentModal('${app.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteAppointment('${app.id}')" class="text-red-600 hover:text-red-800 p-1" title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDayAppointments() {
+            const container = document.getElementById('dayAppointments');
+            const today = new Date().toISOString().split('T')[0];
+            const dayAppointments = appointments.filter(a => a.data === today);
+            
+            if (dayAppointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-4 text-sm">
+                        <i class="fas fa-calendar-times text-2xl mb-2 opacity-50"></i>
+                        <p>Nenhum compromisso hoje</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = dayAppointments.map(app => `
+                <div class="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-sm text-gray-800">${app.assunto}</p>
+                            <p class="text-xs text-gray-500">${app.hora} ${app.local ? `• ${app.local}` : ''}</p>
+                        </div>
+                        <button onclick="openAppointmentModal('${app.id}')" class="text-blue-600 hover:text-blue-800 text-xs">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const title = document.getElementById('calendarTitle');
+            
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+            title.textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            grid.innerHTML = '';
+            
+            // Dias vazios
+            for (let i = 0; i < startingDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day p-1 text-center';
+                grid.appendChild(empty);
+            }
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const hasEvent = appointments.some(a => a.data === dateStr);
+                const isToday = dateStr === todayStr;
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = `calendar-day p-1 text-center ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}`;
+                
+                const numberSpan = document.createElement('div');
+                numberSpan.className = 'day-number';
+                numberSpan.textContent = day;
+                dayElement.appendChild(numberSpan);
+                
+                if (hasEvent) {
+                    const dot = document.createElement('div');
+                    dot.className = 'event-dot normal';
+                    dayElement.appendChild(dot);
+                }
+                
+                dayElement.addEventListener('click', () => {
+                    const selectedDate = dateStr;
+                    document.getElementById('dayAppointmentsTitle').textContent = `Compromissos de ${formatDate(selectedDate)}`;
+                    const dayAppointments = appointments.filter(a => a.data === selectedDate);
+                    const container = document.getElementById('dayAppointments');
+                    
+                    if (dayAppointments.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center text-gray-500 py-4 text-sm">
+                                <i class="fas fa-calendar-times text-2xl mb-2 opacity-50"></i>
+                                <p>Nenhum compromisso neste dia</p>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = dayAppointments.map(app => `
+                            <div class="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium text-sm text-gray-800">${app.assunto}</p>
+                                        <p class="text-xs text-gray-500">${app.hora} ${app.local ? `• ${app.local}` : ''}</p>
+                                    </div>
+                                    <button onclick="openAppointmentModal('${app.id}')" class="text-blue-600 hover:text-blue-800 text-xs">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                });
+                
+                grid.appendChild(dayElement);
+            }
+        }
+
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayApps = appointments.filter(a => a.data === today);
+            const urgentToday = todayApps.filter(a => a.urgente).length;
+            
+            const weekStart = new Date();
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            const weekApps = appointments.filter(a => {
+                const date = new Date(a.data);
+                return date >= weekStart && date <= weekEnd;
+            });
+            
+            const monthStart = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1);
+            const monthEnd = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
+            const monthApps = appointments.filter(a => {
+                const date = new Date(a.data);
+                return date >= monthStart && date <= monthEnd;
+            });
+            
+            const allParticipants = new Set();
+            appointments.forEach(a => {
+                if (a.participantes) {
+                    a.participantes.forEach(p => allParticipants.add(p));
+                }
+            });
+            
+            document.getElementById('appointmentsToday').textContent = todayApps.length;
+            document.getElementById('urgentToday').textContent = urgentToday;
+            document.getElementById('appointmentsWeek').textContent = weekApps.length;
+            document.getElementById('appointmentsMonth').textContent = monthApps.length;
+            document.getElementById('totalParticipants').textContent = allParticipants.size;
+            
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+            document.getElementById('currentMonthLabel').textContent = monthNames[calendarDate.getMonth()];
+        }
+
+        // ==================== CRUD COMPROMISSOS ====================
+        function openAppointmentModal(appointment = null) {
+            const modal = document.getElementById('appointmentModal');
+            const title = document.getElementById('appointmentModalTitle');
+            
+            // Reset participantes
+            document.getElementById('participantsContainer').innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" class="participant-input flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Nome do participante">
+                    <button type="button" onclick="addParticipantField()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            `;
+            
+            if (appointment) {
+                title.textContent = 'Editar Compromisso';
+                document.getElementById('appointment_id').value = appointment.id;
+                document.getElementById('app_assunto').value = appointment.assunto || '';
+                document.getElementById('app_tipo').value = appointment.tipo || 'reuniao';
+                document.getElementById('app_data').value = appointment.data || '';
+                document.getElementById('app_hora').value = appointment.hora || '';
+                document.getElementById('app_duracao').value = appointment.duracao || 60;
+                document.getElementById('app_local').value = appointment.local || '';
+                document.getElementById('app_observacoes').value = appointment.observacoes || '';
+                document.getElementById('app_notificacao').checked = appointment.notificar !== false;
+                
+                // Adicionar participantes
+                if (appointment.participantes && appointment.participantes.length > 0) {
+                    appointment.participantes.forEach((p, index) => {
+                        if (index === 0) {
+                            document.querySelector('.participant-input').value = p;
+                        } else {
+                            addParticipantField(p);
+                        }
+                    });
+                }
+                
+                editingAppointmentId = appointment.id;
+            } else {
+                title.textContent = 'Novo Compromisso';
+                document.getElementById('appointment_id').value = '';
+                document.getElementById('app_assunto').value = '';
+                document.getElementById('app_tipo').value = 'reuniao';
+                document.getElementById('app_data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('app_hora').value = '09:00';
+                document.getElementById('app_duracao').value = 60;
+                document.getElementById('app_local').value = '';
+                document.getElementById('app_observacoes').value = '';
+                document.getElementById('app_notificacao').checked = true;
+                editingAppointmentId = null;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').classList.remove('active');
+            editingAppointmentId = null;
+        }
+
+        function addParticipantField(value = '') {
+            const container = document.getElementById('participantsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" class="participant-input flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Nome do participante" value="${value}">
+                <button type="button" onclick="this.parentElement.remove()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        async function saveAppointment(event) {
+            if (event) event.preventDefault();
+            
+            const participantes = [];
+            document.querySelectorAll('.participant-input').forEach(input => {
+                if (input.value.trim()) {
+                    participantes.push(input.value.trim());
+                }
+            });
+            
+            const appointmentData = {
+                assunto: document.getElementById('app_assunto').value.trim(),
+                tipo: document.getElementById('app_tipo').value,
+                data: document.getElementById('app_data').value,
+                hora: document.getElementById('app_hora').value,
+                duracao: parseInt(document.getElementById('app_duracao').value) || 60,
+                local: document.getElementById('app_local').value.trim() || null,
+                participantes: participantes,
+                observacoes: document.getElementById('app_observacoes').value.trim() || null,
+                notificar: document.getElementById('app_notificacao').checked,
+                status: 'pendente',
+                user_id: currentUser?.id || 1
+            };
+            
+            if (!appointmentData.assunto || !appointmentData.data || !appointmentData.hora) {
+                showToast('Preencha os campos obrigatórios', 'error');
+                return;
+            }
+            
+            try {
+                await saveAppointmentToDB(appointmentData);
+                closeAppointmentModal();
+                await loadAppointments();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+            }
+        }
+
+        async function deleteAppointment(id) {
+            const appointment = appointments.find(a => a.id == id);
+            if (!appointment) return;
+            
+            if (!confirm(`Tem certeza que deseja excluir o compromisso "${appointment.assunto}"?`)) return;
+            
+            try {
+                await deleteAppointmentFromDB(id);
+                await loadAppointments();
+            } catch (error) {
+                console.error('Erro ao deletar:', error);
+            }
+        }
+
+        // ==================== CALENDÁRIO ====================
+        function prevMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            renderCalendar();
+            updateStats();
+        }
+
+        function nextMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            renderCalendar();
+            updateStats();
+        }
+
+        function goToToday() {
+            calendarDate = new Date();
+            renderCalendar();
+            updateStats();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dayAppointmentsTitle').textContent = 'Compromissos de Hoje';
+            const dayAppointments = appointments.filter(a => a.data === today);
+            const container = document.getElementById('dayAppointments');
+            
+            if (dayAppointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-4 text-sm">
+                        <i class="fas fa-calendar-times text-2xl mb-2 opacity-50"></i>
+                        <p>Nenhum compromisso hoje</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = dayAppointments.map(app => `
+                    <div class="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-sm text-gray-800">${app.assunto}</p>
+                                <p class="text-xs text-gray-500">${app.hora} ${app.local ? `• ${app.local}` : ''}</p>
+                            </div>
+                            <button onclick="openAppointmentModal('${app.id}')" class="text-blue-600 hover:text-blue-800 text-xs">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ==================== AÇÕES ====================
+        function syncCalendar() {
+            loadAppointments();
+            showToast('Calendário sincronizado!', 'success');
+        }
+
+        function exportAppointments() {
+            if (appointments.length === 0) {
+                showToast('Nenhum compromisso para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['Assunto', 'Tipo', 'Data', 'Hora', 'Duração', 'Local', 'Participantes', 'Observações'];
+            const rows = appointments.map(a => [
+                a.assunto,
+                a.tipo,
+                a.data,
+                a.hora,
+                a.duracao || 60,
+                a.local || '',
+                (a.participantes || []).join('; '),
+                a.observacoes || ''
+            ]);
+            
+            const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `agenda_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showToast('Agenda exportada com sucesso!', 'success');
+        }
+
+        // ==================== FILTROS ====================
+        function filterAppointments() {
+            loadAppointments();
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== UTILITÁRIOS ====================
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function updateHeaderDate() {
+            const now = new Date();
+            document.getElementById('todayDate').textContent = now.toLocaleDateString('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            document.getElementById('filterType').addEventListener('change', filterAppointments);
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('appointmentModal').classList.contains('active')) {
+                        closeAppointmentModal();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    openAppointmentModal();
+                }
+            });
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-expanded');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('hidden');
+        }
+
+        function toggleSubmenu(el) {
+            const submenu = el.nextElementSibling;
+            const arrow = el.querySelector('.fa-chevron-down');
+            if (submenu) {
+                submenu.classList.toggle('submenu-open');
+                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+            }
+        }
+
+        function loadSidebarPreference() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.remove('sidebar-expanded');
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-expanded');
+                }
+            }
+        }
+
+        // ==================== EXPORTAR FUNÇÕES ====================
+        window.openAppointmentModal = openAppointmentModal;
+        window.closeAppointmentModal = closeAppointmentModal;
+        window.saveAppointment = saveAppointment;
+        window.deleteAppointment = deleteAppointment;
+        window.addParticipantField = addParticipantField;
+        window.prevMonth = prevMonth;
+        window.nextMonth = nextMonth;
+        window.goToToday = goToToday;
+        window.syncCalendar = syncCalendar;
+        window.exportAppointments = exportAppointments;
+        window.filterAppointments = filterAppointments;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.toggleSubmenu = toggleSubmenu;
+        window.showToast = showToast;
+        window.loadAppointments = loadAppointments;
+    </script>
+</body>
+</html>

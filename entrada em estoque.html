@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrada em Estoque | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.warning { background: var(--warning-color); }
+        .toast.info { background: var(--info-color); }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        .toast .toast-close:hover { opacity: 1; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li>
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
+                        <i class="fas fa-pallet mr-3"></i>
+                        <span class="flex-1 font-medium">Estoque</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                    </div>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="entrada-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-arrow-down mr-2 text-sm"></i>Entrada</a></li>
+                        <li><a href="saida-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-arrow-up mr-2 text-sm"></i>Saída</a></li>
+                        <li><a href="inventario.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-clipboard-list mr-2 text-sm"></i>Inventário</a></li>
+                    </ul>
+                </li>
+                <li><a href="produtos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-box mr-3"></i><span class="font-medium">Produtos</span></a></li>
+                <li><a href="fornecedores.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-truck mr-3"></i><span class="font-medium">Fornecedores</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">ENTRADA EM ESTOQUE</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-arrow-down mr-1"></i> <span id="entryCount">0</span> Entradas
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Formulário -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Nova Entrada de Estoque</h2>
+                        
+                        <form id="stockEntryForm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Número da Entrada</label>
+                                    <input type="text" id="entryNumber" class="w-full border rounded-lg px-3 py-2 bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                                    <input type="datetime-local" id="entryDate" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
+                                    <select id="entryFornecedor" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Selecione o fornecedor</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nº Factura Fornecedor</label>
+                                    <input type="text" id="entryFactura" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <!-- Adicionar Produtos -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Produtos</label>
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    <select id="productSelect" class="flex-1 min-w-[150px] border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Selecione o produto</option>
+                                    </select>
+                                    <input type="number" id="productQuantity" placeholder="Qtd" class="w-20 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" id="productCost" placeholder="Custo" class="w-32 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01">
+                                    <button type="button" onclick="window.addProductToEntry()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Produtos -->
+                            <div class="border rounded-lg overflow-hidden">
+                                <table class="min-w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qtd</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Custo Unit.</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="entryProductsList">
+                                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                            <i class="fas fa-box-open text-2xl mb-2 opacity-50"></i>
+                                            <p>Nenhum produto adicionado</p>
+                                        </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Totais -->
+                            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">Subtotal:</span>
+                                    <span id="entrySubtotal">AOA 0</span>
+                                </div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">IVA (14%):</span>
+                                    <span id="entryTax">AOA 0</span>
+                                </div>
+                                <div class="flex justify-between items-center font-bold text-lg">
+                                    <span>Total da Entrada:</span>
+                                    <span id="entryTotal">AOA 0</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-end space-x-3">
+                                <button type="button" onclick="window.resetForm()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="button" onclick="window.registerStockEntry()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Registar Entrada
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Painel Lateral -->
+                <div class="space-y-6">
+                    <!-- Estatísticas -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Informações</h3>
+                        <div class="space-y-3" id="statisticsContainer">
+                            <div class="flex justify-between"><span class="text-gray-600">Entradas este mês:</span><span class="font-semibold" id="totalEntriesMonth">0</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Valor total:</span><span class="font-semibold" id="totalValueMonth">AOA 0</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Produtos recebidos:</span><span class="font-semibold" id="totalProductsReceived">0</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Fornecedores:</span><span class="font-semibold" id="totalSuppliers">0</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Entradas Recentes -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Entradas Recentes</h3>
+                        <div id="recentEntriesList" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4 text-sm">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertas de Stock -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Stock Baixo</h3>
+                        <div id="lowStockList" class="space-y-2">
+                            <div class="text-center text-gray-500 py-4 text-sm">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Carregando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            const ENTRIES_TABLE = 'stock_entries';
+            const PRODUCTS_TABLE = 'produtos';
+            const SUPPLIERS_TABLE = 'fornecedores';
+            const USERS_TABLE = 'usuarios';
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                products: [],
+                suppliers: [],
+                entries: [],
+                entryProducts: [],
+                isLoading: false,
+                refreshInterval: null
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                entryNumber: document.getElementById('entryNumber'),
+                entryDate: document.getElementById('entryDate'),
+                entryFornecedor: document.getElementById('entryFornecedor'),
+                entryFactura: document.getElementById('entryFactura'),
+                productSelect: document.getElementById('productSelect'),
+                productQuantity: document.getElementById('productQuantity'),
+                productCost: document.getElementById('productCost'),
+                entryProductsList: document.getElementById('entryProductsList'),
+                entrySubtotal: document.getElementById('entrySubtotal'),
+                entryTax: document.getElementById('entryTax'),
+                entryTotal: document.getElementById('entryTotal'),
+                totalEntriesMonth: document.getElementById('totalEntriesMonth'),
+                totalValueMonth: document.getElementById('totalValueMonth'),
+                totalProductsReceived: document.getElementById('totalProductsReceived'),
+                totalSuppliers: document.getElementById('totalSuppliers'),
+                recentEntriesList: document.getElementById('recentEntriesList'),
+                lowStockList: document.getElementById('lowStockList'),
+                entryCount: document.getElementById('entryCount'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    loadProducts(),
+                    loadSuppliers(),
+                    loadEntries(),
+                    loadStatistics(),
+                    loadLowStock()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    // Data padrão
+                    DOM.entryDate.value = new Date().toISOString().slice(0, 16);
+                    DOM.entryNumber.value = generateEntryNumber();
+                    
+                    // Atualizar a cada 60 segundos
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR DADOS ====================
+            async function loadProducts() {
+                try {
+                    const { data } = await state.supabase.from(PRODUCTS_TABLE).select('*').order('nome');
+                    state.products = data || [];
+                    updateProductSelect();
+                } catch (e) {
+                    state.products = [];
+                    updateProductSelect();
+                }
+            }
+
+            async function loadSuppliers() {
+                try {
+                    const { data } = await state.supabase.from(SUPPLIERS_TABLE).select('*').eq('status', 'ativo').order('nome');
+                    state.suppliers = data || [];
+                    updateSupplierSelect();
+                } catch (e) {
+                    state.suppliers = [];
+                    updateSupplierSelect();
+                }
+            }
+
+            async function loadEntries() {
+                state.isLoading = true;
+                try {
+                    const { data } = await state.supabase.from(ENTRIES_TABLE).select('*').order('created_at', { ascending: false }).limit(50);
+                    state.entries = data || [];
+                    renderRecentEntries();
+                    DOM.entryCount.textContent = state.entries.length;
+                } catch (e) {
+                    state.entries = [];
+                    renderRecentEntries();
+                } finally {
+                    state.isLoading = false;
+                }
+            }
+
+            async function loadStatistics() {
+                try {
+                    const startOfMonth = new Date();
+                    startOfMonth.setDate(1);
+                    startOfMonth.setHours(0, 0, 0, 0);
+
+                    const { data } = await state.supabase.from(ENTRIES_TABLE).select('*').gte('created_at', startOfMonth.toISOString());
+                    const entries = data || [];
+                    
+                    const totalEntries = entries.length;
+                    const totalValue = entries.reduce((sum, e) => sum + (e.total || 0), 0);
+                    const totalProducts = entries.reduce((sum, e) => {
+                        const items = e.items || [];
+                        return sum + items.reduce((s, i) => s + (i.quantity || 0), 0);
+                    }, 0);
+                    const uniqueSuppliers = new Set(entries.map(e => e.fornecedor_id));
+
+                    DOM.totalEntriesMonth.textContent = totalEntries;
+                    DOM.totalValueMonth.textContent = `AOA ${totalValue.toLocaleString('pt-BR')}`;
+                    DOM.totalProductsReceived.textContent = totalProducts;
+                    DOM.totalSuppliers.textContent = uniqueSuppliers.size;
+
+                } catch (e) {
+                    console.warn('Erro ao carregar estatísticas:', e);
+                }
+            }
+
+            async function loadLowStock() {
+                try {
+                    const { data } = await state.supabase.from(PRODUCTS_TABLE).select('*').filter('current_stock', 'lte', 'stock_minimo').order('current_stock', { ascending: true }).limit(10);
+                    renderLowStock(data || []);
+                } catch (e) {
+                    renderLowStock([]);
+                }
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function generateEntryNumber() {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+                return `ENT-${year}${month}${day}-${random}`;
+            }
+
+            function updateProductSelect() {
+                const select = DOM.productSelect;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Selecione o produto</option>';
+                state.products.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.nome}${p.codigo ? ` (${p.codigo})` : ''} - Stock: ${p.current_stock || 0}`;
+                    select.appendChild(opt);
+                });
+                if (currentValue) select.value = currentValue;
+            }
+
+            function updateSupplierSelect() {
+                const select = DOM.entryFornecedor;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Selecione o fornecedor</option>';
+                state.suppliers.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.nome;
+                    select.appendChild(opt);
+                });
+                if (currentValue) select.value = currentValue;
+            }
+
+            // ==================== ADICIONAR PRODUTOS ====================
+            function addProductToEntry() {
+                const productId = DOM.productSelect.value;
+                const quantity = parseInt(DOM.productQuantity.value);
+                const cost = parseFloat(DOM.productCost.value);
+
+                if (!productId || !quantity || !cost) {
+                    showToast('Preencha todos os campos do produto', 'error');
+                    return;
+                }
+                if (quantity <= 0 || cost <= 0) {
+                    showToast('Quantidade e custo devem ser maiores que zero', 'error');
+                    return;
+                }
+
+                const product = state.products.find(p => p.id == productId);
+                if (!product) { showToast('Produto não encontrado', 'error'); return; }
+
+                const existingIndex = state.entryProducts.findIndex(item => item.product_id == productId);
+                if (existingIndex !== -1) {
+                    state.entryProducts[existingIndex].quantity += quantity;
+                    state.entryProducts[existingIndex].cost = cost;
+                    state.entryProducts[existingIndex].total = state.entryProducts[existingIndex].quantity * cost;
+                } else {
+                    state.entryProducts.push({
+                        product_id: product.id,
+                        product_name: product.nome,
+                        product_code: product.codigo,
+                        quantity: quantity,
+                        cost: cost,
+                        total: quantity * cost
+                    });
+                }
+
+                renderEntryProducts();
+                updateEntryTotals();
+                
+                DOM.productQuantity.value = '';
+                DOM.productCost.value = '';
+                DOM.productSelect.value = '';
+                showToast('Produto adicionado com sucesso!', 'success');
+            }
+
+            function removeProductFromEntry(index) {
+                state.entryProducts.splice(index, 1);
+                renderEntryProducts();
+                updateEntryTotals();
+            }
+
+            function renderEntryProducts() {
+                const tbody = DOM.entryProductsList;
+                if (state.entryProducts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fas fa-box-open text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhum produto adicionado</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = state.entryProducts.map((item, index) => `
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="px-4 py-2">
+                            <div class="font-medium text-sm">${item.product_name}</div>
+                            <div class="text-xs text-gray-500">${item.product_code || ''}</div>
+                        </td>
+                        <td class="px-4 py-2 text-sm text-center">${item.quantity}</td>
+                        <td class="px-4 py-2 text-sm text-right">AOA ${item.cost.toLocaleString('pt-BR')}</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium">AOA ${item.total.toLocaleString('pt-BR')}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button onclick="window.removeProductFromEntry(${index})" class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            function updateEntryTotals() {
+                const subtotal = state.entryProducts.reduce((sum, item) => sum + item.total, 0);
+                const taxRate = 0.14;
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+
+                DOM.entrySubtotal.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
+                DOM.entryTax.textContent = `AOA ${tax.toLocaleString('pt-BR')}`;
+                DOM.entryTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+            }
+
+            // ==================== REGISTAR ENTRADA ====================
+            async function registerStockEntry() {
+                if (state.entryProducts.length === 0) {
+                    showToast('Adicione pelo menos um produto', 'error');
+                    return;
+                }
+
+                const fornecedorId = DOM.entryFornecedor.value;
+                const factura = DOM.entryFactura.value.trim();
+                const date = DOM.entryDate.value;
+
+                if (!fornecedorId) {
+                    showToast('Selecione um fornecedor', 'error');
+                    return;
+                }
+
+                const subtotal = state.entryProducts.reduce((sum, item) => sum + item.total, 0);
+                const taxRate = 0.14;
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+
+                const entryData = {
+                    numero: DOM.entryNumber.value,
+                    data: date || new Date().toISOString(),
+                    fornecedor_id: parseInt(fornecedorId),
+                    factura: factura || null,
+                    items: state.entryProducts.map(item => ({
+                        product_id: item.product_id,
+                        product_name: item.product_name,
+                        quantity: item.quantity,
+                        cost: item.cost,
+                        total: item.total
+                    })),
+                    subtotal: subtotal,
+                    tax: tax,
+                    total: total,
+                    user_id: state.user?.id || 1,
+                    created_at: new Date().toISOString()
+                };
+
+                try {
+                    await state.supabase.from(ENTRIES_TABLE).insert([entryData]);
+
+                    // Atualizar stock
+                    for (const item of state.entryProducts) {
+                        const product = state.products.find(p => p.id == item.product_id);
+                        if (product) {
+                            const newStock = (product.current_stock || 0) + item.quantity;
+                            await state.supabase.from(PRODUCTS_TABLE).update({ current_stock: newStock }).eq('id', item.product_id);
+                        }
+                    }
+
+                    showToast('Entrada de stock registada com sucesso!', 'success');
+                    resetForm();
+                    await Promise.all([loadProducts(), loadEntries(), loadStatistics(), loadLowStock()]);
+                    updateProductSelect();
+
+                } catch (error) {
+                    console.error('Erro ao registrar entrada:', error);
+                    showToast('Erro ao registrar entrada de stock', 'error');
+                }
+            }
+
+            // ==================== RENDER ====================
+            function renderRecentEntries() {
+                const container = DOM.recentEntriesList;
+                if (!state.entries || state.entries.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-sm">
+                            <i class="fas fa-history text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhuma entrada registrada</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = state.entries.slice(0, 5).map(entry => {
+                    const date = new Date(entry.created_at || entry.data);
+                    const items = entry.items || [];
+                    const totalItems = items.reduce((sum, i) => sum + (i.quantity || 0), 0);
+                    const supplier = state.suppliers.find(s => s.id == entry.fornecedor_id);
+
+                    return `
+                        <div class="border-l-4 border-green-500 pl-3 py-2 hover:bg-gray-50 rounded-r">
+                            <div class="font-medium text-sm">${entry.numero}</div>
+                            <div class="text-xs text-gray-500">${date.toLocaleDateString('pt-BR')} • ${supplier?.nome || 'Fornecedor'}</div>
+                            <div class="text-xs text-gray-500">${items.length} itens • ${totalItems} unidades</div>
+                            <div class="text-sm font-bold text-green-600">AOA ${(entry.total || 0).toLocaleString('pt-BR')}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function renderLowStock(productsList) {
+                const container = DOM.lowStockList;
+                if (!productsList || productsList.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-sm">
+                            <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
+                            <p>Todos os produtos com stock adequado</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = productsList.map(product => {
+                    const stock = product.current_stock || 0;
+                    const min = product.stock_minimo || 0;
+                    const isCritical = stock === 0;
+                    const bgColor = isCritical ? 'bg-red-50' : 'bg-yellow-50';
+                    const badgeColor = isCritical ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+
+                    return `
+                        <div class="flex justify-between items-center p-2 ${bgColor} rounded transition-colors">
+                            <div>
+                                <span class="text-sm font-medium">${product.nome}</span>
+                                <span class="text-xs text-gray-500 block">${product.codigo || ''}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs ${badgeColor} px-2 py-1 rounded font-medium">
+                                    ${stock} / ${min} min
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ==================== AÇÕES ====================
+            function resetForm() {
+                state.entryProducts = [];
+                renderEntryProducts();
+                updateEntryTotals();
+                
+                DOM.entryNumber.value = generateEntryNumber();
+                DOM.entryDate.value = new Date().toISOString().slice(0, 16);
+                DOM.entryFornecedor.value = '';
+                DOM.entryFactura.value = '';
+                DOM.productSelect.value = '';
+                DOM.productQuantity.value = '';
+                DOM.productCost.value = '';
+            }
+
+            function refreshData() {
+                Promise.all([loadEntries(), loadStatistics(), loadLowStock()]);
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        // Fechar modais se houver
+                    }
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.addProductToEntry = addProductToEntry;
+            window.removeProductFromEntry = removeProductFromEntry;
+            window.registerStockEntry = registerStockEntry;
+            window.resetForm = resetForm;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+            window.refreshData = refreshData;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>

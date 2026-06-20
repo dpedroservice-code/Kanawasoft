@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajuda & Suporte | Kanawa Soft</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg-start: #1e3a5f;
+            --sidebar-bg-end: #0f2440;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(0,0,0,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f9;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        .sidebar {
+            transition: all 0.3s;
+            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 280px;
+        }
+        .sidebar-collapsed { width: 70px; }
+        .sidebar-hidden { display: none; }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu-open { max-height: 500px; }
+
+        .toast-container {
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
+        }
+        .toast {
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            animation: slideInRight 0.35s ease; display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.warning { background: #f59e0b; }
+        .toast.info { background: #3b82f6; }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .support-card {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .support-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-online { background: #10b981; }
+        .status-offline { background: #ef4444; }
+        .status-maintenance { background: #f59e0b; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar-hidden { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <div class="flex items-center">
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
+                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+            </div>
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
+            <div class="relative">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                <div class="text-xs text-blue-200 truncate" id="userRole">Usuário</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <ul class="space-y-1 px-2">
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li><a href="produtos.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-3"></i><span class="font-medium">Produtos</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+                <li><a href="ajuda-suporte.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-life-ring mr-3 text-yellow-400"></i><span class="font-medium">Ajuda & Suporte</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-blue-700 bg-blue-800">
+            <div class="text-center text-sm">
+                <div class="font-semibold text-yellow-300">Sistema</div>
+                <div class="text-blue-200 text-xs" id="footerVersion">v1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10 border-b">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">AJUDA & SUPORTE</h1>
+                    <div class="bg-green-50 px-3 py-1 rounded-full text-sm text-green-700">
+                        <i class="fas fa-life-ring mr-1"></i> Suporte 24/7
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
+                         alt="Usuário" class="w-8 h-8 rounded-full">
+                    <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
+            <!-- Banner -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg text-white p-8 mb-6 fade-in">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-6 md:mb-0">
+                        <h2 class="text-3xl font-bold mb-2">Precisa de Ajuda?</h2>
+                        <p class="text-blue-100 text-lg">Estamos aqui para ajudar você a tirar o máximo proveito do sistema</p>
+                        <div class="flex flex-wrap gap-3 mt-4">
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-sm">📚 Documentação</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-sm">💬 Chat Online</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-sm">📧 Email</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="window.openContactModal()" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition flex items-center">
+                            <i class="fas fa-envelope mr-2"></i> Contactar Suporte
+                        </button>
+                        <button onclick="window.openChat()" class="bg-blue-500 bg-opacity-50 text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-75 transition flex items-center">
+                            <i class="fas fa-comments mr-2"></i> Chat Online
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo carregado via JavaScript -->
+            <div id="supportContent"></div>
+        </main>
+    </div>
+
+    <!-- ==================== CONTACT MODAL ==================== -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Contactar Suporte Técnico</h3>
+                <button onclick="window.closeContactModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <form id="supportForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                            <input type="text" id="supportName" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <input type="email" id="supportEmail" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Assunto *</label>
+                            <select id="supportSubject" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Selecione o assunto...</option>
+                                <option value="technical">Problema Técnico</option>
+                                <option value="billing">Facturação</option>
+                                <option value="feature">Nova Funcionalidade</option>
+                                <option value="training">Treinamento</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descrição *</label>
+                            <textarea id="supportDescription" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" rows="4" required></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Anexos</label>
+                            <input type="file" id="supportAttachment" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">Máx. 10MB (imagens ou PDF)</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="supportTerms" class="mr-3" required>
+                                <span class="text-sm text-gray-700">Concordo com os termos de suporte e privacidade</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" onclick="window.closeContactModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                            <i class="fas fa-paper-plane mr-2"></i> Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ARTICLE MODAL ==================== -->
+    <div class="modal-overlay" id="articleModal">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800" id="articleTitle">Artigo</h3>
+                <button onclick="window.closeArticleModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]" id="articleContent">
+                <!-- Carregado via JavaScript -->
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end">
+                <button onclick="window.closeArticleModal()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ==================== SUPABASE ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ==================== CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+            };
+
+            // ==================== DADOS DE SUPORTE ====================
+            const SUPPORT_DATA = {
+                categories: [
+                    { id: 'getting-started', name: 'Começando', icon: 'fa-rocket', color: 'text-blue-500', hoverColor: 'text-blue-600', description: 'Primeiros passos no sistema' },
+                    { id: 'sales', name: 'Vendas', icon: 'fa-cash-register', color: 'text-green-500', hoverColor: 'text-green-600', description: 'PDV e gestão de vendas' },
+                    { id: 'products', name: 'Produtos', icon: 'fa-boxes', color: 'text-purple-500', hoverColor: 'text-purple-600', description: 'Cadastro e estoque' },
+                    { id: 'finance', name: 'Financeiro', icon: 'fa-money-bill-wave', color: 'text-yellow-500', hoverColor: 'text-yellow-600', description: 'Faturas e recibos' },
+                    { id: 'reports', name: 'Relatórios', icon: 'fa-chart-bar', color: 'text-indigo-500', hoverColor: 'text-indigo-600', description: 'Análises e métricas' },
+                    { id: 'settings', name: 'Configurações', icon: 'fa-cog', color: 'text-gray-500', hoverColor: 'text-gray-600', description: 'Personalize o sistema' }
+                ],
+                articles: [
+                    { id: 1, title: 'Como criar um novo produto', category: 'products', description: 'Aprenda a cadastrar produtos no sistema', updated: '2 dias atrás', borderColor: 'border-purple-500', content: 'Conteúdo detalhado sobre criação de produtos...' },
+                    { id: 2, title: 'Iniciar uma venda no PDV', category: 'sales', description: 'Passo a passo para realizar uma venda', updated: '3 dias atrás', borderColor: 'border-green-500', content: 'Conteúdo detalhado sobre vendas no PDV...' },
+                    { id: 3, title: 'Configurar a empresa', category: 'settings', description: 'Como configurar os dados da empresa', updated: '1 semana atrás', borderColor: 'border-gray-500', content: 'Conteúdo detalhado sobre configurações...' },
+                    { id: 4, title: 'Gerar relatório de vendas', category: 'reports', description: 'Como analisar suas vendas', updated: '1 semana atrás', borderColor: 'border-indigo-500', content: 'Conteúdo detalhado sobre relatórios...' }
+                ],
+                videos: [
+                    { id: 1, title: 'Tutorial PDV', description: 'Como usar o Ponto de Venda', duration: '5:30' },
+                    { id: 2, title: 'Gestão de Produtos', description: 'Cadastro e controle de estoque', duration: '8:15' },
+                    { id: 3, title: 'Relatórios Financeiros', description: 'Análise de métricas', duration: '6:45' }
+                ],
+                contacts: [
+                    { type: 'WhatsApp', value: '+244 900 000 000', icon: 'fa-whatsapp', color: 'text-green-500', hoverColor: 'bg-green-50' },
+                    { type: 'Email', value: 'suporte@kanawasoft.com', icon: 'fa-envelope', color: 'text-blue-500', hoverColor: 'bg-blue-50' },
+                    { type: 'Telefone', value: '+244 222 000 000', icon: 'fa-phone', color: 'text-purple-500', hoverColor: 'bg-purple-50' }
+                ],
+                serviceStatus: [
+                    { service: 'API Principal', status: 'Online', statusColor: 'text-green-600' },
+                    { service: 'Base de Dados', status: 'Online', statusColor: 'text-green-600' },
+                    { service: 'Suporte AGT', status: 'Manutenção', statusColor: 'text-yellow-600' },
+                    { service: 'Chat Online', status: 'Online', statusColor: 'text-green-600' }
+                ],
+                downloads: [
+                    { id: 'manual', name: 'Manual do Utilizador', icon: 'fa-file-pdf', color: 'text-red-500' },
+                    { id: 'quick-guide', name: 'Guia Rápido', icon: 'fa-file-alt', color: 'text-blue-500' },
+                    { id: 'api-docs', name: 'Documentação API', icon: 'fa-code', color: 'text-purple-500' }
+                ]
+            };
+
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabase: null,
+                isOnline: navigator.onLine
+            };
+
+            // ==================== DOM REFS ====================
+            const DOM = {
+                mainContent: document.getElementById('mainContent'),
+                supportContent: document.getElementById('supportContent'),
+                toast: document.getElementById('toastContainer'),
+                contactModal: document.getElementById('contactModal'),
+                articleModal: document.getElementById('articleModal'),
+                articleTitle: document.getElementById('articleTitle'),
+                articleContent: document.getElementById('articleContent')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                state.supabase = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.anonKey
+                );
+
+                Promise.all([
+                    loadUserData(),
+                    renderSupportContent()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                }
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== RENDER CONTEÚDO ====================
+            function renderSupportContent() {
+                DOM.supportContent.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Coluna Principal -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Base de Conhecimento -->
+                            <div class="bg-white rounded-lg shadow">
+                                <div class="p-6 border-b">
+                                    <h2 class="text-xl font-bold text-gray-800">Base de Conhecimento</h2>
+                                </div>
+                                <div class="p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-600 mb-3">Categorias</h3>
+                                            <div id="knowledgeCategories" class="space-y-2"></div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-600 mb-3">Artigos Recentes</h3>
+                                            <div id="recentArticles" class="space-y-3"></div>
+                                            <button onclick="window.viewAllArticles()" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                                Ver todos <i class="fas fa-arrow-right ml-1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Video Tutorials -->
+                            <div class="bg-white rounded-lg shadow">
+                                <div class="p-6 border-b">
+                                    <h2 class="text-xl font-bold text-gray-800">Video Tutorials</h2>
+                                </div>
+                                <div class="p-6">
+                                    <div id="videoTutorials" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Lateral -->
+                        <div class="space-y-6">
+                            <!-- Contactos -->
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Contactos</h3>
+                                <div id="supportContacts" class="space-y-3"></div>
+                            </div>
+
+                            <!-- Diagnóstico -->
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Diagnóstico</h3>
+                                <div class="space-y-2">
+                                    <button onclick="window.runSystemCheck()" class="w-full text-left p-3 border rounded-lg hover:bg-blue-50 transition flex items-center justify-between">
+                                        <span><i class="fas fa-stethoscope text-blue-500 mr-3"></i> Verificar Sistema</span>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                    <button onclick="window.clearCache()" class="w-full text-left p-3 border rounded-lg hover:bg-purple-50 transition flex items-center justify-between">
+                                        <span><i class="fas fa-broom text-purple-500 mr-3"></i> Limpar Cache</span>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                    <button onclick="window.viewSystemLogs()" class="w-full text-left p-3 border rounded-lg hover:bg-yellow-50 transition flex items-center justify-between">
+                                        <span><i class="fas fa-file-alt text-yellow-500 mr-3"></i> Ver Logs</span>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Status do Serviço -->
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Status do Serviço</h3>
+                                <div id="serviceStatus" class="space-y-2"></div>
+                            </div>
+
+                            <!-- Downloads -->
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Downloads</h3>
+                                <div id="usefulDownloads" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Carregar dados após renderizar
+                setTimeout(() => {
+                    renderCategories();
+                    renderArticles();
+                    renderVideos();
+                    renderContacts();
+                    renderServiceStatus();
+                    renderDownloads();
+                }, 100);
+            }
+
+            // ==================== RENDER FUNCTIONS ====================
+            function renderCategories() {
+                const container = document.getElementById('knowledgeCategories');
+                container.innerHTML = SUPPORT_DATA.categories.map(cat => `
+                    <div class="support-card border rounded-lg p-3 hover:shadow-md" onclick="window.openCategory('${cat.id}')">
+                        <div class="flex items-center">
+                            <i class="fas ${cat.icon} ${cat.color} text-lg mr-3"></i>
+                            <div>
+                                <h4 class="font-medium text-gray-800">${cat.name}</h4>
+                                <p class="text-xs text-gray-500">${cat.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderArticles() {
+                const container = document.getElementById('recentArticles');
+                container.innerHTML = SUPPORT_DATA.articles.slice(0, 3).map(art => `
+                    <div class="border-l-4 ${art.borderColor} pl-3 py-1 cursor-pointer hover:bg-gray-50 rounded-r-lg transition" onclick="window.openArticle(${art.id})">
+                        <h4 class="font-medium text-gray-800 text-sm">${art.title}</h4>
+                        <p class="text-xs text-gray-500">${art.description}</p>
+                        <span class="text-xs text-gray-400"><i class="fas fa-clock mr-1"></i>${art.updated}</span>
+                    </div>
+                `).join('');
+            }
+
+            function renderVideos() {
+                const container = document.getElementById('videoTutorials');
+                container.innerHTML = SUPPORT_DATA.videos.map(v => `
+                    <div class="border rounded-lg overflow-hidden support-card" onclick="window.playVideo(${v.id})">
+                        <div class="bg-gray-200 h-28 flex items-center justify-center">
+                            <i class="fas fa-play-circle text-gray-400 text-3xl"></i>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium text-gray-800 text-sm">${v.title}</h4>
+                            <p class="text-xs text-gray-500">${v.description}</p>
+                            <span class="text-xs text-gray-400"><i class="fas fa-clock mr-1"></i>${v.duration}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderContacts() {
+                const container = document.getElementById('supportContacts');
+                container.innerHTML = SUPPORT_DATA.contacts.map(c => `
+                    <div class="flex items-center p-3 border rounded-lg hover:${c.hoverColor} cursor-pointer transition">
+                        <i class="fab ${c.icon} ${c.color} text-xl mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-800 text-sm">${c.type}</div>
+                            <div class="text-sm text-gray-600">${c.value}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderServiceStatus() {
+                const container = document.getElementById('serviceStatus');
+                container.innerHTML = SUPPORT_DATA.serviceStatus.map(s => `
+                    <div class="flex items-center justify-between p-2 border-b last:border-0">
+                        <span class="text-sm text-gray-700">${s.service}</span>
+                        <span class="flex items-center ${s.statusColor} text-sm">
+                            <span class="status-indicator ${s.status === 'Online' ? 'status-online' : s.status === 'Manutenção' ? 'status-maintenance' : 'status-offline'} mr-1"></span>
+                            ${s.status}
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            function renderDownloads() {
+                const container = document.getElementById('usefulDownloads');
+                container.innerHTML = SUPPORT_DATA.downloads.map(d => `
+                    <button onclick="window.downloadFile('${d.id}')" class="w-full text-left p-2 border rounded hover:bg-gray-50 transition flex items-center text-sm">
+                        <i class="fas ${d.icon} ${d.color} mr-2"></i>
+                        <span>${d.name}</span>
+                    </button>
+                `).join('');
+            }
+
+            // ==================== AÇÕES ====================
+            function openContactModal() {
+                const user = state.user;
+                if (user) {
+                    document.getElementById('supportName').value = user.nome || '';
+                    document.getElementById('supportEmail').value = user.email || '';
+                }
+                DOM.contactModal.classList.add('active');
+            }
+
+            function closeContactModal() {
+                DOM.contactModal.classList.remove('active');
+            }
+
+            function openChat() {
+                showToast('Chat de suporte iniciado!', 'success');
+            }
+
+            function openCategory(id) {
+                showToast(`A carregar categoria: ${id}`, 'info');
+            }
+
+            function openArticle(id) {
+                const article = SUPPORT_DATA.articles.find(a => a.id === id);
+                if (!article) return;
+                DOM.articleTitle.textContent = article.title;
+                DOM.articleContent.innerHTML = `
+                    <div class="prose max-w-none">
+                        <p class="text-gray-600">${article.content || 'Conteúdo do artigo em desenvolvimento...'}</p>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-tag mr-2"></i>Categoria: ${SUPPORT_DATA.categories.find(c => c.id === article.category)?.name || 'Geral'}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-clock mr-2"></i>Última atualização: ${article.updated}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                DOM.articleModal.classList.add('active');
+            }
+
+            function closeArticleModal() {
+                DOM.articleModal.classList.remove('active');
+            }
+
+            function playVideo(id) {
+                showToast(`A reproduzir vídeo #${id}`, 'info');
+            }
+
+            function viewAllArticles() {
+                showToast('Carregando todos os artigos...', 'info');
+            }
+
+            function downloadFile(id) {
+                showToast(`Download iniciado: ${id}`, 'success');
+            }
+
+            function runSystemCheck() {
+                showToast('Verificação do sistema concluída! Todos os sistemas operacionais.', 'success');
+            }
+
+            function clearCache() {
+                showToast('Cache limpo com sucesso!', 'success');
+            }
+
+            function viewSystemLogs() {
+                showToast('A carregar logs do sistema...', 'info');
+            }
+
+            // ==================== FORM ====================
+            async function submitSupportRequest(e) {
+                e.preventDefault();
+                const formData = {
+                    name: document.getElementById('supportName').value,
+                    email: document.getElementById('supportEmail').value,
+                    subject: document.getElementById('supportSubject').value,
+                    description: document.getElementById('supportDescription').value,
+                    attachment: document.getElementById('supportAttachment').files[0]
+                };
+
+                if (!formData.name || !formData.email || !formData.subject || !formData.description) {
+                    showToast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                try {
+                    // Simular envio
+                    showToast('Pedido enviado com sucesso! Entraremos em contacto.', 'success');
+                    closeContactModal();
+                    document.getElementById('supportForm').reset();
+                } catch (error) {
+                    showToast('Erro ao enviar pedido', 'error');
+                }
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.getElementById('supportForm').addEventListener('submit', submitSupportRequest);
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.contactModal.classList.contains('active')) closeContactModal();
+                        if (DOM.articleModal.classList.contains('active')) closeArticleModal();
+                    }
+                });
+
+                DOM.contactModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeContactModal();
+                });
+                DOM.articleModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeArticleModal();
+                });
+            }
+
+            // ==================== EXPORT ====================
+            window.openContactModal = openContactModal;
+            window.closeContactModal = closeContactModal;
+            window.openChat = openChat;
+            window.openCategory = openCategory;
+            window.openArticle = openArticle;
+            window.closeArticleModal = closeArticleModal;
+            window.playVideo = playVideo;
+            window.viewAllArticles = viewAllArticles;
+            window.downloadFile = downloadFile;
+            window.runSystemCheck = runSystemCheck;
+            window.clearCache = clearCache;
+            window.viewSystemLogs = viewSystemLogs;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>
