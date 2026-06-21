@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sidebar-bg-start: #1e3a5f;
@@ -344,24 +345,33 @@
     <!-- ==================== TOAST ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        let supabase = null;
+        let supabaseReady = false;
+
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado para Alterar Senha');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
+
         (function() {
             'use strict';
-
-            // ==================== CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
-            };
 
             // ==================== ESTADO ====================
             const state = {
                 initialized: false,
                 user: null,
-                supabase: null,
                 isSubmitting: false
             };
 
@@ -390,11 +400,6 @@
                 if (state.initialized) return;
                 state.initialized = true;
 
-                state.supabase = window.supabase.createClient(
-                    SUPABASE_CONFIG.url,
-                    SUPABASE_CONFIG.anonKey
-                );
-
                 Promise.all([
                     loadUserData()
                 ]).then(() => {
@@ -406,11 +411,17 @@
             // ==================== CARREGAR USUÁRIO ====================
             async function loadUserData() {
                 try {
-                    const { data } = await state.supabase.from('usuarios').select('*').limit(1);
+                    if (!supabaseReady) {
+                        state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                        updateUserUI();
+                        return;
+                    }
+                    const { data } = await supabase.from('usuarios').select('*').limit(1);
                     state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
                     updateUserUI();
                 } catch (e) {
                     state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
             }
 
@@ -441,7 +452,6 @@
                 const checks = validatePassword(password);
                 const strength = Object.values(checks).filter(Boolean).length;
                 
-                // Atualizar requisitos
                 Object.keys(checks).forEach(key => {
                     const el = DOM.requirements[key];
                     if (el) {
@@ -456,7 +466,6 @@
                     }
                 });
 
-                // Barra de força
                 const percentage = (strength / 5) * 100;
                 DOM.strengthBar.style.width = percentage + '%';
                 
@@ -542,7 +551,6 @@
                     return;
                 }
 
-                // Verificar força da senha
                 const strength = checkPasswordStrength(newPass);
                 if (strength < 3) {
                     showToast('A senha é muito fraca. Use uma combinação mais forte.', 'warning');
@@ -554,16 +562,32 @@
                 DOM.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Alterando...';
 
                 try {
-                    // Simular alteração de senha
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    // Aqui viria a chamada real para a API
-                    // await state.supabase.auth.updateUser({ password: newPass });
-                    
+                    if (supabaseReady) {
+                        // Verificar senha atual
+                        const { error: signInError } = await supabase.auth.signInWithPassword({
+                            email: state.user.email,
+                            password: currentPass
+                        });
+
+                        if (signInError) {
+                            showToast('Senha atual incorreta!', 'error');
+                            state.isSubmitting = false;
+                            DOM.submitBtn.disabled = false;
+                            DOM.submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Salvar Alterações';
+                            return;
+                        }
+
+                        // Atualizar senha
+                        const { error: updateError } = await supabase.auth.updateUser({
+                            password: newPass
+                        });
+
+                        if (updateError) throw updateError;
+                    }
+
                     showToast('Senha alterada com sucesso!', 'success');
                     DOM.confirmModal.classList.add('active');
                     
-                    // Limpar formulário
                     DOM.currentPassword.value = '';
                     DOM.newPassword.value = '';
                     DOM.confirmPassword.value = '';
