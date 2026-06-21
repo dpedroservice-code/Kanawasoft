@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sidebar-bg-start: #1e3a5f;
@@ -302,19 +303,23 @@
     <!-- ==================== TOAST ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado para Clientes');
+
         (function() {
             'use strict';
 
             // ==================== CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
-            };
-
             const CLIENTS_TABLE = 'clientes';
             const USERS_TABLE = 'usuarios';
             const SALES_TABLE = 'vendas';
@@ -323,7 +328,7 @@
             const state = {
                 initialized: false,
                 user: null,
-                supabase: null,
+                supabaseReady: true,
                 clients: [],
                 editingId: null,
                 isLoading: false,
@@ -356,10 +361,8 @@
                 if (state.initialized) return;
                 state.initialized = true;
 
-                state.supabase = window.supabase.createClient(
-                    SUPABASE_CONFIG.url,
-                    SUPABASE_CONFIG.anonKey
-                );
+                // Usar a variável global supabase
+                state.supabase = supabase;
 
                 Promise.all([
                     loadUserData(),
@@ -368,7 +371,6 @@
                     setupEventListeners();
                     loadSidebarPreference();
                     
-                    // Atualizar a cada 60 segundos
                     state.refreshInterval = setInterval(refreshData, 60000);
                 });
             }
@@ -381,6 +383,7 @@
                     updateUserUI();
                 } catch (e) {
                     state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
             }
 
@@ -650,7 +653,7 @@
                     const { data: sales } = await state.supabase
                         .from(SALES_TABLE)
                         .select('*')
-                        .eq('customer_id', id)
+                        .eq('cliente_id', id)
                         .order('created_at', { ascending: false });
 
                     const compras = sales || [];
