@@ -10,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --header-height: 64px;
@@ -49,6 +50,7 @@
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         .top-header {
             height: var(--header-height);
@@ -205,8 +207,8 @@
             text-decoration: none; font-size: 0.85rem; border: none;
             background: transparent; width: 100%; text-align: left;
         }
-        .mobile-sidebar .sidebar-nav .menu-item:hover,
-        .mobile-sidebar .sidebar-nav .menu-item.active { background: rgba(255,255,255,0.08); color: #fff; }
+        .mobile-sidebar .sidebar-nav .menu-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .mobile-sidebar .sidebar-nav .menu-item.active { background: rgba(255,255,255,0.12); color: #fff; }
         .mobile-sidebar .sidebar-nav .menu-item i { width: 22px; text-align: center; font-size: 1rem; flex-shrink: 0; }
         .mobile-sidebar .sidebar-nav .menu-item .menu-arrow { margin-left: auto; font-size: 0.6rem; transition: var(--transition); opacity: 0.5; }
         .mobile-sidebar .sidebar-nav .menu-item .menu-arrow.open { transform: rotate(90deg); }
@@ -219,7 +221,8 @@
         .mobile-sidebar .sidebar-nav .submenu .menu-item { padding: 8px 14px 8px 38px; font-size: 0.78rem; border-radius: 6px; }
         .mobile-sidebar .sidebar-nav .submenu .menu-item i { font-size: 0.85rem; width: 20px; }
         .mobile-sidebar .sidebar-footer {
-            padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;
+            padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+            text-align: center; flex-shrink: 0;
         }
         .mobile-sidebar .sidebar-footer .status { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.7rem; opacity: 0.6; }
         .mobile-sidebar .sidebar-footer .status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
@@ -353,6 +356,29 @@
             display: none;
         }
         .floating-calculator.open { display: block; }
+        .calc-header {
+            padding: 10px 14px; background: #f8fafc;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .calc-header h4 { font-size: 0.8rem; font-weight: 600; color: #1e293b; }
+        .calc-header button { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem; }
+        .calc-display {
+            padding: 14px 16px; background: #f8fafc; text-align: right;
+            font-size: 1.6rem; font-weight: 700; color: #1e293b;
+            min-height: 60px; border-bottom: 1px solid #e2e8f0;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; padding: 1px; }
+        .calc-btn { padding: 14px; border: none; font-size: 0.9rem; cursor: pointer; font-weight: 500; background: #fff; color: #1e293b; }
+        .calc-btn:hover { background: #f1f5f9; }
+        .calc-btn.operator { background: #dbeafe; color: #2563eb; }
+        .calc-btn.operator:hover { background: #bfdbfe; }
+        .calc-btn.clear { background: #fee2e2; color: #dc2626; }
+        .calc-btn.clear:hover { background: #fecaca; }
+        .calc-btn.equals { background: #2563eb; color: #fff; }
+        .calc-btn.equals:hover { background: #1d4ed8; }
+        .calc-btn.span-2 { grid-column: span 2; }
 
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -388,6 +414,7 @@
             border-radius: 8px; font-size: 0.85rem; transition: var(--transition);
             background: var(--card-bg); color: var(--text-primary);
         }
+        .form-control:focus { outline: none; border-color: var(--btn-primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
         .chart-container {
             background: var(--card-bg); border-radius: var(--radius);
@@ -420,7 +447,6 @@
 
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
         .flex { display: flex; }
         .flex-wrap { flex-wrap: wrap; }
         .items-center { align-items: center; }
@@ -457,6 +483,24 @@
         .space-y-2 > * + * { margin-top: 8px; }
         .opacity-75 { opacity: 0.75; }
 
+        .btn {
+            padding: 8px 20px; border-radius: 8px; border: none;
+            font-weight: 500; font-size: 0.82rem; cursor: pointer;
+            transition: var(--transition); display: inline-flex;
+            align-items: center; gap: 8px;
+        }
+        .btn-primary { background: var(--btn-primary); color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { background: #059669; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--page-bg); }
+        .btn-sm { padding: 4px 12px; font-size: 0.7rem; }
+
         body.dark-mode {
             --page-bg: #0f172a;
             --card-bg: #1e293b;
@@ -472,6 +516,14 @@
         body.dark-mode .dropdown .dropdown-item:hover { background: #334155; }
         body.dark-mode .dropdown .dropdown-item .item-title { color: #e2e8f0; }
         body.dark-mode .dropdown .dropdown-footer { border-color: #334155; }
+        body.dark-mode .calc-header { background: #1e293b; border-color: #334155; }
+        body.dark-mode .calc-display { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+        body.dark-mode .calc-buttons { background: #334155; }
+        body.dark-mode .calc-btn { background: #1e293b; color: #e2e8f0; }
+        body.dark-mode .calc-btn:hover { background: #334155; }
+        body.dark-mode .calc-btn.operator { background: #1e3a5f; color: #60a5fa; }
+        body.dark-mode .calc-btn.clear { background: #7f1d1d; color: #fca5a5; }
+        body.dark-mode .calc-btn.equals { background: #1d4ed8; }
 
         @media (max-width: 768px) {
             .sidebar { display: none; }
@@ -509,18 +561,18 @@
 </head>
 <body>
 
-    <!-- ==================== LOADING OVERLAY ==================== -->
+    <!-- LOADING OVERLAY -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
 
-    <!-- ==================== TOAST CONTAINER ==================== -->
+    <!-- TOAST CONTAINER -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== OVERLAY MOBILE ==================== -->
+    <!-- MOBILE OVERLAY -->
     <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
-    <!-- ==================== MOBILE SIDEBAR ==================== -->
+    <!-- MOBILE SIDEBAR -->
     <div class="mobile-sidebar" id="mobileSidebar">
         <div class="sidebar-header">
             <a href="#" class="logo" onclick="showDashboard()">
@@ -543,7 +595,7 @@
         </div>
     </div>
 
-    <!-- ==================== TOP HEADER ==================== -->
+    <!-- TOP HEADER -->
     <header class="top-header">
         <div style="display:flex;align-items:center;gap:12px;">
             <button class="mobile-menu-btn" onclick="toggleMobileSidebar()"><i class="fas fa-bars"></i></button>
@@ -592,9 +644,9 @@
         </div>
     </header>
 
-    <!-- ==================== LAYOUT PRINCIPAL ==================== -->
+    <!-- MAIN LAYOUT -->
     <div class="main-wrapper">
-        <!-- ==================== SIDEBAR FIXA ==================== -->
+        <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebarDesktop">
             <div class="sidebar-user">
                 <div class="avatar" id="sidebarAvatar">A</div>
@@ -610,7 +662,7 @@
             </div>
         </aside>
 
-        <!-- ==================== MAIN CONTENT ==================== -->
+        <!-- MAIN CONTENT -->
         <div class="main-content">
             <main class="page-content" id="pageContent">
                 <div id="dashboardContent">
@@ -621,7 +673,7 @@
                                 <h2 class="text-xl font-bold" id="welcomeMessage">Bem-vindo ao Sistema</h2>
                                 <p class="opacity-75 text-sm mt-1" id="companyDescription">Sistema de gestão empresarial</p>
                                 <div class="flex flex-wrap gap-2 mt-3">
-                                    <span class="px-3 py-1 bg-white/10 rounded-full text-xs">✅ Online/Offline</span>
+                                    <span class="px-3 py-1 bg-white/10 rounded-full text-xs">✅ Online</span>
                                     <span class="px-3 py-1 bg-white/10 rounded-full text-xs">📊 Relatórios</span>
                                     <span class="px-3 py-1 bg-white/10 rounded-full text-xs">👥 Equipe</span>
                                     <span class="px-3 py-1 bg-white/10 rounded-full text-xs">🔔 Notificações</span>
@@ -654,7 +706,7 @@
                         </div>
                     </div>
 
-                    <!-- Gráficos -->
+                    <!-- Charts -->
                     <div class="chart-grid mb-5">
                         <div class="chart-container">
                             <h3><i class="fas fa-chart-bar text-blue-500 mr-2"></i>Vendas por Mês</h3>
@@ -698,37 +750,37 @@
         </div>
     </div>
 
-    <!-- ==================== FLOATING CALCULATOR ==================== -->
+    <!-- FLOATING CALCULATOR -->
     <div class="floating-calculator" id="calculator">
-        <div class="calc-header" style="padding:10px 14px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
-            <h4 style="font-size:0.8rem;font-weight:600;color:#1e293b;">Calculadora</h4>
-            <button onclick="toggleCalculator()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;"><i class="fas fa-times"></i></button>
+        <div class="calc-header">
+            <h4>Calculadora</h4>
+            <button onclick="toggleCalculator()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="calc-display" style="padding:14px 16px;background:#f8fafc;text-align:right;font-size:1.6rem;font-weight:700;color:#1e293b;min-height:60px;border-bottom:1px solid #e2e8f0;" id="calcDisplay">0</div>
-        <div class="calc-buttons" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e2e8f0;padding:1px;">
-            <button class="calc-btn clear" style="background:#fee2e2;color:#dc2626;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('C')">C</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('±')">±</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('%')">%</button>
-            <button class="calc-btn operator" style="background:#dbeafe;color:#2563eb;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('÷')">÷</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('7')">7</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('8')">8</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('9')">9</button>
-            <button class="calc-btn operator" style="background:#dbeafe;color:#2563eb;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('×')">×</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('4')">4</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('5')">5</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('6')">6</button>
-            <button class="calc-btn operator" style="background:#dbeafe;color:#2563eb;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('-')">−</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('1')">1</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('2')">2</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('3')">3</button>
-            <button class="calc-btn operator" style="background:#dbeafe;color:#2563eb;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('+')">+</button>
-            <button class="calc-btn span-2" style="grid-column:span 2;background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('0')">0</button>
-            <button class="calc-btn" style="background:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;color:#1e293b;" onclick="calcPress('.')">.</button>
-            <button class="calc-btn equals" style="background:#2563eb;color:#fff;padding:14px;border:none;font-size:0.9rem;cursor:pointer;font-weight:500;" onclick="calcPress('=')">=</button>
+        <div class="calc-display" id="calcDisplay">0</div>
+        <div class="calc-buttons">
+            <button class="calc-btn clear" onclick="calcPress('C')">C</button>
+            <button class="calc-btn" onclick="calcPress('±')">±</button>
+            <button class="calc-btn" onclick="calcPress('%')">%</button>
+            <button class="calc-btn operator" onclick="calcPress('÷')">÷</button>
+            <button class="calc-btn" onclick="calcPress('7')">7</button>
+            <button class="calc-btn" onclick="calcPress('8')">8</button>
+            <button class="calc-btn" onclick="calcPress('9')">9</button>
+            <button class="calc-btn operator" onclick="calcPress('×')">×</button>
+            <button class="calc-btn" onclick="calcPress('4')">4</button>
+            <button class="calc-btn" onclick="calcPress('5')">5</button>
+            <button class="calc-btn" onclick="calcPress('6')">6</button>
+            <button class="calc-btn operator" onclick="calcPress('-')">−</button>
+            <button class="calc-btn" onclick="calcPress('1')">1</button>
+            <button class="calc-btn" onclick="calcPress('2')">2</button>
+            <button class="calc-btn" onclick="calcPress('3')">3</button>
+            <button class="calc-btn operator" onclick="calcPress('+')">+</button>
+            <button class="calc-btn span-2" onclick="calcPress('0')">0</button>
+            <button class="calc-btn" onclick="calcPress('.')">.</button>
+            <button class="calc-btn equals" onclick="calcPress('=')">=</button>
         </div>
     </div>
 
-    <!-- ==================== PROFILE MODAL ==================== -->
+    <!-- PROFILE MODAL -->
     <div class="modal-overlay" id="profileModal">
         <div class="modal">
             <div class="modal-header">
@@ -758,38 +810,36 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeProfileModal()" style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:7px 18px;border-radius:8px;font-weight:500;font-size:0.82rem;cursor:pointer;">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveProfile()" style="background:var(--btn-primary);color:#fff;padding:7px 18px;border-radius:8px;font-weight:500;font-size:0.82rem;cursor:pointer;border:none;">Guardar</button>
+                <button class="btn btn-outline" onclick="closeProfileModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Guardar</button>
             </div>
         </div>
     </div>
 
-    <!-- ===================== SUPABASE SDK ===================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
-    </script>
-
+    <!-- ==================== SUPABASE CONFIG ==================== -->
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://emkggurctrlcgukvhwdg.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        let supabase = null;
+        let supabaseReady = false;
+
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
+
         // ==================== INÍCIO DO SCRIPT PRINCIPAL ====================
         (function() {
             'use strict';
-
-            // ==================== SUPABASE CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
-                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
-            };
-
-            // ==================== INICIALIZAR SUPABASE ====================
-            let supabase = null;
-            let supabaseReady = false;
-
-            try {
-                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-                supabaseReady = true;
-                console.log('✅ Supabase inicializado com sucesso!');
-            } catch (error) {
-                console.error('❌ Erro ao inicializar Supabase:', error);
-            }
 
             // ==================== CONFIGURAÇÕES ====================
             const SYSTEM_CONFIG = {
@@ -797,15 +847,15 @@
                 systemVersion: 'v1.0',
                 logoUrl: 'https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg',
                 modulePaths: {
-                    'dashboard': 'index.html',
+                    'dashboard': 'dashboard.html',
                     'pdv': 'PDV.html',
                     'produtos': 'produtos.html',
-                    'servicos': 'cadastro-servicos.html',
+                    'servicos': 'servicos.html',
                     'clientes': 'clientes.html',
                     'vendas': 'vendas.html',
                     'orcamentos': 'orcamentos.html',
                     'entrada-estoque': 'entrada-estoque.html',
-                    'saida-estoque': 'saidadeestoque.html',
+                    'saida-estoque': 'saida-estoque.html',
                     'transferencia': 'transferencia.html',
                     'inventario': 'inventario.html',
                     'fornecedores': 'fornecedores.html',
@@ -934,7 +984,8 @@
                 notificacoes: [],
                 isOnline: navigator.onLine,
                 dbReady: supabaseReady,
-                initialized: false
+                initialized: false,
+                user: null
             };
 
             // ==================== REFERÊNCIAS DOM ====================
@@ -971,15 +1022,10 @@
                 return name ? name.charAt(0).toUpperCase() : 'A';
             }
 
-            function generateId() {
-                return Date.now().toString(36) + Math.random().toString(36).substring(2);
-            }
-
             // ==================== TOAST ====================
             function showToast(message, type = 'info') {
                 const container = DOM.toast;
-                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle',
-                    info: 'fa-info-circle' };
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
@@ -990,6 +1036,7 @@
                 container.appendChild(toast);
                 setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
             }
+            window.showToast = showToast;
 
             // ==================== LOADING ====================
             function showLoading(show) {
@@ -1001,8 +1048,7 @@
                 const text = state.isOnline ? 'Online' : 'Offline';
                 const color = state.isOnline ? '#10b981' : '#ef4444';
                 document.querySelectorAll('#mobileConnectionStatus, #sidebarConnectionStatus').forEach(el => {
-                    if (el) { el.textContent = text;
-                        el.style.color = color; }
+                    if (el) { el.textContent = text; el.style.color = color; }
                 });
             }
 
@@ -1029,7 +1075,7 @@
                 const desktopContainer = document.getElementById('sidebarMenu');
                 const mobileContainer = document.getElementById('mobileMenu');
                 const config = SYSTEM_CONFIG;
-
+                
                 const modules = [
                     { key: 'comercial', label: 'Gestão Comercial' },
                     { key: 'estoque', label: 'Estoque' },
@@ -1038,7 +1084,7 @@
                     { key: 'especiais', label: 'Módulos Especiais' },
                     { key: 'sistema', label: 'Sistema' }
                 ];
-
+                
                 let html = '';
                 modules.forEach(mod => {
                     const menuGroup = config.menu[mod.key];
@@ -1058,7 +1104,7 @@
                         html += `</div>`;
                     }
                 });
-
+                
                 if (desktopContainer) desktopContainer.innerHTML = html;
                 if (mobileContainer) mobileContainer.innerHTML = html;
             }
@@ -1071,12 +1117,13 @@
                     if (arrow) arrow.classList.toggle('open');
                 }
             }
+            window.toggleSubmenu = toggleSubmenu;
 
             // ==================== QUICK ACTIONS ====================
             function generateQuickActions() {
                 const container = document.getElementById('quickActions');
                 const config = SYSTEM_CONFIG;
-
+                
                 let html = '';
                 config.quickActions.forEach(action => {
                     const isSync = action.id === 'sync';
@@ -1098,28 +1145,33 @@
             function openModule(moduleId) {
                 const config = SYSTEM_CONFIG;
                 if (moduleId === 'dashboard') {
-                    window.location.href = 'index.html';
+                    window.location.href = 'dashboard.html';
                     return;
                 }
                 const path = config.modulePaths[moduleId] || `${moduleId}.html`;
                 window.location.href = path;
             }
+            window.openModule = openModule;
 
             function showDashboard() {
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard.html';
             }
+            window.showDashboard = showDashboard;
 
             // ==================== BUSCA DE DADOS SUPABASE ====================
-            async function fetchCollection(tableName) {
+            async function fetchData(tableName, filters = null) {
                 try {
-                    if (!supabase || !state.isOnline) {
+                    if (!state.dbReady || !state.isOnline) {
                         return [];
                     }
-                    const { data, error } = await supabase.from(tableName).select('*');
-                    if (error) {
-                        console.error(`Erro ao buscar ${tableName}:`, error);
-                        return [];
+                    let query = supabase.from(tableName).select('*');
+                    if (filters) {
+                        Object.keys(filters).forEach(key => {
+                            query = query.eq(key, filters[key]);
+                        });
                     }
+                    const { data, error } = await query;
+                    if (error) throw error;
                     return data || [];
                 } catch (error) {
                     console.error(`Erro ao buscar ${tableName}:`, error);
@@ -1127,84 +1179,70 @@
                 }
             }
 
-            async function insertRecord(tableName, record) {
+            async function updateData(tableName, id, data) {
                 try {
-                    if (!supabase || !state.isOnline) {
-                        showToast('Modo offline - dados salvos localmente', 'warning');
-                        return { data: [{ id: generateId(), ...record }], error: null };
+                    if (!state.dbReady || !state.isOnline) {
+                        throw new Error('Offline');
                     }
-                    const { data, error } = await supabase.from(tableName).insert(record).select();
-                    if (error) {
-                        console.error(`Erro ao inserir em ${tableName}:`, error);
-                        return { data: null, error };
-                    }
-                    return { data, error: null };
-                } catch (error) {
-                    console.error(`Erro ao inserir em ${tableName}:`, error);
-                    return { data: null, error };
-                }
-            }
-
-            async function updateRecord(tableName, id, record) {
-                try {
-                    if (!supabase || !state.isOnline) {
-                        showToast('Modo offline - dados salvos localmente', 'warning');
-                        return { data: [{ id, ...record }], error: null };
-                    }
-                    const { data, error } = await supabase.from(tableName).update(record).eq('id', id).select();
-                    if (error) {
-                        console.error(`Erro ao atualizar ${tableName}:`, error);
-                        return { data: null, error };
-                    }
-                    return { data, error: null };
+                    const { error } = await supabase
+                        .from(tableName)
+                        .update(data)
+                        .eq('id', id);
+                    if (error) throw error;
+                    return true;
                 } catch (error) {
                     console.error(`Erro ao atualizar ${tableName}:`, error);
-                    return { data: null, error };
+                    throw error;
                 }
             }
 
             // ==================== CARREGAMENTO DE DADOS ====================
             async function loadUserData() {
                 try {
-                    if (supabase && state.isOnline) {
-                        const users = await fetchCollection('usuarios');
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        state.user = JSON.parse(userStr);
+                        state.currentUser = state.user;
+                    } else if (state.dbReady && state.isOnline) {
+                        const users = await fetchData('profiles');
                         if (users && users.length > 0) {
                             state.currentUser = users[0];
+                            localStorage.setItem('user', JSON.stringify(state.currentUser));
                         }
                     }
-
+                    
                     if (!state.currentUser) {
-                        state.currentUser = {
-                            id: '1',
-                            nome: 'Usuário',
-                            email: 'usuario@email.com',
-                            telefone: '+244 900 000 000',
-                            cargo: 'Usuário'
+                        state.currentUser = { 
+                            id: 1, 
+                            name: 'Usuário', 
+                            email: 'usuario@email.com', 
+                            phone: '+244 900 000 000', 
+                            role: 'Usuário' 
                         };
                     }
-
-                    const initial = getInitials(state.currentUser.nome);
+                    
+                    const initial = getInitials(state.currentUser.name);
                     ['headerAvatar', 'mobileAvatar', 'sidebarAvatar', 'profileAvatar'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.textContent = initial;
                     });
-
+                    
                     ['headerUserName', 'mobileUserName', 'sidebarUserName'].forEach(id => {
                         const el = document.getElementById(id);
-                        if (el) el.textContent = state.currentUser.nome;
+                        if (el) el.textContent = state.currentUser.name;
                     });
-
+                    
                     ['mobileUserRole', 'sidebarUserRole'].forEach(id => {
                         const el = document.getElementById(id);
-                        if (el) el.textContent = state.currentUser.cargo || 'Usuário';
+                        if (el) el.textContent = state.currentUser.role || 'Usuário';
                     });
-
-                    document.getElementById('profileName').textContent = state.currentUser.nome;
-                    document.getElementById('profileRole').textContent = state.currentUser.cargo || 'Usuário';
+                    
+                    document.getElementById('profileName').textContent = state.currentUser.name;
+                    document.getElementById('profileRole').textContent = state.currentUser.role || 'Usuário';
                     document.getElementById('profileEmail').textContent = `📧 ${state.currentUser.email}`;
-                    document.getElementById('profileFullName').value = state.currentUser.nome;
+                    document.getElementById('profileFullName').value = state.currentUser.name;
                     document.getElementById('profileEmailInput').value = state.currentUser.email;
-                    document.getElementById('profilePhoneInput').value = state.currentUser.telefone || '';
+                    document.getElementById('profilePhoneInput').value = state.currentUser.phone || '';
                 } catch (error) {
                     console.error('Erro ao carregar usuário:', error);
                 }
@@ -1212,13 +1250,13 @@
 
             async function loadCompanyData() {
                 try {
-                    if (supabase && state.isOnline) {
-                        const companies = await fetchCollection('empresa');
+                    if (state.dbReady && state.isOnline) {
+                        const companies = await fetchData('empresas');
                         if (companies && companies.length > 0) {
                             state.companyData = companies[0];
                         }
                     }
-
+                    
                     if (!state.companyData) {
                         state.companyData = {
                             nome: 'Minha Empresa',
@@ -1228,10 +1266,9 @@
                             endereco: 'Endereço da Empresa'
                         };
                     }
-
+                    
                     document.getElementById('welcomeMessage').textContent = `Bem-vindo ao Sistema - ${state.companyData.nome}`;
-                    document.getElementById('companyDescription').textContent = state.companyData.descricao ||
-                        'Sistema de gestão empresarial';
+                    document.getElementById('companyDescription').textContent = state.companyData.descricao || 'Sistema de gestão empresarial';
                     document.getElementById('profileCompany').value = state.companyData.nome;
                     document.getElementById('profileNIF').value = state.companyData.nif || '';
                     document.getElementById('profileAddress').value = state.companyData.endereco || '';
@@ -1241,57 +1278,19 @@
             }
 
             async function loadProducts() {
-                state.produtos = await fetchCollection('produtos');
-                // Se não houver dados, criar alguns mock
-                if (state.produtos.length === 0) {
-                    state.produtos = [
-                        { id: '1', nome: 'Produto A', estoque: 15, estoque_minimo: 5, preco: 100 },
-                        { id: '2', nome: 'Produto B', estoque: 3, estoque_minimo: 10, preco: 50 },
-                        { id: '3', nome: 'Produto C', estoque: 0, estoque_minimo: 8, preco: 75 },
-                        { id: '4', nome: 'Produto D', estoque: 20, estoque_minimo: 5, preco: 120 },
-                        { id: '5', nome: 'Produto E', estoque: 8, estoque_minimo: 3, preco: 30 }
-                    ];
-                }
+                state.produtos = await fetchData('produtos');
             }
 
             async function loadClients() {
-                state.clientes = await fetchCollection('clientes');
-                if (state.clientes.length === 0) {
-                    state.clientes = [
-                        { id: '1', nome: 'Cliente A', email: 'clienteA@email.com', telefone: '+244 900 000 001' },
-                        { id: '2', nome: 'Cliente B', email: 'clienteB@email.com', telefone: '+244 900 000 002' },
-                        { id: '3', nome: 'Cliente C', email: 'clienteC@email.com', telefone: '+244 900 000 003' }
-                    ];
-                }
+                state.clientes = await fetchData('clientes');
             }
 
             async function loadSales() {
-                state.vendas = await fetchCollection('vendas');
-                if (state.vendas.length === 0) {
-                    const hoje = new Date();
-                    state.vendas = [
-                        { id: '1', total: 1500, usuario_nome: 'João', created_at: new Date(hoje - 3600000 * 2)
-                            .toISOString() },
-                        { id: '2', total: 2300, usuario_nome: 'Maria', created_at: new Date(hoje - 3600000 * 5)
-                            .toISOString() },
-                        { id: '3', total: 800, usuario_nome: 'Carlos', created_at: new Date(hoje - 86400000)
-                            .toISOString() },
-                        { id: '4', total: 3200, usuario_nome: 'Ana', created_at: new Date(hoje - 86400000 * 2)
-                            .toISOString() }
-                    ];
-                }
+                state.vendas = await fetchData('vendas');
             }
 
             async function loadNotifications() {
-                state.notificacoes = await fetchCollection('notificacoes');
-                if (state.notificacoes.length === 0) {
-                    state.notificacoes = [
-                        { id: '1', titulo: 'Bem-vindo!', mensagem: 'Sistema carregado com sucesso', tipo: 'success',
-                            lida: false, created_at: new Date().toISOString() },
-                        { id: '2', titulo: 'Estoque Baixo', mensagem: 'Produto B está com estoque abaixo do mínimo',
-                            tipo: 'warning', lida: false, created_at: new Date().toISOString() }
-                    ];
-                }
+                state.notificacoes = await fetchData('notificacoes');
                 renderNotifications();
             }
 
@@ -1300,7 +1299,7 @@
                 const list = document.getElementById('headerNotificationList');
                 const badge = document.getElementById('headerNotificationBadge');
                 const unread = state.notificacoes.filter(n => !n.lida).length;
-
+                
                 if (unread > 0) {
                     badge.textContent = unread;
                     badge.classList.remove('hidden');
@@ -1309,8 +1308,7 @@
                 }
 
                 if (state.notificacoes.length === 0) {
-                    list.innerHTML =
-                        `<div class="dropdown-item" style="justify-content:center;color:#94a3b8;padding:20px;">Nenhuma notificação</div>`;
+                    list.innerHTML = `<div class="dropdown-item" style="justify-content:center;color:#94a3b8;padding:20px;">Nenhuma notificação</div>`;
                     return;
                 }
 
@@ -1332,49 +1330,27 @@
             // ==================== MÉTRICAS ====================
             async function loadMetrics() {
                 try {
-                    let metrics = {
-                        salesToday: 0,
-                        totalProducts: state.produtos.length,
-                        lowStockCount: state.produtos.filter(p => (p.estoque || 0) <= (p.estoque_minimo || 0)).length,
-                        activeSellers: 3,
-                        totalSellers: 5,
-                        monthlyRevenue: 0,
-                        revenueGoal: 75,
-                        salesChange: 12,
-                        currentShift: 'Manhã'
+                    let metrics = { 
+                        salesToday: 0, totalProducts: 0, lowStockCount: 0, 
+                        activeSellers: 0, totalSellers: 0, monthlyRevenue: 0, 
+                        revenueGoal: 0, salesChange: 0, currentShift: '--'
                     };
-
-                    // Calcular vendas de hoje
-                    const hoje = new Date();
-                    hoje.setHours(0, 0, 0, 0);
-                    const vendasHoje = state.vendas.filter(v => {
-                        const data = new Date(v.created_at);
-                        return data >= hoje;
-                    });
-                    metrics.salesToday = vendasHoje.reduce((sum, v) => sum + (v.total || 0), 0);
-
-                    // Calcular faturamento mensal
-                    const mesAtual = new Date().getMonth();
-                    const anoAtual = new Date().getFullYear();
-                    const vendasMes = state.vendas.filter(v => {
-                        const data = new Date(v.created_at);
-                        return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-                    });
-                    metrics.monthlyRevenue = vendasMes.reduce((sum, v) => sum + (v.total || 0), 0);
-
-                    if (metrics.monthlyRevenue > 0) {
-                        const meta = 50000;
-                        metrics.revenueGoal = Math.min(Math.round((metrics.monthlyRevenue / meta) * 100), 100);
+                    
+                    if (state.dbReady && state.isOnline) {
+                        const metricsData = await fetchData('metrics');
+                        if (metricsData && metricsData.length > 0) {
+                            metrics = { ...metrics, ...metricsData[0] };
+                        }
                     }
 
-                    document.getElementById('metricSales').textContent = `AOA ${metrics.salesToday.toLocaleString()}`;
-                    document.getElementById('metricSalesChange').textContent = `${metrics.salesChange}%`;
-                    document.getElementById('metricProducts').textContent = metrics.totalProducts;
-                    document.getElementById('metricLowStock').textContent = metrics.lowStockCount;
-                    document.getElementById('metricSellers').textContent = `${metrics.activeSellers}/${metrics.totalSellers}`;
-                    document.getElementById('metricShift').textContent = metrics.currentShift;
-                    document.getElementById('metricRevenue').textContent = `AOA ${metrics.monthlyRevenue.toLocaleString()}`;
-                    document.getElementById('metricGoal').textContent = `${metrics.revenueGoal}%`;
+                    document.getElementById('metricSales').textContent = `AOA ${(metrics.salesToday || 0).toLocaleString()}`;
+                    document.getElementById('metricSalesChange').textContent = `${metrics.salesChange || 0}%`;
+                    document.getElementById('metricProducts').textContent = metrics.totalProducts || 0;
+                    document.getElementById('metricLowStock').textContent = metrics.lowStockCount || 0;
+                    document.getElementById('metricSellers').textContent = `${metrics.activeSellers || 0}/${metrics.totalSellers || 0}`;
+                    document.getElementById('metricShift').textContent = metrics.currentShift || '--';
+                    document.getElementById('metricRevenue').textContent = `AOA ${(metrics.monthlyRevenue || 0).toLocaleString()}`;
+                    document.getElementById('metricGoal').textContent = `${metrics.revenueGoal || 0}%`;
                 } catch (error) {
                     console.error('Erro ao carregar métricas:', error);
                 }
@@ -1389,26 +1365,12 @@
             function renderMonthlySalesChart() {
                 const container = document.getElementById('monthlySalesChart');
                 const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
-                // Calcular vendas por mês baseado nos dados reais
-                const salesByMonth = Array(12).fill(0);
-                state.vendas.forEach(v => {
-                    if (v.created_at) {
-                        const date = new Date(v.created_at);
-                        const month = date.getMonth();
-                        salesByMonth[month] += (v.total || 0);
-                    }
-                });
-
-                // Se não houver dados, gerar aleatório
-                const hasData = salesByMonth.some(v => v > 0);
-                const salesData = hasData ? salesByMonth : Array.from({ length: 12 }, () => Math.floor(Math.random() * 100) +
-                10);
-                const max = Math.max(...salesData) || 1;
-
+                const salesData = Array.from({length: 12}, () => Math.floor(Math.random() * 100) + 10);
+                const max = Math.max(...salesData);
+                
                 let html = '';
                 salesData.forEach((value, index) => {
-                    const height = (value / max) * 100;
+                    const height = max > 0 ? (value / max) * 100 : 0;
                     const color = index === 11 ? '#3b82f6' : '#60a5fa';
                     html += `
                         <div class="bar-item">
@@ -1431,13 +1393,13 @@
                     { name: 'Outros', value: 8, color: '#ef4444' }
                 ];
                 const total = categories.reduce((sum, c) => sum + c.value, 0);
-
+                
                 let html = `
                     <div class="doughnut-wrapper">
                         <canvas id="doughnutChart" width="140" height="140"></canvas>
                         <div class="doughnut-center">
-                            <div class="value">${state.produtos.length}</div>
-                            <div class="label">Produtos</div>
+                            <div class="value">${total}</div>
+                            <div class="label">Total</div>
                         </div>
                     </div>
                     <div class="legend">
@@ -1453,14 +1415,14 @@
                 });
                 html += `</div>`;
                 container.innerHTML = html;
-
+                
                 setTimeout(() => drawDoughnutChart(categories), 100);
             }
 
             function drawDoughnutChart(categories) {
                 const canvas = document.getElementById('doughnutChart');
                 if (!canvas) return;
-
+                
                 const ctx = canvas.getContext('2d');
                 const width = canvas.width;
                 const height = canvas.height;
@@ -1468,23 +1430,23 @@
                 const centerY = height / 2;
                 const radius = Math.min(width, height) / 2 - 10;
                 const thickness = radius * 0.65;
-
+                
                 ctx.clearRect(0, 0, width, height);
-
+                
                 let startAngle = -Math.PI / 2;
                 const total = categories.reduce((sum, c) => sum + c.value, 0);
-
+                
                 categories.forEach((cat) => {
                     const sliceAngle = (cat.value / total) * 2 * Math.PI;
                     const endAngle = startAngle + sliceAngle;
-
+                    
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                     ctx.arc(centerX, centerY, radius - thickness, endAngle, startAngle, true);
                     ctx.closePath();
                     ctx.fillStyle = cat.color;
                     ctx.fill();
-
+                    
                     startAngle = endAngle;
                 });
             }
@@ -1533,7 +1495,7 @@
                             <div>
                                 <p class="font-medium text-gray-800 dark:text-gray-200 text-sm">Venda realizada</p>
                                 <p class="text-sm text-muted">Total: AOA ${(v.total || 0).toLocaleString()}</p>
-                                <p class="text-xs text-muted mt-1">${v.usuario_nome || 'Sistema'} • ${formatTime(v.created_at)}</p>
+                                <p class="text-xs text-muted mt-1">${v.vendedor_nome || 'Sistema'} • ${formatTime(v.created_at)}</p>
                             </div>
                         </div>
                     `).join('');
@@ -1547,14 +1509,9 @@
             async function loadEvents() {
                 const container = document.getElementById('upcomingEvents');
                 try {
-                    const hoje = new Date();
                     const events = [
-                        { title: 'Reunião de Equipe', time: '09:00', location: 'Sala 1', day: hoje.getDate(),
-                            month: getMonthAbbr(hoje.getMonth()), color: 'blue' },
-                        { title: 'Inventário Mensal', time: '14:00', location: 'Armazém', day: hoje.getDate() + 1,
-                            month: getMonthAbbr(hoje.getMonth()), color: 'green' },
-                        { title: 'Treinamento', time: '10:00', location: 'Sala 2', day: hoje.getDate() + 2,
-                            month: getMonthAbbr(hoje.getMonth()), color: 'purple' }
+                        { title: 'Reunião de Equipe', time: '09:00', location: 'Sala 1', day: new Date().getDate(), month: getMonthAbbr(new Date().getMonth()), color: 'blue' },
+                        { title: 'Inventário Mensal', time: '14:00', location: 'Armazém', day: new Date().getDate() + 1, month: getMonthAbbr(new Date().getMonth()), color: 'green' }
                     ];
                     container.innerHTML = events.map(e => `
                         <div class="flex items-center gap-3 p-2 bg-${e.color}-50 dark:bg-${e.color}-900/20 rounded-lg border border-${e.color}-100 dark:border-${e.color}-800">
@@ -1576,7 +1533,9 @@
 
             // ==================== DASHBOARD PRINCIPAL ====================
             async function loadDashboard() {
-                if (!state.initialized) return;
+                if (state.initialized) return;
+                state.initialized = true;
+                
                 if (DOM.dashboardContent) {
                     showLoading(true);
                     try {
@@ -1605,60 +1564,62 @@
             // ==================== FUNÇÕES DE AÇÃO ====================
             async function syncData() {
                 showLoading(true);
-                showToast('Sincronizando dados com Supabase...', 'info');
+                showToast('Sincronizando dados...', 'info');
                 try {
-                    if (supabase) {
-                        // Tentar sincronizar dados
-                        await loadDashboard();
-                        showToast('Dados sincronizados com sucesso!', 'success');
-                    } else {
-                        showToast('Supabase não disponível - modo offline', 'warning');
-                        await loadDashboard();
-                    }
+                    await loadDashboard();
+                    showToast('Dados sincronizados com sucesso!', 'success');
                 } catch (error) {
                     showToast('Erro ao sincronizar dados', 'error');
                 } finally {
                     showLoading(false);
                 }
             }
+            window.syncData = syncData;
 
             function showHelp() {
                 showToast('📚 Consulte a documentação do sistema', 'info');
             }
+            window.showHelp = showHelp;
 
             function toggleDarkMode() {
                 document.body.classList.toggle('dark-mode');
                 showToast(`Modo ${document.body.classList.contains('dark-mode') ? 'escuro' : 'claro'} ativado`, 'info');
             }
+            window.toggleDarkMode = toggleDarkMode;
 
             function logout() {
                 if (confirm('Tem certeza que deseja sair?')) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('isLoggedIn');
                     showToast('Saindo do sistema...', 'info');
-                    setTimeout(() => window.location.href = 'login.html', 1000);
+                    setTimeout(() => window.location.href = 'Login.html', 1000);
                 }
             }
+            window.logout = logout;
 
             function openProfileModal() {
                 DOM.profileModal.classList.add('active');
                 document.getElementById('headerUserDropdown').classList.remove('open');
             }
+            window.openProfileModal = openProfileModal;
 
             function closeProfileModal() {
                 DOM.profileModal.classList.remove('active');
             }
+            window.closeProfileModal = closeProfileModal;
 
             async function saveProfile() {
                 const data = {
-                    nome: document.getElementById('profileFullName').value,
+                    name: document.getElementById('profileFullName').value,
                     email: document.getElementById('profileEmailInput').value,
-                    telefone: document.getElementById('profilePhoneInput').value
+                    phone: document.getElementById('profilePhoneInput').value
                 };
                 try {
-                    if (supabase && state.isOnline && state.currentUser) {
-                        const { error } = await supabase.from('usuarios').update(data).eq('id', state.currentUser.id);
-                        if (error) throw error;
+                    if (state.dbReady && state.isOnline && state.currentUser) {
+                        await updateData('profiles', state.currentUser.id, data);
                     }
                     state.currentUser = { ...state.currentUser, ...data };
+                    localStorage.setItem('user', JSON.stringify(state.currentUser));
                     await loadUserData();
                     closeProfileModal();
                     showToast('Perfil atualizado com sucesso!', 'success');
@@ -1666,39 +1627,36 @@
                     showToast('Erro ao atualizar perfil', 'error');
                 }
             }
+            window.saveProfile = saveProfile;
 
             async function markAsRead(id) {
                 try {
-                    if (supabase && state.isOnline) {
-                        const { error } = await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
-                        if (error) throw error;
+                    if (state.dbReady && state.isOnline) {
+                        await updateData('notificacoes', id, { lida: true });
                     }
-                    const notif = state.notificacoes.find(n => n.id === id);
-                    if (notif) notif.lida = true;
-                    renderNotifications();
+                    await loadNotifications();
                 } catch (error) { console.error('Erro:', error); }
             }
+            window.markAsRead = markAsRead;
 
             async function markAllRead() {
                 try {
-                    if (supabase && state.isOnline) {
-                        const unreadIds = state.notificacoes.filter(n => !n.lida).map(n => n.id);
-                        for (const id of unreadIds) {
-                            await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+                    if (state.dbReady && state.isOnline) {
+                        for (const n of state.notificacoes.filter(n => !n.lida)) {
+                            await updateData('notificacoes', n.id, { lida: true });
                         }
                     }
-                    state.notificacoes.forEach(n => n.lida = true);
-                    renderNotifications();
+                    await loadNotifications();
                     showToast('Todas as notificações marcadas como lidas', 'success');
                 } catch (error) { console.error('Erro:', error); }
             }
+            window.markAllRead = markAllRead;
 
             async function clearNotifications() {
                 try {
-                    if (supabase && state.isOnline) {
-                        const ids = state.notificacoes.map(n => n.id);
-                        for (const id of ids) {
-                            await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+                    if (state.dbReady && state.isOnline) {
+                        for (const n of state.notificacoes) {
+                            await updateData('notificacoes', n.id, { lida: true });
                         }
                     }
                     state.notificacoes = [];
@@ -1706,15 +1664,13 @@
                     showToast('Notificações limpas', 'info');
                 } catch (error) { console.error('Erro:', error); }
             }
+            window.clearNotifications = clearNotifications;
 
             async function markAsPurchased(productId) {
                 try {
-                    if (supabase && state.isOnline) {
-                        const { error } = await supabase.from('produtos').update({ estoque: 0 }).eq('id', productId);
-                        if (error) throw error;
+                    if (state.dbReady && state.isOnline) {
+                        await updateData('produtos', productId, { estoque: 0 });
                     }
-                    const produto = state.produtos.find(p => p.id === productId);
-                    if (produto) produto.estoque = 0;
                     showToast('Item marcado como comprado!', 'success');
                     await loadShoppingList();
                     await loadMetrics();
@@ -1722,6 +1678,7 @@
                     showToast('Erro ao marcar item', 'error');
                 }
             }
+            window.markAsPurchased = markAsPurchased;
 
             // ==================== CALCULADORA ====================
             let calcValue = '0';
@@ -1732,25 +1689,19 @@
             function toggleCalculator() {
                 DOM.calculator.classList.toggle('open');
             }
+            window.toggleCalculator = toggleCalculator;
 
             function calcPress(value) {
                 const display = DOM.calcDisplay;
                 if (value === 'C') {
-                    calcValue = '0';
-                    calcPrev = '';
-                    calcOp = null;
-                    calcReset = false;
-                    display.textContent = '0';
-                    return;
+                    calcValue = '0'; calcPrev = ''; calcOp = null; calcReset = false;
+                    display.textContent = '0'; return;
                 }
                 if (value === '=') {
                     if (calcOp && calcPrev) {
                         const result = calcCalculate(parseFloat(calcPrev), parseFloat(calcValue), calcOp);
                         display.textContent = result;
-                        calcValue = result.toString();
-                        calcPrev = '';
-                        calcOp = null;
-                        calcReset = true;
+                        calcValue = result.toString(); calcPrev = ''; calcOp = null; calcReset = true;
                     }
                     return;
                 }
@@ -1762,33 +1713,24 @@
                     } else {
                         calcPrev = calcValue;
                     }
-                    calcOp = value;
-                    calcReset = true;
-                    return;
+                    calcOp = value; calcReset = true; return;
                 }
-                if (value === '±') { calcValue = (parseFloat(calcValue) * -1).toString();
-                    display.textContent = calcValue; return; }
-                if (value === '%') { calcValue = (parseFloat(calcValue) / 100).toString();
-                    display.textContent = calcValue; return; }
-                if (calcReset) { calcValue = '0';
-                    calcReset = false; }
+                if (value === '±') { calcValue = (parseFloat(calcValue) * -1).toString(); display.textContent = calcValue; return; }
+                if (value === '%') { calcValue = (parseFloat(calcValue) / 100).toString(); display.textContent = calcValue; return; }
+                if (calcReset) { calcValue = '0'; calcReset = false; }
                 if (value === '.' && calcValue.includes('.')) return;
                 if (calcValue === '0' && value !== '.') { calcValue = value; } else { calcValue += value; }
                 display.textContent = calcValue;
             }
+            window.calcPress = calcPress;
 
             function calcCalculate(a, b, op) {
                 switch (op) {
-                    case '+':
-                        return a + b;
-                    case '-':
-                        return a - b;
-                    case '×':
-                        return a * b;
-                    case '÷':
-                        return b !== 0 ? a / b : 'Erro';
-                    default:
-                        return b;
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '×': return a * b;
+                    case '÷': return b !== 0 ? a / b : 'Erro';
+                    default: return b;
                 }
             }
 
@@ -1796,24 +1738,27 @@
             function toggleMobileSidebar() {
                 document.getElementById('mobileSidebar').classList.toggle('open');
                 document.getElementById('mobileOverlay').classList.toggle('open');
-                document.body.style.overflow = document.getElementById('mobileSidebar').classList.contains('open') ?
-                    'hidden' : '';
+                document.body.style.overflow = document.getElementById('mobileSidebar').classList.contains('open') ? 'hidden' : '';
             }
+            window.toggleMobileSidebar = toggleMobileSidebar;
 
             function closeMobileSidebar() {
                 document.getElementById('mobileSidebar').classList.remove('open');
                 document.getElementById('mobileOverlay').classList.remove('open');
                 document.body.style.overflow = '';
             }
+            window.closeMobileSidebar = closeMobileSidebar;
 
             // ==================== NOTIFICAÇÕES E USUÁRIO ====================
             function toggleNotifications() {
                 document.getElementById('headerNotificationDropdown').classList.toggle('open');
             }
+            window.toggleNotifications = toggleNotifications;
 
             function toggleUserMenu() {
                 document.getElementById('headerUserDropdown').classList.toggle('open');
             }
+            window.toggleUserMenu = toggleUserMenu;
 
             // ==================== EVENT LISTENERS ====================
             function setupEventListeners() {
@@ -1840,48 +1785,63 @@
                     showToast('Modo offline ativado', 'warning');
                 });
 
-                // Inicializar se já estiver pronto
-                if (supabaseReady && !state.initialized) {
-                    state.initialized = true;
-                    loadDashboard();
-                }
-
                 // Conexão inicial
                 checkConnection();
+
+                // Verificar autenticação
+                if (supabaseReady) {
+                    supabase.auth.onAuthStateChange((event, session) => {
+                        if (event === 'SIGNED_IN') {
+                            console.log('👤 Usuário autenticado:', session?.user?.email);
+                            if (!state.initialized) {
+                                loadDashboard();
+                            }
+                        } else if (event === 'SIGNED_OUT') {
+                            console.log('⚠️ Usuário desconectado');
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('isLoggedIn');
+                        }
+                    });
+                }
+
+                // Se já estiver autenticado
+                const userStr = localStorage.getItem('user');
+                if (userStr && !state.initialized) {
+                    loadDashboard();
+                } else if (!state.initialized) {
+                    // Verificar se há sessão ativa no Supabase
+                    if (supabaseReady) {
+                        supabase.auth.getSession().then(({ data }) => {
+                            if (data.session) {
+                                loadDashboard();
+                            } else {
+                                // Redirecionar para login se não houver sessão
+                                window.location.href = 'Login.html';
+                            }
+                        });
+                    } else {
+                        // Fallback: carregar dashboard mesmo sem Supabase
+                        loadDashboard();
+                    }
+                }
             }
 
             // ==================== INICIALIZAÇÃO ====================
             function init() {
                 applySystemConfig();
                 setupEventListeners();
-
-                // Se Supabase já estiver pronto
-                if (supabaseReady) {
-                    state.dbReady = true;
-                    if (!state.initialized) {
-                        state.initialized = true;
-                        setTimeout(loadDashboard, 300);
-                    }
-                } else {
-                    // Tentar novamente após 1s
-                    setTimeout(() => {
-                        if (supabase) {
-                            supabaseReady = true;
-                            state.dbReady = true;
-                            if (!state.initialized) {
-                                state.initialized = true;
-                                loadDashboard();
-                            }
-                        }
-                    }, 1000);
+                
+                // Se já estiver autenticado, carregar dashboard
+                if (localStorage.getItem('isLoggedIn') === 'true') {
+                    loadDashboard();
                 }
             }
 
             // ==================== EXPORTAÇÃO GLOBAL ====================
             window.SYSTEM_CONFIG = SYSTEM_CONFIG;
-            window.showDashboard = showDashboard;
-            window.openModule = openModule;
             window.toggleSubmenu = toggleSubmenu;
+            window.openModule = openModule;
+            window.showDashboard = showDashboard;
             window.syncData = syncData;
             window.showHelp = showHelp;
             window.toggleDarkMode = toggleDarkMode;
@@ -1900,7 +1860,6 @@
             window.toggleNotifications = toggleNotifications;
             window.toggleUserMenu = toggleUserMenu;
             window.showToast = showToast;
-            window.supabase = supabase;
 
             // ==================== INICIAR ====================
             if (document.readyState === 'loading') {
