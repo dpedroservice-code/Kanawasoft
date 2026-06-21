@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sidebar-bg-start: #1e3a5f;
@@ -353,19 +354,23 @@
     <!-- ==================== TOAST ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado para Eventos');
+
         (function() {
             'use strict';
 
             // ==================== CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
-            };
-
             const EVENTS_TABLE = 'eventos';
             const USERS_TABLE = 'usuarios';
 
@@ -373,7 +378,7 @@
             const state = {
                 initialized: false,
                 user: null,
-                supabase: null,
+                supabaseReady: true,
                 events: [],
                 users: [],
                 currentDate: new Date(),
@@ -413,10 +418,8 @@
                 if (state.initialized) return;
                 state.initialized = true;
 
-                state.supabase = window.supabase.createClient(
-                    SUPABASE_CONFIG.url,
-                    SUPABASE_CONFIG.anonKey
-                );
+                // Usar a variável global supabase
+                state.supabase = supabase;
 
                 Promise.all([
                     loadUserData(),
@@ -429,7 +432,6 @@
                     generateCalendar();
                     selectToday();
                     
-                    // Atualizar a cada 60 segundos
                     state.refreshInterval = setInterval(refreshData, 60000);
                 });
             }
@@ -437,11 +439,17 @@
             // ==================== CARREGAR USUÁRIO ====================
             async function loadUserData() {
                 try {
+                    if (!state.supabaseReady) {
+                        state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                        updateUserUI();
+                        return;
+                    }
                     const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
                     state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
                     updateUserUI();
                 } catch (e) {
                     state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
             }
 
@@ -459,6 +467,12 @@
             // ==================== CARREGAR DADOS ====================
             async function loadUsers() {
                 try {
+                    if (!state.supabaseReady) {
+                        state.users = [];
+                        renderTeam();
+                        renderParticipantsCheckboxes();
+                        return;
+                    }
                     const { data } = await state.supabase.from(USERS_TABLE).select('*').eq('status', 'ativo').order('nome');
                     state.users = data || [];
                     renderTeam();
@@ -473,6 +487,14 @@
             async function loadEvents() {
                 state.isLoading = true;
                 try {
+                    if (!state.supabaseReady) {
+                        state.events = [];
+                        updateStats();
+                        renderNextEvents();
+                        generateCalendar();
+                        loadDayEvents(state.selectedDate);
+                        return;
+                    }
                     const { data } = await state.supabase.from(EVENTS_TABLE).select('*').order('data', { ascending: true });
                     state.events = data || [];
                     updateStats();
@@ -877,6 +899,11 @@
                 }
 
                 try {
+                    if (!state.supabaseReady) {
+                        showToast('Supabase não disponível', 'error');
+                        return;
+                    }
+
                     if (state.editingId) {
                         await state.supabase.from(EVENTS_TABLE).update(eventData).eq('id', state.editingId);
                         showToast('Evento actualizado com sucesso!', 'success');
@@ -904,6 +931,10 @@
                 if (!confirm(`Tem certeza que deseja eliminar o evento "${event.titulo}"?`)) return;
 
                 try {
+                    if (!state.supabaseReady) {
+                        showToast('Supabase não disponível', 'error');
+                        return;
+                    }
                     await state.supabase.from(EVENTS_TABLE).delete().eq('id', id);
                     showToast('Evento removido com sucesso!', 'success');
                     await loadEvents();
