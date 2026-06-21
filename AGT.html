@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --agt-green: #10b981;
@@ -91,7 +92,7 @@
             <div class="flex items-center space-x-3 mt-3 md:mt-0 flex-wrap gap-2">
                 <div id="agtApiStatus" class="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full">
                     <i class="fas fa-circle text-green-500 text-xs status-pulse"></i>
-                    <span class="text-sm text-green-700 font-medium">API Conectada</span>
+                    <span class="text-sm text-green-700 font-medium">Supabase Conectado</span>
                 </div>
                 <div class="flex items-center space-x-1 bg-gray-100 px-3 py-1 rounded-full">
                     <i class="fas fa-fingerprint text-blue-500 text-xs"></i>
@@ -228,19 +229,35 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        let supabase = null;
+        let supabaseReady = false;
+
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado para AGT');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
+
         (function() {
             'use strict';
 
             // ==================== CONFIG ====================
-            const API_URL = "http://127.0.0.1:5000/api";
-            
             const AGT_CONFIG = {
-                apiUrl: API_URL,
                 certificateNumber: 'AGT/2026/001',
                 softwareName: 'Kanawa Soft v5.0',
-                ivaRegime: 'geral', // geral, exclusao, simplificacao
+                ivaRegime: 'geral',
                 ivaTaxRate: 0.14,
-                hashChars: [0, 10, 20, 30] // 1º, 11º, 21º, 31º caracteres
+                hashChars: [0, 10, 20, 30]
             };
 
             // ==================== ESTADO ====================
@@ -278,10 +295,8 @@
                 setupEventListeners();
                 carregarFaturasFiscais();
                 
-                // Atualizar automaticamente a cada 30 segundos
                 state.refreshInterval = setInterval(carregarFaturasFiscais, 30000);
                 
-                // Verificar conectividade
                 window.addEventListener('online', () => {
                     state.isOnline = true;
                     updateConnectionStatus(true);
@@ -296,21 +311,39 @@
             // ==================== CONEXÃO ====================
             function updateConnectionStatus(online) {
                 const status = DOM.agtStatus;
-                if (online) {
+                if (online && supabaseReady) {
                     status.innerHTML = `
                         <i class="fas fa-circle text-green-500 text-xs status-pulse"></i>
-                        <span class="text-sm text-green-700 font-medium">API Conectada</span>
+                        <span class="text-sm text-green-700 font-medium">Supabase Conectado</span>
+                    `;
+                } else if (!supabaseReady) {
+                    status.innerHTML = `
+                        <i class="fas fa-circle text-yellow-500 text-xs"></i>
+                        <span class="text-sm text-yellow-700 font-medium">Supabase Offline</span>
                     `;
                 } else {
                     status.innerHTML = `
                         <i class="fas fa-circle text-red-500 text-xs"></i>
-                        <span class="text-sm text-red-700 font-medium">API Desconectada</span>
+                        <span class="text-sm text-red-700 font-medium">Desconectado</span>
                     `;
                 }
             }
 
             // ==================== CARREGAR FATURAS ====================
             async function carregarFaturasFiscais() {
+                if (!supabaseReady) {
+                    DOM.tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-yellow-500">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Supabase não disponível. Verifique a conexão.
+                            </td>
+                        </tr>
+                    `;
+                    updateConnectionStatus(false);
+                    return;
+                }
+
                 const tbody = DOM.tableBody;
                 tbody.innerHTML = `
                     <tr>
@@ -322,24 +355,23 @@
                 `;
 
                 try {
-                    const response = await fetch(`${API_URL}/faturas`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Erro HTTP: ${response.status}`);
-                    }
+                    const { data: faturas, error } = await supabase
+                        .from('faturas_agt')
+                        .select('*')
+                        .order('created_at', { ascending: false });
 
-                    const faturas = await response.json();
-                    state.invoices = faturas;
+                    if (error) throw error;
+
+                    state.invoices = faturas || [];
                     
-                    // Atualizar último hash
                     if (faturas && faturas.length > 0) {
-                        const last = faturas[faturas.length - 1];
+                        const last = faturas[0];
                         state.lastHash = last.agt_hash || '----';
                         DOM.lastHash.textContent = state.lastHash;
                     }
 
-                    atualizarTabela(faturas);
-                    atualizarEstatisticas(faturas);
+                    atualizarTabela(faturas || []);
+                    atualizarEstatisticas(faturas || []);
                     atualizarUltimaAtualizacao();
                     updateConnectionStatus(true);
 
@@ -349,7 +381,7 @@
                         <tr>
                             <td colspan="7" class="p-6 text-center text-red-500">
                                 <i class="fas fa-exclamation-circle mr-2"></i>
-                                Erro ao conectar com o servidor. Verifique se o backend Flask está em execução.
+                                Erro ao carregar faturas do Supabase.
                                 <br>
                                 <span class="text-xs text-gray-400">${error.message}</span>
                             </td>
@@ -382,15 +414,12 @@
                     const rowBg = f.agt_status === 'INVALIDO' ? 'bg-red-50' : 
                                  f.agt_status === 'PENDENTE' ? 'bg-yellow-50' : '';
                     
-                    // Extrair os caracteres da hash (1º, 11º, 21º, 31º)
                     const hashDisplay = f.agt_hash ? extrairCaracteresHash(f.agt_hash) : '----';
                     
-                    // Calcular IVA
                     const ivaValue = f.total * AGT_CONFIG.ivaTaxRate;
                     const ivaDisplay = f.iva_exempt ? 'Isento' : `${(AGT_CONFIG.ivaTaxRate * 100).toFixed(0)}%`;
                     
-                    // Gerar link da cadeia de hashes
-                    const prevHash = index > 0 ? faturas[index - 1].agt_hash : '-----';
+                    const prevHash = index < faturas.length - 1 ? faturas[index + 1].agt_hash : '-----';
                     
                     return `
                         <tr class="hover:bg-gray-50 ${rowBg}">
@@ -413,7 +442,7 @@
                                 <span class="hash-display text-xs" title="Hash: ${f.agt_hash || 'N/A'}">${hashDisplay}</span>
                                 <div class="signature-chain mt-1" title="Cadeia de assinaturas">
                                     <i class="fas fa-link text-xs"></i> 
-                                    <span class="text-[8px]">${prevHash.substring(0, 8)}...${prevHash.substring(prevHash.length - 4)}</span>
+                                    <span class="text-[8px]">${prevHash ? prevHash.substring(0, 8) + '...' + prevHash.substring(prevHash.length - 4) : '---'}</span>
                                 </div>
                             </td>
                             <td class="p-3">
@@ -424,15 +453,15 @@
                                             <i class="fas fa-exclamation-triangle"></i>
                                         </button>
                                     ` : ''}
-                                    <button onclick="solicitarAnulacao(${f.id}, '${f.invoice_number}')" 
+                                    <button onclick="solicitarAnulacao('${f.id}', '${f.invoice_number}')" 
                                             class="text-red-400 hover:text-red-600" title="Anular com Nota de Crédito">
                                         <i class="fas fa-ban"></i>
                                     </button>
-                                    <button onclick="visualizarDetalhes(${f.id})" 
+                                    <button onclick="visualizarDetalhes('${f.id}')" 
                                             class="text-blue-400 hover:text-blue-600" title="Ver detalhes">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="verificarHashChain(${f.id})" 
+                                    <button onclick="verificarHashChain('${f.id}')" 
                                             class="text-purple-400 hover:text-purple-600" title="Verificar cadeia de hashes">
                                         <i class="fas fa-link"></i>
                                     </button>
@@ -538,26 +567,22 @@
                 }
 
                 try {
-                    const response = await fetch(`${API_URL}/faturas/anular`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            sale_id: id, 
-                            motivo: motivo,
-                            invoice_number: numero
+                    const { error } = await supabase
+                        .from('faturas_agt')
+                        .update({ 
+                            agt_status: 'ANULADO',
+                            agt_error: `Anulado: ${motivo.trim()}`,
+                            updated_at: new Date().toISOString()
                         })
-                    });
+                        .eq('id', id);
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        showToast(`✅ ${data.message || 'Pedido de anulação enviado.'}`, 'success');
-                        carregarFaturasFiscais();
-                    } else {
-                        const error = await response.json();
-                        showToast(`❌ Erro: ${error.error || 'Falha ao processar o pedido.'}`, 'error');
-                    }
+                    if (error) throw error;
+
+                    showToast(`✅ Pedido de anulação enviado para a fatura ${numero}.`, 'success');
+                    carregarFaturasFiscais();
+
                 } catch (error) {
-                    showToast("❌ Falha ao comunicar com o servidor.", 'error');
+                    showToast(`❌ Erro: ${error.message || 'Falha ao processar o pedido.'}`, 'error');
                     console.error('Erro na anulação:', error);
                 }
             }
@@ -623,8 +648,8 @@
                                 <p>${fatura.validation_date || '---'}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-lg col-span-2">
-                                <p class="text-xs text-gray-500">Request ID</p>
-                                <p class="font-mono text-xs">${fatura.agt_request_id || '---'}</p>
+                                <p class="text-xs text-gray-500">Data de Criação</p>
+                                <p>${fatura.created_at ? new Date(fatura.created_at).toLocaleString('pt-PT') : '---'}</p>
                             </div>
                         </div>
                     `;
@@ -650,19 +675,19 @@
                     }
 
                     const index = state.invoices.indexOf(fatura);
-                    if (index === 0) {
-                        showToast('Esta é a primeira fatura da cadeia.', 'info');
+                    if (index === state.invoices.length - 1) {
+                        showToast('Esta é a última fatura da cadeia.', 'info');
                         return;
                     }
 
-                    const prev = state.invoices[index - 1];
-                    if (!prev || !prev.agt_hash || !fatura.agt_hash) {
+                    const next = state.invoices[index + 1];
+                    if (!next || !next.agt_hash || !fatura.agt_hash) {
                         showToast('Cadeia de hashes incompleta.', 'warning');
                         return;
                     }
 
-                    // Verificar se a fatura atual contém a hash anterior
-                    const containsPrev = fatura.agt_hash.includes(prev.agt_hash.substring(0, 10));
+                    // Verificar se a próxima fatura contém a hash atual
+                    const containsPrev = next.agt_hash.includes(fatura.agt_hash.substring(0, 10));
                     
                     if (containsPrev) {
                         showToast('✅ Cadeia de hashes verificada com sucesso!', 'success');
