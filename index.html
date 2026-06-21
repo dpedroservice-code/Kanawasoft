@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -57,21 +58,6 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.4); }
         .btn-primary:active { transform: translateY(0); }
         .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-        .social-btn {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 0.75rem;
-            background: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .social-btn:hover { background: #f9fafb; border-color: #d1d5db; }
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -128,17 +114,27 @@
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e5e7eb; }
         .divider span { padding: 0 1rem; color: #9ca3af; font-size: 0.875rem; }
         @media (max-width: 480px) { .input-field { padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 16px; } .text-3xl { font-size: 1.5rem; } }
-
-        .role-badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.65rem;
-            font-weight: 600;
+        
+        .role-btn {
+            padding: 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
         }
-        .role-badge.admin { background: #dbeafe; color: #1e40af; }
-        .role-badge.seller { background: #d1fae5; color: #065f46; }
-        .role-badge.user { background: #fef3c7; color: #92400e; }
+        .role-btn:hover { border-color: #667eea; background: #f0f4ff; }
+        .role-btn.selected { border-color: #667eea; background: #667eea; color: white; }
+        .role-btn i { font-size: 1rem; }
+        .role-btn.selected i { color: white; }
+        
+        .company-fields { display: none; border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem; }
+        .company-fields.show { display: block; }
     </style>
 </head>
 <body>
@@ -195,20 +191,7 @@
                     </button>
                 </form>
 
-                <div class="divider"><span>ou</span></div>
-
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <button onclick="loginWithGoogle()" class="social-btn">
-                        <i class="fab fa-google text-red-500"></i>
-                        <span class="text-sm hidden sm:inline">Google</span>
-                    </button>
-                    <button onclick="loginWithGithub()" class="social-btn">
-                        <i class="fab fa-github text-gray-800"></i>
-                        <span class="text-sm hidden sm:inline">GitHub</span>
-                    </button>
-                </div>
-
-                <div class="text-center">
+                <div class="text-center mt-6">
                     <p class="text-gray-600 text-sm">
                         Não tem uma conta?
                         <button type="button" onclick="showRegisterCard()" class="auth-link">Criar conta gratuita</button>
@@ -260,6 +243,47 @@
                         </button>
                     </div>
 
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Conta</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" class="role-btn selected" data-role="user" onclick="selectRole(this)">
+                                <i class="fas fa-user"></i> Usuário
+                            </button>
+                            <button type="button" class="role-btn" data-role="vendedor" onclick="selectRole(this)">
+                                <i class="fas fa-store"></i> Vendedor
+                            </button>
+                            <button type="button" class="role-btn" data-role="admin" onclick="selectRole(this)">
+                                <i class="fas fa-user-cog"></i> Admin
+                            </button>
+                            <button type="button" class="role-btn" data-role="administrador" onclick="selectRole(this)">
+                                <i class="fas fa-crown"></i> Administrador
+                            </button>
+                        </div>
+                        <input type="hidden" id="registerRole" value="user">
+                    </div>
+
+                    <!-- Company Fields (apenas para Admin/Administrador) -->
+                    <div id="companyFields" class="company-fields">
+                        <p class="text-sm font-semibold text-gray-700 mb-3">Dados da Empresa</p>
+                        <div class="input-group">
+                            <i class="fas fa-building input-icon"></i>
+                            <input type="text" id="companyName" class="input-field" placeholder="Nome da Empresa *">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-id-card input-icon"></i>
+                            <input type="text" id="companyCnpj" class="input-field" placeholder="NIF/CNPJ *">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="text" id="companyPhone" class="input-field" placeholder="Telefone da Empresa">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-map-marker-alt input-icon"></i>
+                            <input type="text" id="companyAddress" class="input-field" placeholder="Endereço">
+                        </div>
+                    </div>
+
                     <div class="mb-4">
                         <label class="flex items-start cursor-pointer">
                             <input type="checkbox" id="acceptTerms" class="w-4 h-4 text-indigo-600 rounded mt-0.5">
@@ -275,20 +299,7 @@
                     </button>
                 </form>
 
-                <div class="divider"><span>ou</span></div>
-
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <button onclick="loginWithGoogle()" class="social-btn">
-                        <i class="fab fa-google text-red-500"></i>
-                        <span class="text-sm hidden sm:inline">Google</span>
-                    </button>
-                    <button onclick="loginWithGithub()" class="social-btn">
-                        <i class="fab fa-github text-gray-800"></i>
-                        <span class="text-sm hidden sm:inline">GitHub</span>
-                    </button>
-                </div>
-
-                <div class="text-center">
+                <div class="text-center mt-6">
                     <button type="button" onclick="showLoginCard()" class="auth-link text-sm">
                         ← Voltar para o login
                     </button>
@@ -327,647 +338,445 @@
         </div>
     </div>
 
-    <!-- ==================== SUPABASE SDK ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
-    </script>
-
     <script>
-        (function() {
-            'use strict';
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://emkggurctrlcgukvhwdg.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
+        };
 
-            // ==================== SUPABASE CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
-                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
-            };
+        let supabase = null;
+        let supabaseReady = false;
 
-            // ==================== INICIALIZAR SUPABASE ====================
-            let supabase = null;
-            let supabaseReady = false;
+        // ==================== INICIALIZAR SUPABASE ====================
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
 
-            try {
-                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-                supabaseReady = true;
-                console.log('✅ Supabase inicializado com sucesso!');
-            } catch (error) {
-                console.error('❌ Erro ao inicializar Supabase:', error);
+        // ==================== ESTADO ====================
+        const state = {
+            isLoading: false,
+            isAuthenticated: false,
+            user: null
+        };
+
+        // ==================== DOM REFS ====================
+        const DOM = {
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            loadingMessage: document.getElementById('loadingMessage'),
+            loginCard: document.getElementById('loginCard'),
+            registerCard: document.getElementById('registerCard'),
+            recoveryCard: document.getElementById('recoveryCard'),
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm'),
+            recoveryForm: document.getElementById('recoveryForm'),
+            loginEmail: document.getElementById('loginEmail'),
+            loginPassword: document.getElementById('loginPassword'),
+            loginSubmitBtn: document.getElementById('loginSubmitBtn'),
+            registerSubmitBtn: document.getElementById('registerSubmitBtn'),
+            recoverySubmitBtn: document.getElementById('recoverySubmitBtn'),
+            rememberMe: document.getElementById('rememberMe'),
+            registerRole: document.getElementById('registerRole'),
+            companyFields: document.getElementById('companyFields')
+        };
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 4000);
+        }
+        window.showToast = showToast;
+
+        // ==================== LOADING ====================
+        function showLoading(message = 'Processando...') {
+            state.isLoading = true;
+            if (DOM.loadingMessage) DOM.loadingMessage.textContent = message;
+            if (DOM.loadingOverlay) DOM.loadingOverlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            state.isLoading = false;
+            if (DOM.loadingOverlay) DOM.loadingOverlay.classList.remove('active');
+        }
+
+        // ==================== NAVEGAÇÃO ENTRE CARDS ====================
+        window.showLoginCard = function() {
+            DOM.loginCard.style.display = 'block';
+            DOM.registerCard.style.display = 'none';
+            DOM.recoveryCard.style.display = 'none';
+        };
+
+        window.showRegisterCard = function() {
+            DOM.loginCard.style.display = 'none';
+            DOM.registerCard.style.display = 'block';
+            DOM.recoveryCard.style.display = 'none';
+        };
+
+        window.showRecoveryCard = function() {
+            DOM.loginCard.style.display = 'none';
+            DOM.registerCard.style.display = 'none';
+            DOM.recoveryCard.style.display = 'block';
+        };
+
+        // ==================== TOGGLE PASSWORD ====================
+        window.togglePassword = function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            const icon = field.parentElement.querySelector('.password-toggle i');
+            if (!icon) return;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
             }
+        };
 
-            // ==================== ESTADO ====================
-            const state = {
-                isLoading: false,
-                isAuthenticated: false,
-                supabase: supabase,
-                session: null,
-                user: null,
-                userRole: null
-            };
-
-            // ==================== DOM REFS ====================
-            const DOM = {
-                loadingOverlay: document.getElementById('loadingOverlay'),
-                loadingMessage: document.getElementById('loadingMessage'),
-                loginCard: document.getElementById('loginCard'),
-                registerCard: document.getElementById('registerCard'),
-                recoveryCard: document.getElementById('recoveryCard'),
-                loginForm: document.getElementById('loginForm'),
-                registerForm: document.getElementById('registerForm'),
-                recoveryForm: document.getElementById('recoveryForm'),
-                loginEmail: document.getElementById('loginEmail'),
-                loginPassword: document.getElementById('loginPassword'),
-                loginSubmitBtn: document.getElementById('loginSubmitBtn'),
-                registerSubmitBtn: document.getElementById('registerSubmitBtn'),
-                recoverySubmitBtn: document.getElementById('recoverySubmitBtn'),
-                rememberMe: document.getElementById('rememberMe')
-            };
-
-            // ==================== ROLES E PERMISSÕES ====================
-            const ROLES = {
-                ADMIN: 'admin',
-                SELLER: 'vendedor',
-                USER: 'user'
-            };
-
-            const ROLE_PERMISSIONS = {
-                [ROLES.ADMIN]: {
-                    pages: ['dashboard.html', 'pdv.html', 'produtos.html', 'clientes.html', 'vendas.html', 'relatorios.html', 'usuarios.html', 'configuracoes.html'],
-                    canManageUsers: true,
-                    canManageProducts: true,
-                    canManageSales: true,
-                    canViewReports: true,
-                    canAccessPDV: true
-                },
-                [ROLES.SELLER]: {
-                    pages: ['dashboard.html', 'pdv.html'],
-                    canManageUsers: false,
-                    canManageProducts: false,
-                    canManageSales: true,
-                    canViewReports: false,
-                    canAccessPDV: true
-                },
-                [ROLES.USER]: {
-                    pages: ['dashboard.html'],
-                    canManageUsers: false,
-                    canManageProducts: false,
-                    canManageSales: false,
-                    canViewReports: false,
-                    canAccessPDV: false
-                }
-            };
-
-            // ==================== TOAST ====================
-            function showToast(message, type = 'info') {
-                const existingToasts = document.querySelectorAll('.toast');
-                existingToasts.forEach(toast => toast.remove());
-
-                const toast = document.createElement('div');
-                toast.className = `toast toast-${type}`;
-                toast.innerHTML = `<span>${message}</span>`;
-                document.body.appendChild(toast);
-                
-                setTimeout(() => toast.remove(), 4000);
+        // ==================== ROLE SELECTOR ====================
+        window.selectRole = function(element) {
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            const role = element.dataset.role;
+            DOM.registerRole.value = role;
+            
+            // Mostrar campos de empresa apenas para admin/administrador
+            if (role === 'admin' || role === 'administrador') {
+                DOM.companyFields.classList.add('show');
+                document.querySelectorAll('#companyFields .input-field').forEach(el => el.required = true);
+            } else {
+                DOM.companyFields.classList.remove('show');
+                document.querySelectorAll('#companyFields .input-field').forEach(el => el.required = false);
             }
-            window.showToast = showToast;
+        };
 
-            // ==================== LOADING ====================
-            function showLoading(message = 'Processando...') {
-                state.isLoading = true;
-                if (DOM.loadingMessage) DOM.loadingMessage.textContent = message;
-                if (DOM.loadingOverlay) DOM.loadingOverlay.classList.add('active');
-            }
+        // ==================== SALVAR USUÁRIO LOCAL ====================
+        function saveUserLocal(userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('loginTime', new Date().toISOString());
+        }
 
-            function hideLoading() {
-                state.isLoading = false;
-                if (DOM.loadingOverlay) DOM.loadingOverlay.classList.remove('active');
-            }
-
-            // ==================== NAVEGAÇÃO ENTRE CARDS ====================
-            window.showLoginCard = function() {
-                DOM.loginCard.style.display = 'block';
-                DOM.registerCard.style.display = 'none';
-                DOM.recoveryCard.style.display = 'none';
-            };
-
-            window.showRegisterCard = function() {
-                DOM.loginCard.style.display = 'none';
-                DOM.registerCard.style.display = 'block';
-                DOM.recoveryCard.style.display = 'none';
-            };
-
-            window.showRecoveryCard = function() {
-                DOM.loginCard.style.display = 'none';
-                DOM.registerCard.style.display = 'none';
-                DOM.recoveryCard.style.display = 'block';
-            };
-
-            // ==================== TOGGLE PASSWORD ====================
-            window.togglePassword = function(fieldId) {
-                const field = document.getElementById(fieldId);
-                if (!field) return;
-                const icon = field.parentElement.querySelector('.password-toggle i');
-                if (!icon) return;
-                
-                if (field.type === 'password') {
-                    field.type = 'text';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                } else {
-                    field.type = 'password';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                }
-            };
-
-            // ==================== SALVAR USUÁRIO ====================
-            async function saveUserToLocal(user) {
-                const userData = {
-                    id: user.id,
-                    name: user.nome || user.email.split('@')[0],
-                    email: user.email,
-                    phone: user.telefone || '',
-                    photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=667eea&color=fff`,
-                    role: user.role || ROLES.USER,
-                    lastLogin: new Date().toISOString()
-                };
-                
-                localStorage.setItem('user', JSON.stringify(userData));
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('loginTime', new Date().toISOString());
-                localStorage.setItem('userRole', userData.role);
-                state.userRole = userData.role;
-                return userData;
-            }
-
-            async function createUserInSupabase(userData) {
-                if (!supabase) return null;
-                try {
-                    const { data: existing } = await supabase
-                        .from('usuarios')
-                        .select('*')
-                        .eq('email', userData.email)
-                        .maybeSingle();
-
-                    if (existing) {
-                        return existing;
+        // ==================== VERIFICAR SESSÃO ====================
+        async function checkExistingSession() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                const loginTime = localStorage.getItem('loginTime');
+                const hoursSinceLogin = (new Date() - new Date(loginTime)) / (1000 * 60 * 60);
+                if (hoursSinceLogin < 24) {
+                    // Redirecionar baseado no role
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user.role === 'vendedor') {
+                        window.location.href = 'PDV.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
                     }
+                    return;
+                }
+            }
+            loadSavedEmail();
+        }
 
-                    const { data, error } = await supabase
-                        .from('usuarios')
-                        .insert([{
-                            nome: userData.name,
-                            email: userData.email,
-                            telefone: userData.phone || '',
-                            role: ROLES.USER,
-                            created_at: new Date().toISOString()
-                        }])
-                        .select();
+        function loadSavedEmail() {
+            const savedEmail = localStorage.getItem('savedEmail');
+            if (savedEmail && DOM.loginEmail) {
+                DOM.loginEmail.value = savedEmail;
+                if (DOM.rememberMe) DOM.rememberMe.checked = true;
+            }
+        }
+
+        // ==================== LOGIN ====================
+        if (DOM.loginForm) {
+            DOM.loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (state.isLoading || !supabaseReady) {
+                    showToast('Conectando ao servidor...', 'warning');
+                    return;
+                }
+
+                const email = DOM.loginEmail.value.trim();
+                const password = DOM.loginPassword.value;
+                const remember = DOM.rememberMe ? DOM.rememberMe.checked : false;
+
+                if (!email || !password) {
+                    showToast('Preencha todos os campos', 'warning');
+                    return;
+                }
+
+                showLoading('Verificando credenciais...');
+                
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
 
                     if (error) throw error;
-                    return data?.[0] || null;
-                } catch (error) {
-                    console.warn('Erro ao salvar no Supabase:', error);
-                    return null;
-                }
-            }
 
-            // ==================== REDIRECIONAR POR ROLE ====================
-            function redirectByRole(role) {
-                const rolePerm = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS[ROLES.USER];
-                
-                // Se for admin, vai para dashboard completo
-                if (role === ROLES.ADMIN) {
-                    return 'dashboard.html';
-                }
-                
-                // Se for vendedor, vai para PDV
-                if (role === ROLES.SELLER) {
-                    return 'pdv.html';
-                }
-                
-                // Usuário comum vai para dashboard limitado
-                return 'dashboard.html';
-            }
+                    // Buscar perfil do usuário
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.user.id)
+                        .single();
 
-            // ==================== VERIFICAR SESSÃO ====================
-            async function checkExistingSession() {
-                const isLoggedIn = localStorage.getItem('isLoggedIn');
-                if (isLoggedIn === 'true') {
-                    const loginTime = localStorage.getItem('loginTime');
-                    const hoursSinceLogin = (new Date() - new Date(loginTime)) / (1000 * 60 * 60);
-                    if (hoursSinceLogin < 24) {
-                        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                        const role = localStorage.getItem('userRole') || ROLES.USER;
-                        
-                        if (userData.email && supabase) {
-                            try {
-                                const { data } = await supabase
-                                    .from('usuarios')
-                                    .select('*')
-                                    .eq('email', userData.email)
-                                    .maybeSingle();
-                                if (data) {
-                                    state.userRole = data.role || ROLES.USER;
-                                    localStorage.setItem('userRole', state.userRole);
-                                    window.location.href = redirectByRole(state.userRole);
-                                    return;
-                                }
-                            } catch (e) {
-                                // Fallback - permitir acesso com base no papel salvo
-                                window.location.href = redirectByRole(role);
-                                return;
-                            }
-                        }
+                    if (profileError) throw profileError;
+
+                    // Buscar empresa se for admin
+                    let empresa = null;
+                    if (profile.role === 'admin' || profile.role === 'administrador') {
+                        const { data: empresaData, error: empresaError } = await supabase
+                            .from('empresas')
+                            .select('*')
+                            .eq('usuario_id', data.user.id)
+                            .single();
+                        if (!empresaError) empresa = empresaData;
                     }
-                }
-                loadSavedEmail();
-            }
 
-            function loadSavedEmail() {
-                const savedEmail = localStorage.getItem('savedEmail');
-                if (savedEmail && DOM.loginEmail) {
-                    DOM.loginEmail.value = savedEmail;
-                    if (DOM.rememberMe) DOM.rememberMe.checked = true;
-                }
-            }
-
-            // ==================== LOGIN COM EMAIL/SENHA ====================
-            async function loginWithEmail(email, password) {
-                if (!supabase) throw new Error('Supabase não inicializado');
-                
-                const { data: user, error: findError } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
-
-                if (findError) throw new Error('Erro ao buscar usuário');
-                if (!user) throw new Error('Usuário não encontrado');
-
-                if (user.senha && user.senha !== password) {
-                    throw new Error('Senha incorreta');
-                }
-
-                if (!user.senha) {
-                    const { error: updateError } = await supabase
-                        .from('usuarios')
-                        .update({ senha: password })
-                        .eq('email', email);
-
-                    if (updateError) {
-                        console.warn('Erro ao atualizar senha:', updateError);
-                    }
-                }
-
-                return user;
-            }
-
-            // ==================== REGISTRO ====================
-            async function registerUser(name, email, phone, password) {
-                if (!supabase) throw new Error('Supabase não inicializado');
-
-                const { data: existing } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
-
-                if (existing) throw new Error('Email já cadastrado');
-
-                const { data, error } = await supabase
-                    .from('usuarios')
-                    .insert([{
-                        nome: name,
-                        email: email,
-                        telefone: phone || '',
-                        senha: password,
-                        role: ROLES.USER,
-                        created_at: new Date().toISOString()
-                    }])
-                    .select();
-
-                if (error) throw error;
-                return data?.[0] || null;
-            }
-
-            // ==================== RECUPERAR SENHA ====================
-            async function resetPassword(email) {
-                if (!supabase) throw new Error('Supabase não inicializado');
-
-                const { data: user } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
-
-                if (!user) throw new Error('Usuário não encontrado');
-
-                console.log(`📧 Email de recuperação enviado para ${email}`);
-                return true;
-            }
-
-            // ==================== HANDLE SUCCESSFUL LOGIN ====================
-            async function handleSuccessfulLogin(user) {
-                showLoading('Entrando no sistema...');
-                try {
-                    const userRole = user.role || ROLES.USER;
-                    state.userRole = userRole;
-                    await saveUserToLocal({ ...user, role: userRole });
-                    
-                    const redirectPage = redirectByRole(userRole);
-                    const roleNames = {
-                        [ROLES.ADMIN]: 'Administrador',
-                        [ROLES.SELLER]: 'Vendedor',
-                        [ROLES.USER]: 'Usuário'
+                    const userData = {
+                        id: data.user.id,
+                        email: data.user.email,
+                        name: profile.name || data.user.email,
+                        role: profile.role || 'user',
+                        phone: profile.phone || '',
+                        empresa: empresa
                     };
+
+                    saveUserLocal(userData);
+                    state.user = userData;
+                    state.isAuthenticated = true;
+
+                    if (remember) {
+                        localStorage.setItem('savedEmail', email);
+                    } else {
+                        localStorage.removeItem('savedEmail');
+                    }
+
+                    showToast(`Bem-vindo, ${userData.name}!`, 'success');
                     
-                    showToast(`Bem-vindo, ${user.nome || user.email}! (${roleNames[userRole] || 'Usuário'})`, 'success');
-                    setTimeout(() => { window.location.href = redirectPage; }, 1500);
+                    // Redirecionar baseado no role
+                    setTimeout(() => {
+                        if (userData.role === 'vendedor') {
+                            window.location.href = 'PDV.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1500);
+
                 } catch (error) {
                     console.error('Erro:', error);
-                    showToast('Erro ao carregar dados do usuário', 'error');
+                    let errorMessage = 'Erro ao fazer login';
+                    if (error.message) errorMessage = error.message;
+                    showToast(errorMessage, 'error');
                     hideLoading();
                 }
-            }
+            });
+        }
 
-            // ==================== LOGIN FORM ====================
-            if (DOM.loginForm) {
-                DOM.loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    if (state.isLoading) return;
-
-                    const email = DOM.loginEmail.value.trim();
-                    const password = DOM.loginPassword.value;
-                    const remember = DOM.rememberMe ? DOM.rememberMe.checked : false;
-
-                    if (!email || !password) {
-                        showToast('Preencha todos os campos', 'warning');
-                        return;
-                    }
-
-                    showLoading('Verificando credenciais...');
-                    
-                    try {
-                        if (supabase) {
-                            const user = await loginWithEmail(email, password);
-                            
-                            if (remember) {
-                                localStorage.setItem('savedEmail', email);
-                            } else {
-                                localStorage.removeItem('savedEmail');
-                            }
-                            
-                            await handleSuccessfulLogin(user);
-                        } else {
-                            // Modo offline - usuários de demonstração com roles
-                            const demoUsers = {
-                                'admin@kanawasoft.com': { password: 'admin123', nome: 'Administrador', role: ROLES.ADMIN },
-                                'vendedor@kanawasoft.com': { password: 'vender123', nome: 'Vendedor', role: ROLES.SELLER },
-                                'user@kanawasoft.com': { password: 'user123', nome: 'Usuário', role: ROLES.USER }
-                            };
-                            
-                            if (demoUsers[email] && demoUsers[email].password === password) {
-                                const userData = {
-                                    id: Date.now(),
-                                    nome: demoUsers[email].nome,
-                                    email: email,
-                                    role: demoUsers[email].role
-                                };
-                                await handleSuccessfulLogin(userData);
-                            } else {
-                                throw new Error('Email ou senha incorretos');
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Erro:', error);
-                        let errorMessage = error.message || 'Erro ao fazer login';
-                        showToast(errorMessage, 'error');
-                        hideLoading();
-                    }
-                });
-            }
-
-            // ==================== REGISTER FORM ====================
-            if (DOM.registerForm) {
-                DOM.registerForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    if (state.isLoading) return;
-
-                    const name = document.getElementById('registerName').value.trim();
-                    const email = document.getElementById('registerEmail').value.trim();
-                    const phone = document.getElementById('registerPhone').value.trim();
-                    const password = document.getElementById('registerPassword').value;
-                    const confirmPassword = document.getElementById('registerConfirmPassword').value;
-                    const acceptTerms = document.getElementById('acceptTerms').checked;
-
-                    if (!name || !email || !password) {
-                        showToast('Preencha todos os campos obrigatórios', 'warning');
-                        return;
-                    }
-
-                    if (password !== confirmPassword) {
-                        showToast('As senhas não coincidem', 'error');
-                        return;
-                    }
-
-                    if (password.length < 6) {
-                        showToast('A senha deve ter pelo menos 6 caracteres', 'warning');
-                        return;
-                    }
-
-                    if (!acceptTerms) {
-                        showToast('Aceite os termos de serviço', 'warning');
-                        return;
-                    }
-
-                    showLoading('Criando sua conta...');
-
-                    try {
-                        if (supabase) {
-                            const user = await registerUser(name, email, phone, password);
-                            if (user) {
-                                showToast('Conta criada com sucesso!', 'success');
-                                DOM.loginEmail.value = email;
-                                DOM.loginPassword.value = password;
-                                showLoginCard();
-                                showToast('Faça login com sua nova conta', 'info');
-                            }
-                        } else {
-                            // Modo offline
-                            const userData = {
-                                id: Date.now(),
-                                nome: name,
-                                email: email,
-                                telefone: phone,
-                                role: ROLES.USER
-                            };
-                            localStorage.setItem('user', JSON.stringify(userData));
-                            localStorage.setItem('isLoggedIn', 'true');
-                            localStorage.setItem('loginTime', new Date().toISOString());
-                            localStorage.setItem('userRole', ROLES.USER);
-                            showToast('Conta criada com sucesso! (Modo offline)', 'success');
-                            setTimeout(() => window.location.href = 'dashboard.html', 1500);
-                        }
-                    } catch (error) {
-                        console.error('Erro:', error);
-                        let errorMessage = error.message || 'Erro ao criar conta';
-                        showToast(errorMessage, 'error');
-                    } finally {
-                        hideLoading();
-                    }
-                });
-            }
-
-            // ==================== RECOVERY FORM ====================
-            if (DOM.recoveryForm) {
-                DOM.recoveryForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    if (state.isLoading) return;
-
-                    const email = document.getElementById('recoveryEmail').value.trim();
-
-                    if (!email) {
-                        showToast('Digite seu email', 'warning');
-                        return;
-                    }
-
-                    showLoading('Enviando email de recuperação...');
-
-                    try {
-                        if (supabase) {
-                            await resetPassword(email);
-                            showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
-                        } else {
-                            showToast('Modo offline - Entre em contato com o administrador', 'warning');
-                        }
-                        setTimeout(() => window.showLoginCard(), 3000);
-                    } catch (error) {
-                        console.error('Erro:', error);
-                        showToast(error.message || 'Erro ao enviar email', 'error');
-                    } finally {
-                        hideLoading();
-                    }
-                });
-            }
-
-            // ==================== SOCIAL LOGIN ====================
-            window.loginWithGoogle = async () => {
-                if (state.isLoading) return;
-                if (!navigator.onLine) {
-                    showToast('Você está offline. Conecte-se à internet.', 'warning');
-                    return;
-                }
-                
-                if (!supabase) {
-                    showToast('Autenticação social disponível apenas online', 'warning');
+        // ==================== REGISTER ====================
+        if (DOM.registerForm) {
+            DOM.registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (state.isLoading || !supabaseReady) {
+                    showToast('Conectando ao servidor...', 'warning');
                     return;
                 }
 
-                showLoading('Conectando com Google...');
+                const name = document.getElementById('registerName').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const phone = document.getElementById('registerPhone').value.trim();
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('registerConfirmPassword').value;
+                const acceptTerms = document.getElementById('acceptTerms').checked;
+                const role = DOM.registerRole.value;
+
+                if (!name || !email || !password) {
+                    showToast('Preencha todos os campos obrigatórios', 'warning');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showToast('As senhas não coincidem', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showToast('A senha deve ter pelo menos 6 caracteres', 'warning');
+                    return;
+                }
+
+                if (!acceptTerms) {
+                    showToast('Aceite os termos de serviço', 'warning');
+                    return;
+                }
+
+                // Validar campos de empresa se for admin
+                if (role === 'admin' || role === 'administrador') {
+                    const companyName = document.getElementById('companyName').value.trim();
+                    const companyCnpj = document.getElementById('companyCnpj').value.trim();
+                    if (!companyName || !companyCnpj) {
+                        showToast('Preencha os dados da empresa (Nome e NIF)', 'warning');
+                        return;
+                    }
+                }
+
+                showLoading('Criando sua conta...');
+
                 try {
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
+                    // 1. Criar usuário no Supabase Auth
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
                         options: {
-                            redirectTo: window.location.origin + '/dashboard.html'
-                        }
-                    });
-                    
-                    if (error) throw error;
-                    showToast('Redirecionando para autenticação...', 'info');
-                } catch (error) {
-                    console.error('Erro Google:', error);
-                    showToast('Erro ao autenticar com Google', 'error');
-                    hideLoading();
-                }
-            };
-
-            window.loginWithGithub = async () => {
-                if (state.isLoading) return;
-                if (!navigator.onLine) {
-                    showToast('Você está offline. Conecte-se à internet.', 'warning');
-                    return;
-                }
-                
-                if (!supabase) {
-                    showToast('Autenticação social disponível apenas online', 'warning');
-                    return;
-                }
-
-                showLoading('Conectando com GitHub...');
-                try {
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: 'github',
-                        options: {
-                            redirectTo: window.location.origin + '/dashboard.html'
-                        }
-                    });
-                    
-                    if (error) throw error;
-                    showToast('Redirecionando para autenticação...', 'info');
-                } catch (error) {
-                    console.error('Erro GitHub:', error);
-                    showToast('Erro ao autenticar com GitHub', 'error');
-                    hideLoading();
-                }
-            };
-
-            // ==================== VERIFICAR SESSÃO DO SUPABASE ====================
-            async function checkSupabaseSession() {
-                if (!supabase) return;
-                try {
-                    const { data: { session }, error } = await supabase.auth.getSession();
-                    if (error) throw error;
-                    
-                    if (session) {
-                        const { data: user } = await supabase
-                            .from('usuarios')
-                            .select('*')
-                            .eq('email', session.user.email)
-                            .maybeSingle();
-                        
-                        if (user) {
-                            await handleSuccessfulLogin(user);
-                        } else if (session.user) {
-                            const { data: newUser, error: createError } = await supabase
-                                .from('usuarios')
-                                .insert([{
-                                    nome: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-                                    email: session.user.email,
-                                    role: ROLES.USER,
-                                    created_at: new Date().toISOString()
-                                }])
-                                .select();
-                            
-                            if (!createError && newUser) {
-                                await handleSuccessfulLogin(newUser[0]);
+                            data: {
+                                name: name,
+                                role: role,
+                                phone: phone
                             }
                         }
-                    }
-                } catch (error) {
-                    console.warn('Erro ao verificar sessão:', error);
-                }
-            }
-
-            // ==================== INICIAR ====================
-            async function init() {
-                await checkSupabaseSession();
-                await checkExistingSession();
-                
-                if (supabase) {
-                    supabase.auth.onAuthStateChange((event, session) => {
-                        if (event === 'SIGNED_IN' && session) {
-                            checkSupabaseSession();
-                        }
                     });
-                }
-            }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
+                    if (error) throw error;
+
+                    // 2. Criar perfil no banco
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert({
+                            id: data.user.id,
+                            name: name,
+                            email: email,
+                            phone: phone,
+                            role: role,
+                            status: 'ativo'
+                        });
+
+                    if (profileError) throw profileError;
+
+                    // 3. Se for admin/administrador, criar empresa
+                    let empresa = null;
+                    if (role === 'admin' || role === 'administrador') {
+                        const companyName = document.getElementById('companyName').value.trim();
+                        const companyCnpj = document.getElementById('companyCnpj').value.trim();
+                        const companyPhone = document.getElementById('companyPhone').value.trim();
+                        const companyAddress = document.getElementById('companyAddress').value.trim();
+
+                        const { data: empresaData, error: empresaError } = await supabase
+                            .from('empresas')
+                            .insert({
+                                usuario_id: data.user.id,
+                                nome: companyName,
+                                nif: companyCnpj,
+                                telefone: companyPhone || '',
+                                endereco: companyAddress || '',
+                                data_criacao: new Date().toISOString()
+                            })
+                            .select()
+                            .single();
+
+                        if (empresaError) throw empresaError;
+                        empresa = empresaData;
+                    }
+
+                    const userData = {
+                        id: data.user.id,
+                        email: email,
+                        name: name,
+                        role: role,
+                        phone: phone,
+                        empresa: empresa
+                    };
+
+                    saveUserLocal(userData);
+                    state.user = userData;
+                    state.isAuthenticated = true;
+
+                    showToast('Conta criada com sucesso!', 'success');
+                    
+                    // Redirecionar baseado no role
+                    setTimeout(() => {
+                        if (userData.role === 'vendedor') {
+                            window.location.href = 'PDV.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Erro:', error);
+                    let errorMessage = 'Erro ao criar conta';
+                    if (error.message) errorMessage = error.message;
+                    showToast(errorMessage, 'error');
+                    hideLoading();
+                }
+            });
+        }
+
+        // ==================== RECOVERY ====================
+        if (DOM.recoveryForm) {
+            DOM.recoveryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (state.isLoading || !supabaseReady) {
+                    showToast('Conectando ao servidor...', 'warning');
+                    return;
+                }
+
+                const email = document.getElementById('recoveryEmail').value.trim();
+
+                if (!email) {
+                    showToast('Digite seu email', 'warning');
+                    return;
+                }
+
+                showLoading('Enviando email de recuperação...');
+
+                try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin + '/login.html'
+                    });
+
+                    if (error) throw error;
+
+                    showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+                    setTimeout(() => window.showLoginCard(), 3000);
+                } catch (error) {
+                    console.error('Erro:', error);
+                    let errorMessage = 'Erro ao enviar email';
+                    if (error.message) errorMessage = error.message;
+                    showToast(errorMessage, 'error');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        // ==================== INICIAR ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (supabaseReady) {
+                checkExistingSession();
             } else {
-                init();
+                // Tentar novamente após 1 segundo
+                setTimeout(() => {
+                    if (supabaseReady) checkExistingSession();
+                }, 1000);
             }
+        });
 
-        })();
+        console.log('🔐 Sistema de autenticação Supabase carregado!');
     </script>
 </body>
 </html>
