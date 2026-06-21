@@ -146,6 +146,9 @@
             60% { transform: translateX(-5px); }
             80% { transform: translateX(5px); }
         }
+
+        .error-text { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+        .error-text.show { display: block; }
     </style>
 </head>
 <body>
@@ -357,6 +360,19 @@
             key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
         };
 
+        // ==================== INICIALIZAR SUPABASE ====================
+        let supabase = null;
+        let supabaseReady = false;
+
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
+
         // ==================== ESTADO ====================
         const state = {
             isLoading: false,
@@ -455,23 +471,19 @@
         }
 
         // ==================== NAVEGAÇÃO ENTRE CARDS ====================
-        // IMPORTANTE: Declaradas ANTES de serem usadas no HTML
         window.showLoginCard = function() {
-            console.log('showLoginCard chamado');
             DOM.loginCard.style.display = 'block';
             DOM.registerCard.style.display = 'none';
             DOM.recoveryCard.style.display = 'none';
         };
 
         window.showRegisterCard = function() {
-            console.log('showRegisterCard chamado');
             DOM.loginCard.style.display = 'none';
             DOM.registerCard.style.display = 'block';
             DOM.recoveryCard.style.display = 'none';
         };
 
         window.showRecoveryCard = function() {
-            console.log('showRecoveryCard chamado');
             DOM.loginCard.style.display = 'none';
             DOM.registerCard.style.display = 'none';
             DOM.recoveryCard.style.display = 'block';
@@ -520,20 +532,20 @@
                     return;
                 }
 
-                // Verificar se o Supabase está disponível
-                if (typeof supabase === 'undefined' || !supabase) {
+                if (!supabaseReady || !supabase) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
 
                 const name = document.getElementById('registerName').value.trim();
-                const email = document.getElementById('registerEmail').value.trim();
+                const email = document.getElementById('registerEmail').value.trim().toLowerCase();
                 const phone = document.getElementById('registerPhone').value.trim();
                 const password = document.getElementById('registerPassword').value;
                 const confirmPassword = document.getElementById('registerConfirmPassword').value;
                 const acceptTerms = document.getElementById('acceptTerms').checked;
                 const role = DOM.registerRole.value;
 
+                // Validações
                 if (!name || !email || !password) {
                     showToast('Preencha todos os campos obrigatórios', 'warning');
                     return;
@@ -546,6 +558,13 @@
 
                 if (password.length < 6) {
                     showToast('A senha deve ter pelo menos 6 caracteres', 'warning');
+                    return;
+                }
+
+                // Validação de email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showToast('Digite um email válido', 'error');
                     return;
                 }
 
@@ -566,6 +585,19 @@
                 showLoading('Criando sua conta...', 'Verificando dados...');
 
                 try {
+                    // Verificar se o email já existe
+                    const { data: existingUser, error: checkError } = await supabase
+                        .from('profiles')
+                        .select('email')
+                        .eq('email', email)
+                        .maybeSingle();
+
+                    if (existingUser) {
+                        showToast('Este email já está cadastrado. Faça login.', 'warning');
+                        hideLoading();
+                        return;
+                    }
+
                     const { data, error } = await supabase.auth.signUp({
                         email: email,
                         password: password,
@@ -574,7 +606,18 @@
                         }
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        if (error.message.includes('User already registered')) {
+                            showToast('Este email já está cadastrado. Faça login.', 'warning');
+                            hideLoading();
+                            return;
+                        }
+                        throw error;
+                    }
+
+                    if (!data || !data.user) {
+                        throw new Error('Falha ao criar usuário');
+                    }
 
                     const { error: profileError } = await supabase
                         .from('profiles')
@@ -587,7 +630,10 @@
                             status: 'ativo'
                         });
 
-                    if (profileError) throw profileError;
+                    if (profileError) {
+                        console.error('Erro ao criar perfil:', profileError);
+                        // Continuar mesmo com erro no perfil
+                    }
 
                     let empresa = null;
                     if (role === 'admin' || role === 'administrador') {
@@ -609,8 +655,9 @@
                             .select()
                             .single();
 
-                        if (empresaError) throw empresaError;
-                        empresa = empresaData;
+                        if (!empresaError) {
+                            empresa = empresaData;
+                        }
                     }
 
                     const userData = {
@@ -638,9 +685,18 @@
                     }, 1500);
 
                 } catch (error) {
-                    console.error('Erro:', error);
+                    console.error('Erro no registro:', error);
+                    
                     let errorMessage = 'Erro ao criar conta';
-                    if (error.message) errorMessage = error.message;
+                    if (error.message) {
+                        if (error.message.includes('User already registered')) {
+                            errorMessage = 'Este email já está cadastrado. Faça login.';
+                        } else if (error.message.includes('password')) {
+                            errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+                        } else {
+                            errorMessage = error.message;
+                        }
+                    }
                     showToast(errorMessage, 'error');
                     hideLoading();
                 }
@@ -656,12 +712,12 @@
                     return;
                 }
 
-                if (typeof supabase === 'undefined' || !supabase) {
+                if (!supabaseReady || !supabase) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
 
-                const email = DOM.loginEmail.value.trim();
+                const email = DOM.loginEmail.value.trim().toLowerCase();
                 const password = DOM.loginPassword.value;
                 const remember = DOM.rememberMe ? DOM.rememberMe.checked : false;
 
@@ -678,7 +734,16 @@
                         password: password
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        if (error.message.includes('Invalid login credentials')) {
+                            showToast('Email ou senha incorretos', 'error');
+                            DOM.loginCard.classList.add('shake');
+                            setTimeout(() => DOM.loginCard.classList.remove('shake'), 500);
+                            hideLoading();
+                            return;
+                        }
+                        throw error;
+                    }
 
                     if (!data || !data.user) {
                         throw new Error('Falha ao obter dados do utilizador.');
@@ -705,7 +770,7 @@
                             userName = profile.name || userName;
                         }
                     } catch (pErr) {
-                        console.warn('Aviso ao ler tabela profiles, usando dados padrão:', pErr);
+                        console.warn('Aviso ao ler tabela profiles:', pErr);
                     }
 
                     const userData = {
@@ -731,9 +796,9 @@
                     hideLoading();
                     console.error('Erro detalhado no login:', error);
                     
-                    let errorMessage = 'Credenciais inválidas';
+                    let errorMessage = 'Erro ao fazer login';
                     if (error.message) {
-                        if (error.message.includes('Invalid login')) {
+                        if (error.message.includes('Invalid login credentials')) {
                             errorMessage = 'Email ou senha incorretos';
                         } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
                             errorMessage = 'Erro de conexão com o servidor';
@@ -758,12 +823,12 @@
                     return;
                 }
 
-                if (typeof supabase === 'undefined' || !supabase) {
+                if (!supabaseReady || !supabase) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
 
-                const email = document.getElementById('recoveryEmail').value.trim();
+                const email = document.getElementById('recoveryEmail').value.trim().toLowerCase();
 
                 if (!email) {
                     showToast('Digite seu email', 'warning');
@@ -777,7 +842,14 @@
                         redirectTo: window.location.origin + '/login.html'
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        if (error.message.includes('User not found')) {
+                            showToast('Email não encontrado', 'error');
+                            hideLoading();
+                            return;
+                        }
+                        throw error;
+                    }
 
                     showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
                     setTimeout(() => {
@@ -798,16 +870,7 @@
         // ==================== INICIAR ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM carregado!');
-            
-            // Verificar se as funções estão disponíveis
-            console.log('showRegisterCard disponível?', typeof window.showRegisterCard === 'function');
-            console.log('showRecoveryCard disponível?', typeof window.showRecoveryCard === 'function');
-            console.log('showLoginCard disponível?', typeof window.showLoginCard === 'function');
-            
-            // Carregar email salvo
             loadSavedEmail();
-            
-            // Verificar sessão existente
             checkExistingSession();
         });
 
