@@ -4,32 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Funcionários | Kanawa Soft</title>
-	  <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
     <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ==================== VARIÁVEIS ==================== */
         :root {
             --sidebar-bg-start: #1e3a5f;
             --sidebar-bg-end: #0f2440;
-            --primary-color: #1e3a5f;
-            --secondary-color: #f59e0b;
             --success-color: #10b981;
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
             --info-color: #3b82f6;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
             --radius: 10px;
-            --shadow: 0 2px 16px rgba(0,0,0,0.06);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -38,13 +28,10 @@
             height: 100vh;
             display: flex;
         }
-
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* ==================== SIDEBAR ==================== */
         .sidebar {
             transition: all 0.3s;
             background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
@@ -52,68 +39,35 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            width: 280px;
         }
         .sidebar-collapsed { width: 70px; }
-        .sidebar-expanded { width: 280px; }
         .sidebar-hidden { display: none; }
-
-        .submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .submenu-open { max-height: 500px; }
 
-        /* ==================== MODAL ==================== */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
         }
         .modal-overlay.active { display: flex; }
 
-        /* ==================== TOAST ==================== */
         .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 380px;
-            width: 100%;
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
         }
         .toast {
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            color: #fff;
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
             box-shadow: 0 4px 20px rgba(0,0,0,0.12);
             animation: slideInRight 0.35s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
         }
         .toast.success { background: var(--success-color); }
         .toast.error { background: var(--danger-color); }
         .toast.warning { background: var(--warning-color); }
         .toast.info { background: var(--info-color); }
-        .toast .toast-close {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: #fff;
-            opacity: 0.7;
-            cursor: pointer;
-            font-size: 1rem;
-        }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
         .toast .toast-close:hover { opacity: 1; }
 
         @keyframes slideInRight {
@@ -121,7 +75,9 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* ==================== RESPONSIVE ==================== */
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .sidebar-hidden { display: flex; }
@@ -131,13 +87,13 @@
 <body>
 
     <!-- ==================== SIDEBAR ==================== -->
-    <div class="sidebar sidebar-expanded">
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
         <div class="p-4 flex items-center justify-between border-b border-blue-700">
             <div class="flex items-center">
                 <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
                 <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
             </div>
-            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -156,23 +112,23 @@
 
         <nav class="flex-1 overflow-y-auto py-2">
             <ul class="space-y-1 px-2">
-                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
-                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
                 <li>
-                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
                         <i class="fas fa-users mr-3"></i>
                         <span class="flex-1 font-medium">Recursos Humanos</span>
                         <i class="fas fa-chevron-down text-xs transition-transform"></i>
                     </div>
-                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
-                        <li><a href="funcionarios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-user-plus mr-2 text-sm"></i>Funcionários</a></li>
-                        <li><a href="turnos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-user-clock mr-2 text-sm"></i>Turnos</a></li>
-                        <li><a href="folha-pagamento.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-money-check mr-2 text-sm"></i>Folha Pagamento</a></li>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="funcionarios.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-user-plus mr-2 text-sm"></i>Funcionários</a></li>
+                        <li><a href="turnos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-user-clock mr-2 text-sm"></i>Turnos</a></li>
+                        <li><a href="folha-pagamento.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-money-check mr-2 text-sm"></i>Folha Pagamento</a></li>
                     </ul>
                 </li>
-                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
-                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
-                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
             </ul>
         </nav>
 
@@ -186,11 +142,10 @@
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
         <header class="bg-white shadow-sm z-10 border-b">
             <div class="flex items-center justify-between p-4">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     <h1 class="text-xl font-bold text-gray-800">GESTÃO DE FUNCIONÁRIOS</h1>
@@ -203,26 +158,10 @@
             </div>
         </header>
 
-        <!-- Content -->
-        <main class="flex-1 overflow-hidden p-6">
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContent">
             <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <div class="text-sm text-gray-500">Total Funcionários</div>
-                    <div class="text-2xl font-bold text-gray-800" id="totalEmployees">0</div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-4">
-                    <div class="text-sm text-gray-500">Activos</div>
-                    <div class="text-2xl font-bold text-green-600" id="activeEmployees">0</div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-4">
-                    <div class="text-sm text-gray-500">Vendedores</div>
-                    <div class="text-2xl font-bold text-blue-600" id="sellersCount">0</div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-4">
-                    <div class="text-sm text-gray-500">Folha Salarial</div>
-                    <div class="text-2xl font-bold text-purple-600" id="totalSalary">AOA 0</div>
-                </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
+                <!-- Carregado via JavaScript -->
             </div>
 
             <!-- Toolbar -->
@@ -242,7 +181,7 @@
                         <option value="administrativo">Administrativo</option>
                         <option value="supervisor">Supervisor</option>
                     </select>
-                    <button onclick="openEmployeeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                    <button onclick="window.openEmployeeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
                         <i class="fas fa-user-plus mr-2"></i> Novo Funcionário
                     </button>
                 </div>
@@ -276,10 +215,10 @@
                 <div class="px-6 py-3 border-t flex justify-between items-center">
                     <span class="text-sm text-gray-500" id="employeeCount">0 funcionários</span>
                     <div class="flex gap-2">
-                        <button onclick="loadEmployees()" class="text-blue-600 hover:text-blue-800">
+                        <button onclick="window.loadEmployees()" class="text-blue-600 hover:text-blue-800">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button onclick="exportEmployees()" class="text-green-600 hover:text-green-800">
+                        <button onclick="window.exportEmployees()" class="text-green-600 hover:text-green-800">
                             <i class="fas fa-file-export"></i>
                         </button>
                     </div>
@@ -293,12 +232,12 @@
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
             <div class="p-6 border-b flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Novo Funcionário</h3>
-                <button onclick="closeEmployeeModal()" class="text-gray-500 hover:text-gray-700">
+                <button onclick="window.closeEmployeeModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="p-6 overflow-y-auto max-h-[70vh]">
-                <form id="employeeForm" onsubmit="saveEmployee(event)">
+                <form id="employeeForm">
                     <input type="hidden" id="employeeId" value="">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,10 +293,10 @@
                 </form>
             </div>
             <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                <button onclick="closeEmployeeModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button onclick="window.closeEmployeeModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Cancelar
                 </button>
-                <button onclick="saveEmployee()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <button onclick="window.saveEmployee()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                     <i class="fas fa-save mr-2"></i> Salvar
                 </button>
             </div>
@@ -369,7 +308,7 @@
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
             <div class="p-6 border-b flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Detalhes do Funcionário</h3>
-                <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                <button onclick="window.closeDetailsModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -379,7 +318,7 @@
                 </div>
             </div>
             <div class="p-6 border-t bg-gray-50 flex justify-end">
-                <button onclick="closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button onclick="window.closeDetailsModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Fechar
                 </button>
             </div>
@@ -389,590 +328,590 @@
     <!-- ==================== TOAST CONTAINER ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE SDK ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
-        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        // ==================== SUPABASE CONFIG ====================
         const SUPABASE_CONFIG = {
             url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
             anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
         };
 
-        const supabase = window.supabase.createClient(
-            SUPABASE_CONFIG.url,
-            SUPABASE_CONFIG.anonKey
-        );
+        // ==================== INICIALIZAR SUPABASE ====================
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado para Funcionários');
 
-        console.log('✅ Supabase inicializado em Funcionários!');
+        (function() {
+            'use strict';
 
-        // ==================== VARIÁVEIS GLOBAIS ====================
-        let employees = [];
-        let currentUser = null;
-        let editingId = null;
+            // ==================== CONFIG ====================
+            const EMPLOYEES_TABLE = 'funcionarios';
+            const USERS_TABLE = 'usuarios';
+            const SALES_TABLE = 'vendas';
 
-        // ==================== INICIALIZAÇÃO ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadUserData();
-            await loadEmployees();
-            setupEventListeners();
-            loadSidebarPreference();
-            
-            // Data de admissão padrão
-            document.getElementById('emp_data_admissao').value = new Date().toISOString().split('T')[0];
-        });
+            // ==================== ESTADO ====================
+            const state = {
+                initialized: false,
+                user: null,
+                supabaseReady: true,
+                employees: [],
+                editingId: null,
+                isLoading: false,
+                refreshInterval: null
+            };
 
-        // ==================== FUNÇÕES SUPABASE ====================
-        async function loadUserData() {
-            try {
-                const { data, error } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .limit(1);
-                
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    currentUser = data[0];
+            // ==================== DOM REFS ====================
+            const DOM = {
+                statsGrid: document.getElementById('statsGrid'),
+                employeesTableBody: document.getElementById('employeesTableBody'),
+                employeeCount: document.getElementById('employeeCount'),
+                searchEmployees: document.getElementById('searchEmployees'),
+                roleFilter: document.getElementById('roleFilter'),
+                employeeModal: document.getElementById('employeeModal'),
+                modalTitle: document.getElementById('modalTitle'),
+                employeeId: document.getElementById('employeeId'),
+                emp_nome: document.getElementById('emp_nome'),
+                emp_email: document.getElementById('emp_email'),
+                emp_telefone: document.getElementById('emp_telefone'),
+                emp_cargo: document.getElementById('emp_cargo'),
+                emp_salario: document.getElementById('emp_salario'),
+                emp_data_admissao: document.getElementById('emp_data_admissao'),
+                emp_endereco: document.getElementById('emp_endereco'),
+                emp_ativo: document.getElementById('emp_ativo'),
+                detailsModal: document.getElementById('detailsModal'),
+                detailsContent: document.getElementById('detailsContent'),
+                toast: document.getElementById('toastContainer')
+            };
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                if (state.initialized) return;
+                state.initialized = true;
+
+                // Usar a variável global supabase
+                state.supabase = supabase;
+
+                Promise.all([
+                    loadUserData(),
+                    loadEmployees()
+                ]).then(() => {
+                    setupEventListeners();
+                    loadSidebarPreference();
+                    
+                    DOM.emp_data_admissao.value = new Date().toISOString().split('T')[0];
+                    
+                    state.refreshInterval = setInterval(refreshData, 60000);
+                });
+            }
+
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
+                } catch (e) {
+                    state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
-                
-                if (!currentUser) {
-                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
-                }
-                
-                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
-                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
-                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
-                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
-                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
-                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
+            }
+
+            function updateUserUI() {
+                const u = state.user;
+                document.getElementById('userName').textContent = u.nome;
+                document.getElementById('headerUserName').textContent = u.nome;
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
                 document.getElementById('footerVersion').textContent = 'v1.0';
-                
-            } catch (error) {
-                console.error('Erro ao carregar usuário:', error);
-                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
             }
-        }
 
-        async function loadEmployees() {
-            try {
-                const searchTerm = document.getElementById('searchEmployees')?.value?.toLowerCase() || '';
-                const roleFilter = document.getElementById('roleFilter')?.value || '';
-                
-                let query = supabase
-                    .from('funcionarios')
-                    .select('*')
-                    .order('nome');
-                
-                if (searchTerm) {
-                    query = query.or(`nome.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,telefone.ilike.%${searchTerm}%`);
-                }
-                
-                if (roleFilter) {
-                    query = query.eq('cargo', roleFilter);
-                }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
-                
-                employees = data || [];
-                renderEmployees();
-                updateStats();
-                
-            } catch (error) {
-                console.error('Erro ao carregar funcionários:', error);
-                showToast('Erro ao carregar funcionários', 'error');
-            }
-        }
-
-        async function saveEmployeeToDB(employeeData) {
-            try {
-                if (editingId) {
-                    // Update
-                    const { data, error } = await supabase
-                        .from('funcionarios')
-                        .update(employeeData)
-                        .eq('id', editingId)
-                        .select();
+            // ==================== CARREGAR FUNCIONÁRIOS ====================
+            async function loadEmployees() {
+                state.isLoading = true;
+                try {
+                    const searchTerm = DOM.searchEmployees.value.toLowerCase();
+                    const roleFilter = DOM.roleFilter.value;
+                    
+                    let query = state.supabase
+                        .from(EMPLOYEES_TABLE)
+                        .select('*')
+                        .order('nome');
+                    
+                    if (searchTerm) {
+                        query = query.or(`nome.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,telefone.ilike.%${searchTerm}%`);
+                    }
+                    
+                    if (roleFilter) {
+                        query = query.eq('cargo', roleFilter);
+                    }
+                    
+                    const { data, error } = await query;
                     
                     if (error) throw error;
-                    showToast('Funcionário atualizado com sucesso!', 'success');
-                    return data;
-                } else {
-                    // Insert
-                    const { data, error } = await supabase
-                        .from('funcionarios')
-                        .insert([employeeData])
-                        .select();
                     
-                    if (error) throw error;
-                    showToast('Funcionário cadastrado com sucesso!', 'success');
-                    return data;
+                    state.employees = data || [];
+                    renderEmployees();
+                    updateStats();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar funcionários:', error);
+                    showToast('Erro ao carregar funcionários', 'error');
+                } finally {
+                    state.isLoading = false;
                 }
-            } catch (error) {
-                console.error('Erro ao salvar funcionário:', error);
-                showToast('Erro ao salvar funcionário', 'error');
-                throw error;
             }
-        }
 
-        async function deleteEmployeeFromDB(id) {
-            try {
-                const { error } = await supabase
-                    .from('funcionarios')
-                    .delete()
-                    .eq('id', id);
+            // ==================== RENDERIZAR ====================
+            function renderEmployees() {
+                const tbody = DOM.employeesTableBody;
                 
-                if (error) throw error;
-                showToast('Funcionário removido com sucesso!', 'success');
-                
-            } catch (error) {
-                console.error('Erro ao deletar funcionário:', error);
-                showToast('Erro ao deletar funcionário', 'error');
-                throw error;
-            }
-        }
+                if (state.isLoading) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Carregando funcionários...</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
 
-        async function toggleEmployeeStatusInDB(id, currentStatus) {
-            try {
-                const { data, error } = await supabase
-                    .from('funcionarios')
-                    .update({ ativo: !currentStatus })
-                    .eq('id', id)
-                    .select();
+                if (state.employees.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-user-friends text-4xl mb-2 opacity-50"></i>
+                                <p>Nenhum funcionário encontrado</p>
+                                <p class="text-sm">Clique em "Novo Funcionário" para cadastrar</p>
+                            </td>
+                        </tr>
+                    `;
+                    DOM.employeeCount.textContent = '0 funcionários';
+                    return;
+                }
                 
-                if (error) throw error;
-                const status = !currentStatus ? 'activado' : 'desactivado';
-                showToast(`Funcionário ${status} com sucesso!`, 'success');
-                return data;
+                const roleColors = {
+                    'gerente': 'bg-purple-100 text-purple-800',
+                    'vendedor': 'bg-blue-100 text-blue-800',
+                    'caixa': 'bg-green-100 text-green-800',
+                    'estoquista': 'bg-yellow-100 text-yellow-800',
+                    'administrativo': 'bg-gray-100 text-gray-800',
+                    'supervisor': 'bg-indigo-100 text-indigo-800'
+                };
                 
-            } catch (error) {
-                console.error('Erro ao alterar status:', error);
-                showToast('Erro ao alterar status', 'error');
-                throw error;
-            }
-        }
-
-        async function getEmployeePerformance(id) {
-            try {
-                const { data, error } = await supabase
-                    .from('vendas')
-                    .select('*')
-                    .eq('seller_id', id)
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                const vendas = data || [];
-                const totalVendas = vendas.length;
-                const valorTotal = vendas.reduce((sum, v) => sum + (v.total || 0), 0);
-                const mediaVenda = totalVendas > 0 ? valorTotal / totalVendas : 0;
-                
-                return { totalVendas, valorTotal, mediaVenda };
-                
-            } catch (error) {
-                console.error('Erro ao carregar desempenho:', error);
-                return { totalVendas: 0, valorTotal: 0, mediaVenda: 0 };
-            }
-        }
-
-        // ==================== RENDERIZAR FUNCIONÁRIOS ====================
-        function renderEmployees() {
-            const tbody = document.getElementById('employeesTableBody');
-            
-            if (employees.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
-                            <i class="fas fa-user-friends text-4xl mb-2 opacity-50"></i>
-                            <p>Nenhum funcionário encontrado</p>
-                            <p class="text-sm">Clique em "Novo Funcionário" para cadastrar</p>
-                        </td>
-                    </tr>
-                `;
-                document.getElementById('employeeCount').textContent = '0 funcionários';
-                return;
-            }
-            
-            const roleColors = {
-                'gerente': 'bg-purple-100 text-purple-800',
-                'vendedor': 'bg-blue-100 text-blue-800',
-                'caixa': 'bg-green-100 text-green-800',
-                'estoquista': 'bg-yellow-100 text-yellow-800',
-                'administrativo': 'bg-gray-100 text-gray-800',
-                'supervisor': 'bg-indigo-100 text-indigo-800'
-            };
-            
-            tbody.innerHTML = employees.map(e => {
-                const dataAdmissao = e.data_admissao ? 
-                    new Date(e.data_admissao).toLocaleDateString('pt-BR') : 'N/A';
-                const salario = e.salario ? 
-                    `AOA ${e.salario.toLocaleString('pt-BR')}` : 'N/A';
-                const statusClass = e.ativo === false ? 
-                    'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-                const statusText = e.ativo === false ? 'Inactivo' : 'Activo';
-                const roleClass = roleColors[e.cargo] || 'bg-gray-100 text-gray-800';
-                
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
-                                    ${e.nome.charAt(0).toUpperCase()}
+                tbody.innerHTML = state.employees.map(e => {
+                    const dataAdmissao = e.data_admissao ? 
+                        new Date(e.data_admissao).toLocaleDateString('pt-BR') : 'N/A';
+                    const salario = e.salario ? 
+                        `AOA ${e.salario.toLocaleString('pt-BR')}` : 'N/A';
+                    const statusClass = e.ativo === false ? 
+                        'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                    const statusText = e.ativo === false ? 'Inactivo' : 'Activo';
+                    const roleClass = roleColors[e.cargo] || 'bg-gray-100 text-gray-800';
+                    
+                    return `
+                        <tr class="hover:bg-gray-50 fade-in">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                                        ${e.nome.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">${e.nome}</div>
+                                        <div class="text-sm text-gray-500">${e.email}</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div class="font-medium text-gray-800">${e.nome}</div>
-                                    <div class="text-sm text-gray-500">${e.email}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="${roleClass} px-2 py-1 rounded text-xs capitalize">
-                                ${e.cargo}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">${e.telefone}</td>
-                        <td class="px-6 py-4 text-sm text-right font-medium text-green-700">${salario}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600">${dataAdmissao}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="${statusClass} px-2 py-1 rounded-full text-xs font-medium">
-                                ${statusText}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="editEmployee('${e.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="viewEmployeeDetails('${e.id}')" class="text-green-600 hover:text-green-800 mr-3" title="Detalhes">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button onclick="toggleEmployeeStatus('${e.id}')" 
-                                    class="${e.ativo === false ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} mr-3" 
-                                    title="${e.ativo === false ? 'Activar' : 'Desactivar'}">
-                                <i class="fas ${e.ativo === false ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
-                            </button>
-                            <button onclick="deleteEmployee('${e.id}')" class="text-red-600 hover:text-red-800" title="Eliminar">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            
-            document.getElementById('employeeCount').textContent = `${employees.length} funcionários`;
-        }
-
-        function updateStats() {
-            const total = employees.length;
-            const active = employees.filter(e => e.ativo !== false).length;
-            const sellers = employees.filter(e => e.cargo === 'vendedor').length;
-            const totalSalary = employees.reduce((sum, e) => sum + (e.salario || 0), 0);
-            
-            document.getElementById('totalEmployees').textContent = total;
-            document.getElementById('activeEmployees').textContent = active;
-            document.getElementById('sellersCount').textContent = sellers;
-            document.getElementById('totalSalary').textContent = `AOA ${totalSalary.toLocaleString('pt-BR')}`;
-        }
-
-        // ==================== CRUD OPERAÇÕES ====================
-        function openEmployeeModal(employee = null) {
-            const modal = document.getElementById('employeeModal');
-            const title = document.getElementById('modalTitle');
-            
-            if (employee) {
-                title.textContent = 'Editar Funcionário';
-                document.getElementById('employeeId').value = employee.id;
-                document.getElementById('emp_nome').value = employee.nome || '';
-                document.getElementById('emp_email').value = employee.email || '';
-                document.getElementById('emp_telefone').value = employee.telefone || '';
-                document.getElementById('emp_cargo').value = employee.cargo || '';
-                document.getElementById('emp_salario').value = employee.salario || '';
-                document.getElementById('emp_data_admissao').value = employee.data_admissao || '';
-                document.getElementById('emp_endereco').value = employee.endereco || '';
-                document.getElementById('emp_ativo').checked = employee.ativo !== false;
-                editingId = employee.id;
-            } else {
-                title.textContent = 'Novo Funcionário';
-                document.getElementById('employeeId').value = '';
-                document.getElementById('emp_nome').value = '';
-                document.getElementById('emp_email').value = '';
-                document.getElementById('emp_telefone').value = '';
-                document.getElementById('emp_cargo').value = '';
-                document.getElementById('emp_salario').value = '';
-                document.getElementById('emp_data_admissao').value = new Date().toISOString().split('T')[0];
-                document.getElementById('emp_endereco').value = '';
-                document.getElementById('emp_ativo').checked = true;
-                editingId = null;
-            }
-            
-            modal.classList.add('active');
-        }
-
-        function closeEmployeeModal() {
-            document.getElementById('employeeModal').classList.remove('active');
-            editingId = null;
-        }
-
-        async function saveEmployee(event) {
-            if (event) event.preventDefault();
-            
-            const employeeData = {
-                nome: document.getElementById('emp_nome').value.trim(),
-                email: document.getElementById('emp_email').value.trim(),
-                telefone: document.getElementById('emp_telefone').value.trim(),
-                cargo: document.getElementById('emp_cargo').value,
-                salario: parseFloat(document.getElementById('emp_salario').value) || 0,
-                data_admissao: document.getElementById('emp_data_admissao').value || null,
-                endereco: document.getElementById('emp_endereco').value.trim() || null,
-                ativo: document.getElementById('emp_ativo').checked
-            };
-            
-            if (!employeeData.nome || !employeeData.email || !employeeData.telefone || !employeeData.cargo) {
-                showToast('Todos os campos obrigatórios devem ser preenchidos', 'error');
-                return;
-            }
-            
-            try {
-                await saveEmployeeToDB(employeeData);
-                closeEmployeeModal();
-                await loadEmployees();
-            } catch (error) {
-                console.error('Erro ao salvar:', error);
-            }
-        }
-
-        async function editEmployee(id) {
-            const employee = employees.find(e => e.id == id);
-            if (employee) {
-                openEmployeeModal(employee);
-            } else {
-                showToast('Funcionário não encontrado', 'error');
-            }
-        }
-
-        async function deleteEmployee(id) {
-            const employee = employees.find(e => e.id == id);
-            if (!employee) return;
-            
-            if (!confirm(`Tem certeza que deseja excluir o funcionário "${employee.nome}"?`)) return;
-            
-            try {
-                await deleteEmployeeFromDB(id);
-                await loadEmployees();
-            } catch (error) {
-                console.error('Erro ao deletar:', error);
-            }
-        }
-
-        async function toggleEmployeeStatus(id) {
-            const employee = employees.find(e => e.id == id);
-            if (!employee) return;
-            
-            try {
-                await toggleEmployeeStatusInDB(id, employee.ativo);
-                await loadEmployees();
-            } catch (error) {
-                console.error('Erro ao alterar status:', error);
-            }
-        }
-
-        async function viewEmployeeDetails(id) {
-            const employee = employees.find(e => e.id == id);
-            if (!employee) {
-                showToast('Funcionário não encontrado', 'error');
-                return;
-            }
-            
-            try {
-                const performance = await getEmployeePerformance(id);
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="${roleClass} px-2 py-1 rounded text-xs capitalize">${e.cargo}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${e.telefone}</td>
+                            <td class="px-6 py-4 text-sm text-right font-medium text-green-700">${salario}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${dataAdmissao}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="${statusClass} px-2 py-1 rounded-full text-xs font-medium">${statusText}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="window.editEmployee('${e.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="window.viewEmployeeDetails('${e.id}')" class="text-green-600 hover:text-green-800 mr-3" title="Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="window.toggleEmployeeStatus('${e.id}')" 
+                                        class="${e.ativo === false ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} mr-3" 
+                                        title="${e.ativo === false ? 'Activar' : 'Desactivar'}">
+                                    <i class="fas ${e.ativo === false ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
+                                </button>
+                                <button onclick="window.deleteEmployee('${e.id}')" class="text-red-600 hover:text-red-800" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
                 
-                document.getElementById('detailsContent').innerHTML = `
-                    <div class="space-y-6">
-                        <div class="flex items-center">
-                            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4 flex-shrink-0">
-                                ${employee.nome.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-800">${employee.nome}</h3>
-                                <p class="text-gray-600">${employee.email}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-blue-800 mb-3">Informações Pessoais</h4>
-                                <div class="space-y-2 text-sm">
-                                    <div><strong>Telefone:</strong> ${employee.telefone}</div>
-                                    <div><strong>Endereço:</strong> ${employee.endereco || 'Não informado'}</div>
-                                </div>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-green-800 mb-3">Informações Profissionais</h4>
-                                <div class="space-y-2 text-sm">
-                                    <div><strong>Cargo:</strong> <span class="capitalize">${employee.cargo}</span></div>
-                                    <div><strong>Salário:</strong> AOA ${employee.salario?.toLocaleString('pt-BR') || '0'}</div>
-                                    <div><strong>Data de Admissão:</strong> ${employee.data_admissao ? new Date(employee.data_admissao).toLocaleDateString('pt-BR') : 'N/A'}</div>
-                                    <div><strong>Status:</strong> <span class="${employee.ativo === false ? 'text-red-600' : 'text-green-600'} font-medium">${employee.ativo === false ? 'Inactivo' : 'Activo'}</span></div>
-                                </div>
-                            </div>
-                        </div>
+                DOM.employeeCount.textContent = `${state.employees.length} funcionários`;
+            }
 
-                        ${employee.cargo === 'vendedor' ? `
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-purple-800 mb-3">Desempenho de Vendas</h4>
-                            <div class="grid grid-cols-3 gap-4 text-center">
-                                <div>
-                                    <div class="text-2xl font-bold text-purple-600">${performance.totalVendas}</div>
-                                    <div class="text-sm text-gray-600">Vendas Este Mês</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-green-600">AOA ${performance.valorTotal.toLocaleString('pt-BR')}</div>
-                                    <div class="text-sm text-gray-600">Valor Total</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-blue-600">AOA ${performance.mediaVenda.toLocaleString('pt-BR')}</div>
-                                    <div class="text-sm text-gray-600">Média por Venda</div>
-                                </div>
-                            </div>
-                        </div>
-                        ` : ''}
+            function updateStats() {
+                const total = state.employees.length;
+                const active = state.employees.filter(e => e.ativo !== false).length;
+                const sellers = state.employees.filter(e => e.cargo === 'vendedor').length;
+                const totalSalary = state.employees.reduce((sum, e) => sum + (e.salario || 0), 0);
+                
+                DOM.statsGrid.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Total Funcionários</div>
+                        <div class="text-2xl font-bold text-gray-800">${total}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Activos</div>
+                        <div class="text-2xl font-bold text-green-600">${active}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Vendedores</div>
+                        <div class="text-2xl font-bold text-blue-600">${sellers}</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="text-sm text-gray-500">Folha Salarial</div>
+                        <div class="text-2xl font-bold text-purple-600">AOA ${totalSalary.toLocaleString('pt-BR')}</div>
                     </div>
                 `;
-                
-                document.getElementById('detailsModal').classList.add('active');
-                
-            } catch (error) {
-                console.error('Erro ao carregar detalhes:', error);
-                showToast('Erro ao carregar detalhes do funcionário', 'error');
             }
-        }
 
-        function closeDetailsModal() {
-            document.getElementById('detailsModal').classList.remove('active');
-        }
-
-        // ==================== EXPORT ====================
-        function exportEmployees() {
-            if (employees.length === 0) {
-                showToast('Nenhum funcionário para exportar', 'warning');
-                return;
-            }
-            
-            const headers = ['Nome', 'Email', 'Telefone', 'Cargo', 'Salário', 'Data Admissão', 'Status'];
-            const rows = employees.map(e => [
-                e.nome,
-                e.email,
-                e.telefone,
-                e.cargo,
-                e.salario || 0,
-                e.data_admissao || '',
-                e.ativo !== false ? 'Activo' : 'Inactivo'
-            ]);
-            
-            const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `funcionarios_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-            URL.revokeObjectURL(link.href);
-            
-            showToast('Funcionários exportados com sucesso!', 'success');
-        }
-
-        // ==================== FILTROS ====================
-        function filterEmployees() {
-            loadEmployees();
-        }
-
-        // ==================== NOTIFICAÇÕES ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
-                <span>${message}</span>
-                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
-        }
-
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            document.getElementById('searchEmployees').addEventListener('input', filterEmployees);
-            document.getElementById('roleFilter').addEventListener('change', filterEmployees);
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (document.getElementById('employeeModal').classList.contains('active')) {
-                        closeEmployeeModal();
-                    }
-                    if (document.getElementById('detailsModal').classList.contains('active')) {
-                        closeDetailsModal();
-                    }
-                }
-                if (e.ctrlKey && e.key === 'n') {
-                    e.preventDefault();
-                    openEmployeeModal();
-                }
-            });
-        }
-
-        // ==================== SIDEBAR ====================
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('sidebar-collapsed');
-            sidebar.classList.toggle('sidebar-expanded');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
-        }
-
-        function toggleMobileSidebar() {
-            document.querySelector('.sidebar').classList.toggle('hidden');
-        }
-
-        function toggleSubmenu(el) {
-            const submenu = el.nextElementSibling;
-            const arrow = el.querySelector('.fa-chevron-down');
-            if (submenu) {
-                submenu.classList.toggle('submenu-open');
-                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
-            }
-        }
-
-        function loadSidebarPreference() {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                if (isCollapsed) {
-                    sidebar.classList.add('sidebar-collapsed');
-                    sidebar.classList.remove('sidebar-expanded');
+            // ==================== CRUD ====================
+            function openEmployeeModal(employee = null) {
+                if (employee) {
+                    DOM.modalTitle.textContent = 'Editar Funcionário';
+                    DOM.employeeId.value = employee.id;
+                    DOM.emp_nome.value = employee.nome || '';
+                    DOM.emp_email.value = employee.email || '';
+                    DOM.emp_telefone.value = employee.telefone || '';
+                    DOM.emp_cargo.value = employee.cargo || '';
+                    DOM.emp_salario.value = employee.salario || '';
+                    DOM.emp_data_admissao.value = employee.data_admissao || '';
+                    DOM.emp_endereco.value = employee.endereco || '';
+                    DOM.emp_ativo.checked = employee.ativo !== false;
+                    state.editingId = employee.id;
                 } else {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    sidebar.classList.add('sidebar-expanded');
+                    DOM.modalTitle.textContent = 'Novo Funcionário';
+                    DOM.employeeId.value = '';
+                    DOM.emp_nome.value = '';
+                    DOM.emp_email.value = '';
+                    DOM.emp_telefone.value = '';
+                    DOM.emp_cargo.value = '';
+                    DOM.emp_salario.value = '';
+                    DOM.emp_data_admissao.value = new Date().toISOString().split('T')[0];
+                    DOM.emp_endereco.value = '';
+                    DOM.emp_ativo.checked = true;
+                    state.editingId = null;
+                }
+                
+                DOM.employeeModal.classList.add('active');
+            }
+
+            function closeEmployeeModal() {
+                DOM.employeeModal.classList.remove('active');
+                state.editingId = null;
+            }
+
+            async function saveEmployee() {
+                const employeeData = {
+                    nome: DOM.emp_nome.value.trim(),
+                    email: DOM.emp_email.value.trim(),
+                    telefone: DOM.emp_telefone.value.trim(),
+                    cargo: DOM.emp_cargo.value,
+                    salario: parseFloat(DOM.emp_salario.value) || 0,
+                    data_admissao: DOM.emp_data_admissao.value || null,
+                    endereco: DOM.emp_endereco.value.trim() || null,
+                    ativo: DOM.emp_ativo.checked
+                };
+                
+                if (!employeeData.nome || !employeeData.email || !employeeData.telefone || !employeeData.cargo) {
+                    showToast('Todos os campos obrigatórios devem ser preenchidos', 'error');
+                    return;
+                }
+                
+                try {
+                    if (state.editingId) {
+                        const { error } = await state.supabase
+                            .from(EMPLOYEES_TABLE)
+                            .update(employeeData)
+                            .eq('id', state.editingId);
+                        
+                        if (error) throw error;
+                        showToast('Funcionário atualizado com sucesso!', 'success');
+                    } else {
+                        const { error } = await state.supabase
+                            .from(EMPLOYEES_TABLE)
+                            .insert([employeeData]);
+                        
+                        if (error) throw error;
+                        showToast('Funcionário cadastrado com sucesso!', 'success');
+                    }
+                    
+                    closeEmployeeModal();
+                    await loadEmployees();
+                } catch (error) {
+                    console.error('Erro ao salvar:', error);
+                    showToast('Erro ao salvar funcionário', 'error');
                 }
             }
-        }
 
-        // ==================== EXPORTAR FUNÇÕES ====================
-        window.openEmployeeModal = openEmployeeModal;
-        window.closeEmployeeModal = closeEmployeeModal;
-        window.saveEmployee = saveEmployee;
-        window.editEmployee = editEmployee;
-        window.deleteEmployee = deleteEmployee;
-        window.toggleEmployeeStatus = toggleEmployeeStatus;
-        window.viewEmployeeDetails = viewEmployeeDetails;
-        window.closeDetailsModal = closeDetailsModal;
-        window.filterEmployees = filterEmployees;
-        window.exportEmployees = exportEmployees;
-        window.toggleSidebar = toggleSidebar;
-        window.toggleMobileSidebar = toggleMobileSidebar;
-        window.toggleSubmenu = toggleSubmenu;
-        window.loadEmployees = loadEmployees;
-        window.showToast = showToast;
+            async function editEmployee(id) {
+                const employee = state.employees.find(e => e.id == id);
+                if (employee) {
+                    openEmployeeModal(employee);
+                } else {
+                    showToast('Funcionário não encontrado', 'error');
+                }
+            }
+
+            async function deleteEmployee(id) {
+                const employee = state.employees.find(e => e.id == id);
+                if (!employee) return;
+                
+                if (!confirm(`Tem certeza que deseja excluir o funcionário "${employee.nome}"?`)) return;
+                
+                try {
+                    await state.supabase.from(EMPLOYEES_TABLE).delete().eq('id', id);
+                    showToast('Funcionário removido com sucesso!', 'success');
+                    await loadEmployees();
+                } catch (error) {
+                    console.error('Erro ao deletar:', error);
+                    showToast('Erro ao deletar funcionário', 'error');
+                }
+            }
+
+            async function toggleEmployeeStatus(id) {
+                const employee = state.employees.find(e => e.id == id);
+                if (!employee) return;
+                
+                try {
+                    await state.supabase
+                        .from(EMPLOYEES_TABLE)
+                        .update({ ativo: !employee.ativo })
+                        .eq('id', id);
+                    
+                    showToast(`Funcionário ${!employee.ativo ? 'activado' : 'desactivado'} com sucesso!`, 'success');
+                    await loadEmployees();
+                } catch (error) {
+                    console.error('Erro ao alterar status:', error);
+                    showToast('Erro ao alterar status', 'error');
+                }
+            }
+
+            async function viewEmployeeDetails(id) {
+                const employee = state.employees.find(e => e.id == id);
+                if (!employee) {
+                    showToast('Funcionário não encontrado', 'error');
+                    return;
+                }
+                
+                try {
+                    const { data: sales } = await state.supabase
+                        .from(SALES_TABLE)
+                        .select('*')
+                        .eq('seller_id', id)
+                        .order('created_at', { ascending: false });
+                    
+                    const vendas = sales || [];
+                    const totalVendas = vendas.length;
+                    const valorTotal = vendas.reduce((sum, v) => sum + (v.total || 0), 0);
+                    const mediaVenda = totalVendas > 0 ? valorTotal / totalVendas : 0;
+                    
+                    DOM.detailsContent.innerHTML = `
+                        <div class="space-y-6">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4 flex-shrink-0">
+                                    ${employee.nome.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">${employee.nome}</h3>
+                                    <p class="text-gray-600">${employee.email}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-blue-800 mb-3">Informações Pessoais</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div><strong>Telefone:</strong> ${employee.telefone}</div>
+                                        <div><strong>Endereço:</strong> ${employee.endereco || 'Não informado'}</div>
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-green-800 mb-3">Informações Profissionais</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div><strong>Cargo:</strong> <span class="capitalize">${employee.cargo}</span></div>
+                                        <div><strong>Salário:</strong> AOA ${employee.salario?.toLocaleString('pt-BR') || '0'}</div>
+                                        <div><strong>Data de Admissão:</strong> ${employee.data_admissao ? new Date(employee.data_admissao).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                                        <div><strong>Status:</strong> <span class="${employee.ativo === false ? 'text-red-600' : 'text-green-600'} font-medium">${employee.ativo === false ? 'Inactivo' : 'Activo'}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${employee.cargo === 'vendedor' ? `
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-purple-800 mb-3">Desempenho de Vendas</h4>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <div class="text-2xl font-bold text-purple-600">${totalVendas}</div>
+                                        <div class="text-sm text-gray-600">Vendas</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-green-600">AOA ${valorTotal.toLocaleString('pt-BR')}</div>
+                                        <div class="text-sm text-gray-600">Valor Total</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-blue-600">AOA ${mediaVenda.toLocaleString('pt-BR')}</div>
+                                        <div class="text-sm text-gray-600">Média por Venda</div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    DOM.detailsModal.classList.add('active');
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar detalhes:', error);
+                    showToast('Erro ao carregar detalhes do funcionário', 'error');
+                }
+            }
+
+            function closeDetailsModal() {
+                DOM.detailsModal.classList.remove('active');
+            }
+
+            // ==================== EXPORT ====================
+            function exportEmployees() {
+                if (state.employees.length === 0) {
+                    showToast('Nenhum funcionário para exportar', 'warning');
+                    return;
+                }
+                
+                const headers = ['Nome', 'Email', 'Telefone', 'Cargo', 'Salário', 'Data Admissão', 'Status'];
+                const rows = state.employees.map(e => [
+                    e.nome,
+                    e.email,
+                    e.telefone,
+                    e.cargo,
+                    e.salario || 0,
+                    e.data_admissao || '',
+                    e.ativo !== false ? 'Activo' : 'Inactivo'
+                ]);
+                
+                const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `funcionarios_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                
+                showToast('Funcionários exportados com sucesso!', 'success');
+            }
+
+            // ==================== FILTROS ====================
+            function filterEmployees() {
+                loadEmployees();
+            }
+
+            // ==================== REFRESH ====================
+            function refreshData() {
+                loadEmployees();
+                showToast('Dados atualizados', 'info');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.searchEmployees.addEventListener('input', filterEmployees);
+                DOM.roleFilter.addEventListener('change', filterEmployees);
+                
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (DOM.employeeModal.classList.contains('active')) closeEmployeeModal();
+                        if (DOM.detailsModal.classList.contains('active')) closeDetailsModal();
+                    }
+                    if (e.ctrlKey && e.key === 'n') {
+                        e.preventDefault();
+                        openEmployeeModal();
+                    }
+                });
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar && isCollapsed) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // ==================== EXPORT ====================
+            window.openEmployeeModal = openEmployeeModal;
+            window.closeEmployeeModal = closeEmployeeModal;
+            window.saveEmployee = saveEmployee;
+            window.editEmployee = editEmployee;
+            window.deleteEmployee = deleteEmployee;
+            window.toggleEmployeeStatus = toggleEmployeeStatus;
+            window.viewEmployeeDetails = viewEmployeeDetails;
+            window.closeDetailsModal = closeDetailsModal;
+            window.filterEmployees = filterEmployees;
+            window.exportEmployees = exportEmployees;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.loadEmployees = loadEmployees;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
     </script>
 </body>
 </html>
