@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sidebar-bg-start: #1e3a5f;
@@ -335,19 +336,30 @@
     <!-- ==================== TOAST ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
+
+        // ==================== INICIALIZAR SUPABASE ====================
+        let supabase = null;
+        let supabaseReady = false;
+
+        try {
+            const { createClient } = window.supabase;
+            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            supabaseReady = true;
+            console.log('✅ Supabase inicializado para Auditoria');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Supabase:', error);
+        }
+
         (function() {
             'use strict';
 
             // ==================== CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
-                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
-            };
-
             const LOGS_TABLE = 'logs_auditoria';
             const ALERTS_TABLE = 'alertas_seguranca';
             const USERS_TABLE = 'usuarios';
@@ -356,7 +368,6 @@
             const state = {
                 initialized: false,
                 user: null,
-                supabase: null,
                 logs: [],
                 alerts: [],
                 activeUsers: [],
@@ -392,11 +403,6 @@
                 if (state.initialized) return;
                 state.initialized = true;
 
-                state.supabase = window.supabase.createClient(
-                    SUPABASE_CONFIG.url,
-                    SUPABASE_CONFIG.anonKey
-                );
-
                 Promise.all([
                     loadUserData(),
                     loadAllData()
@@ -404,7 +410,6 @@
                     setupEventListeners();
                     loadSidebarPreference();
                     
-                    // Atualizar a cada 60 segundos
                     state.refreshInterval = setInterval(refreshData, 60000);
                 });
             }
@@ -412,11 +417,17 @@
             // ==================== CARREGAR USUÁRIO ====================
             async function loadUserData() {
                 try {
-                    const { data } = await state.supabase.from(USERS_TABLE).select('*').limit(1);
+                    if (!supabaseReady) {
+                        state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                        updateUserUI();
+                        return;
+                    }
+                    const { data } = await supabase.from(USERS_TABLE).select('*').limit(1);
                     state.user = data?.[0] || { id: 1, nome: 'Usuário', cargo: 'Usuário' };
                     updateUserUI();
                 } catch (e) {
                     state.user = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
             }
 
@@ -454,77 +465,37 @@
             // ==================== CARREGAR ESTATÍSTICAS ====================
             async function loadStats() {
                 try {
-                    // Buscar estatísticas do banco
+                    if (!supabaseReady) {
+                        renderStats({ todayEvents: 0, eventsTrend: '--', activeAlerts: 0, criticalAlerts: '0 crítico', activeUsers: 0, adminUsers: '0', logSize: '--', retentionPeriod: '--' });
+                        return;
+                    }
+
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     const todayStr = today.toISOString();
 
-                    // Eventos de hoje
-                    const { count: todayEvents } = await state.supabase
-                        .from(LOGS_TABLE)
-                        .select('*', { count: 'exact', head: true })
-                        .gte('created_at', todayStr);
-
-                    // Alertas ativos
-                    const { count: activeAlerts } = await state.supabase
-                        .from(ALERTS_TABLE)
-                        .select('*', { count: 'exact', head: true })
-                        .eq('status', 'ativo');
-
-                    // Alertas críticos
-                    const { count: criticalAlerts } = await state.supabase
-                        .from(ALERTS_TABLE)
-                        .select('*', { count: 'exact', head: true })
-                        .eq('status', 'ativo')
-                        .eq('severidade', 'critical');
-
-                    // Utilizadores ativos (últimos 15 minutos)
-                    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-                    const { count: activeUsers } = await state.supabase
-                        .from(USERS_TABLE)
-                        .select('*', { count: 'exact', head: true })
-                        .gt('last_activity', fifteenMinAgo);
-
-                    // Administradores
-                    const { count: adminUsers } = await state.supabase
-                        .from(USERS_TABLE)
-                        .select('*', { count: 'exact', head: true })
-                        .eq('role', 'admin');
-
-                    // Tamanho dos logs
-                    const { data: logSizeData } = await state.supabase
-                        .from(LOGS_TABLE)
-                        .select('created_at')
-                        .order('created_at', { ascending: false })
-                        .limit(1);
-
-                    // Calcular tamanho aproximado (simulado)
-                    const logSize = '2.4 GB';
-                    const retentionPeriod = '30 dias';
+                    const [todayEvents, activeAlerts, criticalAlerts, activeUsers, adminUsers] = await Promise.all([
+                        supabase.from(LOGS_TABLE).select('*', { count: 'exact', head: true }).gte('created_at', todayStr),
+                        supabase.from(ALERTS_TABLE).select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
+                        supabase.from(ALERTS_TABLE).select('*', { count: 'exact', head: true }).eq('status', 'ativo').eq('severidade', 'critical'),
+                        supabase.from(USERS_TABLE).select('*', { count: 'exact', head: true }).gt('last_activity', new Date(Date.now() - 15 * 60 * 1000).toISOString()),
+                        supabase.from(USERS_TABLE).select('*', { count: 'exact', head: true }).eq('role', 'admin')
+                    ]);
 
                     renderStats({
-                        todayEvents: todayEvents || 0,
+                        todayEvents: todayEvents.count || 0,
                         eventsTrend: '+12% vs ontem',
-                        activeAlerts: activeAlerts || 0,
-                        criticalAlerts: `${criticalAlerts || 0} crítico${criticalAlerts > 1 ? 's' : ''}`,
-                        activeUsers: activeUsers || 0,
-                        adminUsers: `${adminUsers || 0} administradore${adminUsers > 1 ? 's' : ''}`,
-                        logSize: logSize,
-                        retentionPeriod: retentionPeriod
+                        activeAlerts: activeAlerts.count || 0,
+                        criticalAlerts: `${criticalAlerts.count || 0} crítico${criticalAlerts.count > 1 ? 's' : ''}`,
+                        activeUsers: activeUsers.count || 0,
+                        adminUsers: `${adminUsers.count || 0} administradore${adminUsers.count > 1 ? 's' : ''}`,
+                        logSize: '2.4 GB',
+                        retentionPeriod: '30 dias'
                     });
 
                 } catch (error) {
                     console.error('Erro ao carregar estatísticas:', error);
-                    renderStats({
-                        todayEvents: 0,
-                        eventsTrend: '--',
-                        activeAlerts: 0,
-                        criticalAlerts: '0 crítico',
-                        activeUsers: 0,
-                        adminUsers: '0 administradores',
-                        logSize: '--',
-                        retentionPeriod: '--'
-                    });
+                    renderStats({ todayEvents: 0, eventsTrend: '--', activeAlerts: 0, criticalAlerts: '0 crítico', activeUsers: 0, adminUsers: '0', logSize: '--', retentionPeriod: '--' });
                 }
             }
 
@@ -576,7 +547,13 @@
             // ==================== CARREGAR LOGS ====================
             async function loadLogs() {
                 try {
-                    let query = state.supabase
+                    if (!supabaseReady) {
+                        state.logs = [];
+                        renderLogs();
+                        return;
+                    }
+
+                    let query = supabase
                         .from(LOGS_TABLE)
                         .select('*, usuarios(nome)')
                         .order('created_at', { ascending: false });
@@ -586,7 +563,6 @@
                     }
 
                     const { data, error } = await query;
-
                     if (error) throw error;
 
                     state.logs = data || [];
@@ -663,7 +639,13 @@
             // ==================== CARREGAR ALERTAS ====================
             async function loadAlerts() {
                 try {
-                    const { data, error } = await state.supabase
+                    if (!supabaseReady) {
+                        state.alerts = [];
+                        renderAlerts();
+                        return;
+                    }
+
+                    const { data, error } = await supabase
                         .from(ALERTS_TABLE)
                         .select('*')
                         .eq('status', 'ativo')
@@ -729,21 +711,21 @@
             // ==================== CARREGAR ESTATÍSTICAS DE EVENTOS ====================
             async function loadEventStats() {
                 try {
-                    // Agrupar logs por tipo
-                    const { data, error } = await state.supabase
-                        .from(LOGS_TABLE)
-                        .select('tipo, count');
-
-                    // Se não houver dados ou erro, usar dados vazios
-                    if (error || !data) {
+                    if (!supabaseReady) {
                         state.eventStats = [];
                         renderEventStats();
                         return;
                     }
 
+                    const { data, error } = await supabase
+                        .from(LOGS_TABLE)
+                        .select('tipo');
+
+                    if (error) throw error;
+
                     // Agrupar manualmente
                     const statsMap = {};
-                    data.forEach(item => {
+                    (data || []).forEach(item => {
                         if (statsMap[item.tipo]) {
                             statsMap[item.tipo] += 1;
                         } else {
@@ -814,14 +796,6 @@
             // ==================== CARREGAR FILTROS RÁPIDOS ====================
             async function loadQuickFilters() {
                 try {
-                    // Buscar tipos de eventos disponíveis
-                    const { data, error } = await state.supabase
-                        .from(LOGS_TABLE)
-                        .select('tipo')
-                        .order('tipo');
-
-                    const types = [...new Set(data?.map(item => item.tipo).filter(Boolean) || [])];
-                    
                     const filterConfigs = {
                         'today': { label: 'Últimas 24h', icon: 'fa-clock', color: 'text-blue-500' },
                         'week': { label: 'Última Semana', icon: 'fa-calendar-week', color: 'text-green-500' },
@@ -833,23 +807,6 @@
                         value: value,
                         ...config
                     }));
-
-                    // Adicionar filtros dinâmicos por tipo
-                    types.forEach(type => {
-                        const labelMap = {
-                            'login': 'Login/Logout',
-                            'data_change': 'Alterações',
-                            'settings': 'Configurações',
-                            'security': 'Segurança',
-                            'system': 'Sistema'
-                        };
-                        state.quickFilters.push({
-                            value: type,
-                            label: labelMap[type] || type,
-                            icon: 'fa-tag',
-                            color: 'text-gray-500'
-                        });
-                    });
 
                     renderQuickFilters();
 
@@ -888,9 +845,15 @@
             // ==================== CARREGAR UTILIZADORES ACTIVOS ====================
             async function loadActiveUsers() {
                 try {
+                    if (!supabaseReady) {
+                        state.activeUsers = [];
+                        renderActiveUsers();
+                        return;
+                    }
+
                     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
                     
-                    const { data, error } = await state.supabase
+                    const { data, error } = await supabase
                         .from(USERS_TABLE)
                         .select('id, nome, last_activity')
                         .gt('last_activity', fifteenMinAgo)
