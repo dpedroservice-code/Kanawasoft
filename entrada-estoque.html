@@ -4,32 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrada em Estoque | Kanawa Soft</title>
-	 <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
+    <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
     <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ==================== VARIÁVEIS ==================== */
         :root {
             --sidebar-bg-start: #1e3a5f;
             --sidebar-bg-end: #0f2440;
-            --primary-color: #1e3a5f;
-            --secondary-color: #f59e0b;
             --success-color: #10b981;
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
             --info-color: #3b82f6;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
             --radius: 10px;
-            --shadow: 0 2px 16px rgba(0,0,0,0.06);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -38,13 +28,10 @@
             height: 100vh;
             display: flex;
         }
-
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* ==================== SIDEBAR ==================== */
         .sidebar {
             transition: all 0.3s;
             background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
@@ -52,54 +39,28 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            width: 280px;
         }
         .sidebar-collapsed { width: 70px; }
-        .sidebar-expanded { width: 280px; }
         .sidebar-hidden { display: none; }
-
-        .submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .submenu-open { max-height: 500px; }
 
-        /* ==================== TOAST ==================== */
         .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 380px;
-            width: 100%;
+            position: fixed; top: 80px; right: 20px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 380px; width: 100%;
         }
         .toast {
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            color: #fff;
+            padding: 12px 16px; border-radius: var(--radius); color: #fff;
             box-shadow: 0 4px 20px rgba(0,0,0,0.12);
             animation: slideInRight 0.35s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
         }
         .toast.success { background: var(--success-color); }
         .toast.error { background: var(--danger-color); }
         .toast.warning { background: var(--warning-color); }
         .toast.info { background: var(--info-color); }
-        .toast .toast-close {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: #fff;
-            opacity: 0.7;
-            cursor: pointer;
-            font-size: 1rem;
-        }
+        .toast .toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 1rem; }
         .toast .toast-close:hover { opacity: 1; }
 
         @keyframes slideInRight {
@@ -107,21 +68,13 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* ==================== MODAL ==================== */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none;
+            align-items: center; justify-content: center; z-index: 99999; padding: 20px;
         }
         .modal-overlay.active { display: flex; }
 
-        /* ==================== RESPONSIVE ==================== */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .sidebar-hidden { display: flex; }
@@ -131,13 +84,13 @@
 <body>
 
     <!-- ==================== SIDEBAR ==================== -->
-    <div class="sidebar sidebar-expanded">
+    <div class="sidebar sidebar-expanded" id="mainSidebar">
         <div class="p-4 flex items-center justify-between border-b border-blue-700">
             <div class="flex items-center">
                 <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
                 <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
             </div>
-            <button onclick="toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -156,35 +109,35 @@
 
         <nav class="flex-1 overflow-y-auto py-2">
             <ul class="space-y-1 px-2">
-                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
-                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
+                <li><a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
+                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-cash-register mr-3"></i><span class="font-medium">Ponto de Venda</span></a></li>
                 <li>
-                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
                         <i class="fas fa-store mr-3"></i>
                         <span class="flex-1 font-medium">Gestão Comercial</span>
                         <i class="fas fa-chevron-down text-xs transition-transform"></i>
                     </div>
                     <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
-                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
-                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
-                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
+                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
+                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
+                        <li><a href="compras.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-shopping-cart mr-2 text-sm"></i>Compras</a></li>
                     </ul>
                 </li>
                 <li>
-                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition-all duration-200" onclick="toggleSubmenu(this)">
+                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
                         <i class="fas fa-pallet mr-3"></i>
                         <span class="flex-1 font-medium">Estoque</span>
                         <i class="fas fa-chevron-down text-xs transition-transform"></i>
                     </div>
-                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
-                        <li><a href="entrada-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200 bg-blue-700"><i class="fas fa-arrow-down mr-2 text-sm"></i>Entrada</a></li>
-                        <li><a href="saida-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-arrow-up mr-2 text-sm"></i>Saída</a></li>
-                        <li><a href="inventario.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-clipboard-list mr-2 text-sm"></i>Inventário</a></li>
+                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1 submenu-open">
+                        <li><a href="entrada-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-arrow-down mr-2 text-sm"></i>Entrada</a></li>
+                        <li><a href="saida-estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-arrow-up mr-2 text-sm"></i>Saída</a></li>
+                        <li><a href="inventario.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-clipboard-list mr-2 text-sm"></i>Inventário</a></li>
                     </ul>
                 </li>
-                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
-                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
-                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition-all duration-200"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
+                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Vendas</span></a></li>
+                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
+                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
             </ul>
         </nav>
 
@@ -198,11 +151,10 @@
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
         <header class="bg-white shadow-sm z-10 border-b">
             <div class="flex items-center justify-between p-4">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 focus:outline-none hover:bg-gray-100 p-2 rounded">
+                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     <h1 class="text-xl font-bold text-gray-800">ENTRADA EM ESTOQUE</h1>
@@ -218,7 +170,6 @@
             </div>
         </header>
 
-        <!-- Content -->
         <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Formulário de Entrada -->
@@ -257,7 +208,7 @@
                                     </select>
                                     <input type="number" id="productQuantity" placeholder="Qtd" class="w-20 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
                                     <input type="number" id="productCost" placeholder="Custo" class="w-32 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" step="0.01">
-                                    <button type="button" onclick="addProductToEntry()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    <button type="button" onclick="window.addProductToEntry()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
@@ -303,7 +254,7 @@
                             </div>
 
                             <div class="mt-6 flex justify-end space-x-3">
-                                <button type="button" onclick="resetForm()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                <button type="button" onclick="window.resetForm()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                                     Cancelar
                                 </button>
                                 <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
@@ -362,590 +313,620 @@
     <!-- ==================== TOAST CONTAINER ==================== -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ==================== SUPABASE SDK ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
-        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        // ==================== SUPABASE CONFIG ====================
         const SUPABASE_CONFIG = {
             url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
             anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
         };
 
-        const supabase = window.supabase.createClient(
-            SUPABASE_CONFIG.url,
-            SUPABASE_CONFIG.anonKey
-        );
+        // ==================== INICIALIZAR SUPABASE ====================
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado para Entrada Estoque');
 
-        console.log('✅ Supabase inicializado em Entrada Estoque!');
+        (function() {
+            'use strict';
 
-        // ==================== VARIÁVEIS GLOBAIS ====================
-        let entryProducts = [];
-        let currentUser = null;
-        let products = [];
-        let suppliers = [];
-        let stockEntries = [];
+            // ==================== VARIÁVEIS GLOBAIS ====================
+            let entryProducts = [];
+            let currentUser = null;
+            let products = [];
+            let suppliers = [];
+            let stockEntries = [];
 
-        // ==================== INICIALIZAÇÃO ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadUserData();
-            await loadProducts();
-            await loadSuppliers();
-            await loadStockEntries();
-            await loadStatistics();
-            await loadLowStock();
-            
-            // Data padrão
-            document.getElementById('entryDate').value = new Date().toISOString().slice(0, 16);
-            document.getElementById('entryNumber').value = generateEntryNumber();
-            
-            setupEventListeners();
-            loadSidebarPreference();
-        });
-
-        // ==================== FUNÇÕES SUPABASE ====================
-        async function loadUserData() {
-            try {
-                const { data, error } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .limit(1);
-                
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    currentUser = data[0];
-                }
-                
-                if (!currentUser) {
-                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
-                }
-                
-                const initial = currentUser.nome?.charAt(0).toUpperCase() || 'U';
-                document.getElementById('userName').textContent = currentUser.nome || 'Usuário';
-                document.getElementById('headerUserName').textContent = currentUser.nome || 'Usuário';
-                document.getElementById('userRole').textContent = currentUser.cargo || 'Usuário';
-                document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
-                document.getElementById('headerUserAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nome || 'User')}&background=10B981&color=fff`;
-                document.getElementById('footerVersion').textContent = 'v1.0';
-                
-            } catch (error) {
-                console.error('Erro ao carregar usuário:', error);
-                currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
-            }
-        }
-
-        async function loadProducts() {
-            try {
-                const { data, error } = await supabase
-                    .from('produtos')
-                    .select('*')
-                    .order('nome');
-                
-                if (error) throw error;
-                
-                products = data || [];
-                updateProductSelect();
-                
-            } catch (error) {
-                console.error('Erro ao carregar produtos:', error);
-                products = [];
-                updateProductSelect();
-            }
-        }
-
-        async function loadSuppliers() {
-            try {
-                const { data, error } = await supabase
-                    .from('fornecedores')
-                    .select('*')
-                    .eq('status', 'ativo')
-                    .order('nome');
-                
-                if (error) throw error;
-                
-                suppliers = data || [];
-                updateSupplierSelect();
-                
-            } catch (error) {
-                console.error('Erro ao carregar fornecedores:', error);
-                suppliers = [];
-                updateSupplierSelect();
-            }
-        }
-
-        async function loadStockEntries() {
-            try {
-                const { data, error } = await supabase
-                    .from('stock_entries')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
-                
-                if (error) throw error;
-                
-                stockEntries = data || [];
-                renderRecentEntries();
-                
-            } catch (error) {
-                console.error('Erro ao carregar entradas:', error);
-                stockEntries = [];
-                renderRecentEntries();
-            }
-        }
-
-        async function loadStatistics() {
-            try {
-                // Buscar entradas do mês atual
-                const startOfMonth = new Date();
-                startOfMonth.setDate(1);
-                startOfMonth.setHours(0, 0, 0, 0);
-                
-                const { data, error } = await supabase
-                    .from('stock_entries')
-                    .select('*')
-                    .gte('created_at', startOfMonth.toISOString());
-                
-                if (error) throw error;
-                
-                const entries = data || [];
-                const totalEntries = entries.length;
-                const totalValue = entries.reduce((sum, e) => sum + (e.total || 0), 0);
-                const totalProducts = entries.reduce((sum, e) => {
-                    const items = e.items || [];
-                    return sum + items.reduce((s, i) => s + (i.quantity || 0), 0);
-                }, 0);
-                
-                const uniqueSuppliers = new Set(entries.map(e => e.fornecedor_id));
-                
-                document.getElementById('totalEntriesMonth').textContent = totalEntries;
-                document.getElementById('totalValueMonth').textContent = `AOA ${totalValue.toLocaleString('pt-BR')}`;
-                document.getElementById('totalProductsReceived').textContent = totalProducts;
-                document.getElementById('totalSuppliers').textContent = uniqueSuppliers.size;
-                
-            } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
-            }
-        }
-
-        async function loadLowStock() {
-            try {
-                const { data, error } = await supabase
-                    .from('produtos')
-                    .select('*')
-                    .filter('current_stock', 'lte', 'stock_minimo')
-                    .order('current_stock', { ascending: true })
-                    .limit(10);
-                
-                if (error) throw error;
-                
-                renderLowStock(data || []);
-                
-            } catch (error) {
-                console.error('Erro ao carregar stock baixo:', error);
-                renderLowStock([]);
-            }
-        }
-
-        async function saveStockEntry(entryData) {
-            try {
-                const { data, error } = await supabase
-                    .from('stock_entries')
-                    .insert([entryData])
-                    .select();
-                
-                if (error) throw error;
-                return data;
-                
-            } catch (error) {
-                console.error('Erro ao salvar entrada:', error);
-                throw error;
-            }
-        }
-
-        async function updateProductStock(productId, newStock) {
-            try {
-                const { error } = await supabase
-                    .from('produtos')
-                    .update({ current_stock: newStock })
-                    .eq('id', productId);
-                
-                if (error) throw error;
-                
-            } catch (error) {
-                console.error('Erro ao atualizar stock:', error);
-            }
-        }
-
-        // ==================== FUNÇÕES AUXILIARES ====================
-        function generateEntryNumber() {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-            return `ENT-${year}${month}${day}-${random}`;
-        }
-
-        function updateProductSelect() {
-            const select = document.getElementById('productSelect');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Selecione o produto</option>';
-            
-            products.forEach(product => {
-                const option = document.createElement('option');
-                option.value = product.id;
-                const codigo = product.codigo ? ` (${product.codigo})` : '';
-                option.textContent = `${product.nome}${codigo} - Stock: ${product.current_stock || 0}`;
-                select.appendChild(option);
-            });
-            
-            if (currentValue) select.value = currentValue;
-        }
-
-        function updateSupplierSelect() {
-            const select = document.getElementById('entryFornecedor');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Selecione o fornecedor</option>';
-            
-            suppliers.forEach(supplier => {
-                const option = document.createElement('option');
-                option.value = supplier.id;
-                option.textContent = supplier.nome;
-                select.appendChild(option);
-            });
-            
-            if (currentValue) select.value = currentValue;
-        }
-
-        // ==================== ADICIONAR PRODUTOS ====================
-        function addProductToEntry() {
-            const productSelect = document.getElementById('productSelect');
-            const quantityInput = document.getElementById('productQuantity');
-            const costInput = document.getElementById('productCost');
-            
-            const productId = productSelect.value;
-            const quantity = parseInt(quantityInput.value);
-            const cost = parseFloat(costInput.value);
-            
-            if (!productId || !quantity || !cost) {
-                showToast('Preencha todos os campos do produto', 'error');
-                return;
-            }
-            
-            if (quantity <= 0 || cost <= 0) {
-                showToast('Quantidade e custo devem ser maiores que zero', 'error');
-                return;
-            }
-            
-            const product = products.find(p => p.id == productId);
-            if (!product) {
-                showToast('Produto não encontrado', 'error');
-                return;
-            }
-            
-            const existingIndex = entryProducts.findIndex(item => item.product_id == productId);
-            
-            if (existingIndex !== -1) {
-                entryProducts[existingIndex].quantity += quantity;
-                entryProducts[existingIndex].cost = cost;
-                entryProducts[existingIndex].total = entryProducts[existingIndex].quantity * cost;
-            } else {
-                entryProducts.push({
-                    product_id: product.id,
-                    product_name: product.nome,
-                    product_code: product.codigo,
-                    quantity: quantity,
-                    cost: cost,
-                    total: quantity * cost
-                });
-            }
-            
-            updateEntryProductsList();
-            updateEntryTotals();
-            
-            // Limpar campos
-            quantityInput.value = '';
-            costInput.value = '';
-            productSelect.value = '';
-            
-            showToast('Produto adicionado com sucesso!', 'success');
-        }
-
-        function updateEntryProductsList() {
-            const tbody = document.getElementById('entryProductsList');
-            
-            if (entryProducts.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-                            <i class="fas fa-box-open text-2xl mb-2 opacity-50"></i>
-                            <p>Nenhum produto adicionado</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = entryProducts.map((item, index) => `
-                <tr class="border-t hover:bg-gray-50">
-                    <td class="px-4 py-2">
-                        <div class="font-medium text-sm">${item.product_name}</div>
-                        <div class="text-xs text-gray-500">${item.product_code || ''}</div>
-                    </td>
-                    <td class="px-4 py-2 text-sm text-center">${item.quantity}</td>
-                    <td class="px-4 py-2 text-sm text-right">AOA ${item.cost.toLocaleString('pt-BR')}</td>
-                    <td class="px-4 py-2 text-sm text-right font-medium">AOA ${item.total.toLocaleString('pt-BR')}</td>
-                    <td class="px-4 py-2 text-center">
-                        <button onclick="removeProductFromEntry(${index})" class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function removeProductFromEntry(index) {
-            entryProducts.splice(index, 1);
-            updateEntryProductsList();
-            updateEntryTotals();
-        }
-
-        function updateEntryTotals() {
-            const subtotal = entryProducts.reduce((sum, item) => sum + item.total, 0);
-            const taxRate = 0.14; // 14% IVA
-            const tax = subtotal * taxRate;
-            const total = subtotal + tax;
-            
-            document.getElementById('entrySubtotal').textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
-            document.getElementById('entryTax').textContent = `AOA ${tax.toLocaleString('pt-BR')}`;
-            document.getElementById('entryTotal').textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-        }
-
-        // ==================== REGISTAR ENTRADA ====================
-        async function registerStockEntry(event) {
-            if (event) event.preventDefault();
-            
-            if (entryProducts.length === 0) {
-                showToast('Adicione pelo menos um produto', 'error');
-                return;
-            }
-            
-            const fornecedorId = document.getElementById('entryFornecedor').value;
-            const factura = document.getElementById('entryFactura').value.trim();
-            const date = document.getElementById('entryDate').value;
-            
-            if (!fornecedorId) {
-                showToast('Selecione um fornecedor', 'error');
-                return;
-            }
-            
-            const subtotal = entryProducts.reduce((sum, item) => sum + item.total, 0);
-            const taxRate = 0.14;
-            const tax = subtotal * taxRate;
-            const total = subtotal + tax;
-            
-            const entryData = {
-                numero: document.getElementById('entryNumber').value,
-                data: date || new Date().toISOString(),
-                fornecedor_id: parseInt(fornecedorId),
-                factura: factura || null,
-                items: entryProducts.map(item => ({
-                    product_id: item.product_id,
-                    product_name: item.product_name,
-                    quantity: item.quantity,
-                    cost: item.cost,
-                    total: item.total
-                })),
-                subtotal: subtotal,
-                tax: tax,
-                total: total,
-                user_id: currentUser?.id || 1,
-                created_at: new Date().toISOString()
+            // ==================== DOM REFS ====================
+            const DOM = {
+                entryProductsList: document.getElementById('entryProductsList'),
+                entrySubtotal: document.getElementById('entrySubtotal'),
+                entryTax: document.getElementById('entryTax'),
+                entryTotal: document.getElementById('entryTotal'),
+                entryNumber: document.getElementById('entryNumber'),
+                entryDate: document.getElementById('entryDate'),
+                entryFornecedor: document.getElementById('entryFornecedor'),
+                entryFactura: document.getElementById('entryFactura'),
+                productSelect: document.getElementById('productSelect'),
+                productQuantity: document.getElementById('productQuantity'),
+                productCost: document.getElementById('productCost'),
+                recentEntriesList: document.getElementById('recentEntriesList'),
+                lowStockList: document.getElementById('lowStockList'),
+                totalEntriesMonth: document.getElementById('totalEntriesMonth'),
+                totalValueMonth: document.getElementById('totalValueMonth'),
+                totalProductsReceived: document.getElementById('totalProductsReceived'),
+                totalSuppliers: document.getElementById('totalSuppliers'),
+                toast: document.getElementById('toastContainer')
             };
-            
-            try {
-                // Salvar entrada
-                await saveStockEntry(entryData);
-                
-                // Atualizar stock dos produtos
-                for (const item of entryProducts) {
-                    const product = products.find(p => p.id == item.product_id);
-                    if (product) {
-                        const newStock = (product.current_stock || 0) + item.quantity;
-                        await updateProductStock(item.product_id, newStock);
-                    }
-                }
-                
-                showToast('Entrada de stock registada com sucesso!', 'success');
-                
-                // Limpar formulário
-                resetForm();
-                
-                // Recarregar dados
+
+            // ==================== INICIALIZAÇÃO ====================
+            async function init() {
+                await loadUserData();
                 await loadProducts();
+                await loadSuppliers();
                 await loadStockEntries();
                 await loadStatistics();
                 await loadLowStock();
-                updateProductSelect();
                 
-            } catch (error) {
-                console.error('Erro ao registrar entrada:', error);
-                showToast('Erro ao registrar entrada de stock', 'error');
-            }
-        }
-
-        // ==================== RENDERIZAR ====================
-        function renderRecentEntries() {
-            const container = document.getElementById('recentEntriesList');
-            
-            if (!stockEntries || stockEntries.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-4 text-sm">
-                        <i class="fas fa-history text-2xl mb-2 opacity-50"></i>
-                        <p>Nenhuma entrada registrada</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = stockEntries.slice(0, 5).map(entry => {
-                const date = new Date(entry.created_at || entry.data);
-                const items = entry.items || [];
-                const totalItems = items.reduce((sum, i) => sum + (i.quantity || 0), 0);
-                const supplier = suppliers.find(s => s.id == entry.fornecedor_id);
+                DOM.entryDate.value = new Date().toISOString().slice(0, 16);
+                DOM.entryNumber.value = generateEntryNumber();
                 
-                return `
-                    <div class="border-l-4 border-green-500 pl-3 py-2 hover:bg-gray-50 rounded-r">
-                        <div class="font-medium text-sm">${entry.numero}</div>
-                        <div class="text-xs text-gray-500">${date.toLocaleDateString('pt-BR')} • ${supplier?.nome || 'Fornecedor'}</div>
-                        <div class="text-xs text-gray-500">${items.length} itens • ${totalItems} unidades</div>
-                        <div class="text-sm font-bold text-green-600">AOA ${(entry.total || 0).toLocaleString('pt-BR')}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderLowStock(productsList) {
-            const container = document.getElementById('lowStockList');
-            
-            if (!productsList || productsList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-4 text-sm">
-                        <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
-                        <p>Todos os produtos com stock adequado</p>
-                    </div>
-                `;
-                return;
+                setupEventListeners();
+                loadSidebarPreference();
             }
-            
-            container.innerHTML = productsList.map(product => {
-                const stock = product.current_stock || 0;
-                const min = product.stock_minimo || 0;
-                const isCritical = stock === 0;
-                const bgColor = isCritical ? 'bg-red-50' : 'bg-yellow-50';
-                const textColor = isCritical ? 'text-red-800' : 'text-yellow-800';
-                const badgeColor = isCritical ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
-                
-                return `
-                    <div class="flex justify-between items-center p-2 ${bgColor} rounded transition-colors">
-                        <div>
-                            <span class="text-sm font-medium">${product.nome}</span>
-                            <span class="text-xs text-gray-500 block">${product.codigo || ''}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs ${badgeColor} px-2 py-1 rounded font-medium">
-                                ${stock} / ${min} min
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
 
-        // ==================== AÇÕES ====================
-        function resetForm() {
-            entryProducts = [];
-            updateEntryProductsList();
-            updateEntryTotals();
-            
-            document.getElementById('entryNumber').value = generateEntryNumber();
-            document.getElementById('entryDate').value = new Date().toISOString().slice(0, 16);
-            document.getElementById('entryFornecedor').value = '';
-            document.getElementById('entryFactura').value = '';
-            document.getElementById('productSelect').value = '';
-            document.getElementById('productQuantity').value = '';
-            document.getElementById('productCost').value = '';
-        }
-
-        // ==================== NOTIFICAÇÕES ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas ${icons[type] || icons.info} toast-icon"></i>
-                <span>${message}</span>
-                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
-        }
-
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    // Fechar modais se houver
+            // ==================== CARREGAR USUÁRIO ====================
+            async function loadUserData() {
+                try {
+                    if (!supabaseReady) {
+                        currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                        updateUserUI();
+                        return;
+                    }
+                    const { data, error } = await supabase.from('usuarios').select('*').limit(1);
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        currentUser = data[0];
+                    }
+                    
+                    if (!currentUser) {
+                        currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    }
+                    
+                    updateUserUI();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar usuário:', error);
+                    currentUser = { id: 1, nome: 'Usuário', cargo: 'Usuário' };
+                    updateUserUI();
                 }
-            });
-        }
-
-        // ==================== SIDEBAR ====================
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('sidebar-collapsed');
-            sidebar.classList.toggle('sidebar-expanded');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
-        }
-
-        function toggleMobileSidebar() {
-            document.querySelector('.sidebar').classList.toggle('hidden');
-        }
-
-        function toggleSubmenu(el) {
-            const submenu = el.nextElementSibling;
-            const arrow = el.querySelector('.fa-chevron-down');
-            if (submenu) {
-                submenu.classList.toggle('submenu-open');
-                if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
             }
-        }
 
-        function loadSidebarPreference() {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                if (isCollapsed) {
-                    sidebar.classList.add('sidebar-collapsed');
-                    sidebar.classList.remove('sidebar-expanded');
+            function updateUserUI() {
+                const u = currentUser;
+                document.getElementById('userName').textContent = u.nome || 'Usuário';
+                document.getElementById('headerUserName').textContent = u.nome || 'Usuário';
+                document.getElementById('userRole').textContent = u.cargo || 'Usuário';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome || 'User')}&background=10B981&color=fff`;
+                document.getElementById('userAvatar').src = avatar;
+                document.getElementById('headerUserAvatar').src = avatar;
+                document.getElementById('footerVersion').textContent = 'v1.0';
+            }
+
+            // ==================== CARREGAR PRODUTOS ====================
+            async function loadProducts() {
+                try {
+                    if (!supabaseReady) {
+                        products = [];
+                        updateProductSelect();
+                        return;
+                    }
+                    const { data, error } = await supabase.from('produtos').select('*').order('nome');
+                    if (error) throw error;
+                    
+                    products = data || [];
+                    updateProductSelect();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar produtos:', error);
+                    products = [];
+                    updateProductSelect();
+                }
+            }
+
+            // ==================== CARREGAR FORNECEDORES ====================
+            async function loadSuppliers() {
+                try {
+                    if (!supabaseReady) {
+                        suppliers = [];
+                        updateSupplierSelect();
+                        return;
+                    }
+                    const { data, error } = await supabase.from('fornecedores').select('*').eq('status', 'ativo').order('nome');
+                    if (error) throw error;
+                    
+                    suppliers = data || [];
+                    updateSupplierSelect();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar fornecedores:', error);
+                    suppliers = [];
+                    updateSupplierSelect();
+                }
+            }
+
+            // ==================== CARREGAR ENTRADAS ====================
+            async function loadStockEntries() {
+                try {
+                    if (!supabaseReady) {
+                        stockEntries = [];
+                        renderRecentEntries();
+                        return;
+                    }
+                    const { data, error } = await supabase.from('stock_entries').select('*').order('created_at', { ascending: false }).limit(50);
+                    if (error) throw error;
+                    
+                    stockEntries = data || [];
+                    renderRecentEntries();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar entradas:', error);
+                    stockEntries = [];
+                    renderRecentEntries();
+                }
+            }
+
+            // ==================== CARREGAR ESTATÍSTICAS ====================
+            async function loadStatistics() {
+                try {
+                    if (!supabaseReady) {
+                        DOM.totalEntriesMonth.textContent = '0';
+                        DOM.totalValueMonth.textContent = 'AOA 0';
+                        DOM.totalProductsReceived.textContent = '0';
+                        DOM.totalSuppliers.textContent = '0';
+                        return;
+                    }
+                    
+                    const startOfMonth = new Date();
+                    startOfMonth.setDate(1);
+                    startOfMonth.setHours(0, 0, 0, 0);
+                    
+                    const { data, error } = await supabase.from('stock_entries').select('*').gte('created_at', startOfMonth.toISOString());
+                    if (error) throw error;
+                    
+                    const entries = data || [];
+                    const totalEntries = entries.length;
+                    const totalValue = entries.reduce((sum, e) => sum + (e.total || 0), 0);
+                    const totalProducts = entries.reduce((sum, e) => {
+                        const items = e.items || [];
+                        return sum + items.reduce((s, i) => s + (i.quantity || 0), 0);
+                    }, 0);
+                    
+                    const uniqueSuppliers = new Set(entries.map(e => e.fornecedor_id));
+                    
+                    DOM.totalEntriesMonth.textContent = totalEntries;
+                    DOM.totalValueMonth.textContent = `AOA ${totalValue.toLocaleString('pt-BR')}`;
+                    DOM.totalProductsReceived.textContent = totalProducts;
+                    DOM.totalSuppliers.textContent = uniqueSuppliers.size;
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar estatísticas:', error);
+                }
+            }
+
+            // ==================== CARREGAR STOCK BAIXO ====================
+            async function loadLowStock() {
+                try {
+                    if (!supabaseReady) {
+                        renderLowStock([]);
+                        return;
+                    }
+                    const { data, error } = await supabase.from('produtos').select('*').filter('current_stock', 'lte', 'stock_minimo').order('current_stock', { ascending: true }).limit(10);
+                    if (error) throw error;
+                    
+                    renderLowStock(data || []);
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar stock baixo:', error);
+                    renderLowStock([]);
+                }
+            }
+
+            // ==================== SALVAR ENTRADA ====================
+            async function saveStockEntry(entryData) {
+                try {
+                    if (!supabaseReady) throw new Error('Supabase não disponível');
+                    const { data, error } = await supabase.from('stock_entries').insert([entryData]).select();
+                    if (error) throw error;
+                    return data;
+                } catch (error) {
+                    console.error('Erro ao salvar entrada:', error);
+                    throw error;
+                }
+            }
+
+            // ==================== ATUALIZAR STOCK ====================
+            async function updateProductStock(productId, newStock) {
+                try {
+                    if (!supabaseReady) return;
+                    const { error } = await supabase.from('produtos').update({ current_stock: newStock }).eq('id', productId);
+                    if (error) throw error;
+                } catch (error) {
+                    console.error('Erro ao atualizar stock:', error);
+                }
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function generateEntryNumber() {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+                return `ENT-${year}${month}${day}-${random}`;
+            }
+
+            function updateProductSelect() {
+                const select = DOM.productSelect;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Selecione o produto</option>';
+                
+                products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    const codigo = product.codigo ? ` (${product.codigo})` : '';
+                    option.textContent = `${product.nome}${codigo} - Stock: ${product.current_stock || 0}`;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) select.value = currentValue;
+            }
+
+            function updateSupplierSelect() {
+                const select = DOM.entryFornecedor;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Selecione o fornecedor</option>';
+                
+                suppliers.forEach(supplier => {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = supplier.nome;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) select.value = currentValue;
+            }
+
+            // ==================== ADICIONAR PRODUTO ====================
+            function addProductToEntry() {
+                const productId = DOM.productSelect.value;
+                const quantity = parseInt(DOM.productQuantity.value);
+                const cost = parseFloat(DOM.productCost.value);
+                
+                if (!productId || !quantity || !cost) {
+                    showToast('Preencha todos os campos do produto', 'error');
+                    return;
+                }
+                
+                if (quantity <= 0 || cost <= 0) {
+                    showToast('Quantidade e custo devem ser maiores que zero', 'error');
+                    return;
+                }
+                
+                const product = products.find(p => p.id == productId);
+                if (!product) {
+                    showToast('Produto não encontrado', 'error');
+                    return;
+                }
+                
+                const existingIndex = entryProducts.findIndex(item => item.product_id == productId);
+                
+                if (existingIndex !== -1) {
+                    entryProducts[existingIndex].quantity += quantity;
+                    entryProducts[existingIndex].cost = cost;
+                    entryProducts[existingIndex].total = entryProducts[existingIndex].quantity * cost;
                 } else {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    sidebar.classList.add('sidebar-expanded');
+                    entryProducts.push({
+                        product_id: product.id,
+                        product_name: product.nome,
+                        product_code: product.codigo,
+                        quantity: quantity,
+                        cost: cost,
+                        total: quantity * cost
+                    });
+                }
+                
+                updateEntryProductsList();
+                updateEntryTotals();
+                
+                DOM.productQuantity.value = '';
+                DOM.productCost.value = '';
+                DOM.productSelect.value = '';
+                
+                showToast('Produto adicionado com sucesso!', 'success');
+            }
+
+            function updateEntryProductsList() {
+                const tbody = DOM.entryProductsList;
+                
+                if (entryProducts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                <i class="fas fa-box-open text-2xl mb-2 opacity-50"></i>
+                                <p>Nenhum produto adicionado</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = entryProducts.map((item, index) => `
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="px-4 py-2">
+                            <div class="font-medium text-sm">${item.product_name}</div>
+                            <div class="text-xs text-gray-500">${item.product_code || ''}</div>
+                        </td>
+                        <td class="px-4 py-2 text-sm text-center">${item.quantity}</td>
+                        <td class="px-4 py-2 text-sm text-right">AOA ${item.cost.toLocaleString('pt-BR')}</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium">AOA ${item.total.toLocaleString('pt-BR')}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button onclick="window.removeProductFromEntry(${index})" class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            function removeProductFromEntry(index) {
+                entryProducts.splice(index, 1);
+                updateEntryProductsList();
+                updateEntryTotals();
+            }
+
+            function updateEntryTotals() {
+                const subtotal = entryProducts.reduce((sum, item) => sum + item.total, 0);
+                const taxRate = 0.14;
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+                
+                DOM.entrySubtotal.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
+                DOM.entryTax.textContent = `AOA ${tax.toLocaleString('pt-BR')}`;
+                DOM.entryTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+            }
+
+            // ==================== REGISTAR ENTRADA ====================
+            async function registerStockEntry(event) {
+                if (event) event.preventDefault();
+                
+                if (entryProducts.length === 0) {
+                    showToast('Adicione pelo menos um produto', 'error');
+                    return;
+                }
+                
+                const fornecedorId = DOM.entryFornecedor.value;
+                const factura = DOM.entryFactura.value.trim();
+                const date = DOM.entryDate.value;
+                
+                if (!fornecedorId) {
+                    showToast('Selecione um fornecedor', 'error');
+                    return;
+                }
+                
+                const subtotal = entryProducts.reduce((sum, item) => sum + item.total, 0);
+                const taxRate = 0.14;
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+                
+                const entryData = {
+                    numero: DOM.entryNumber.value,
+                    data: date || new Date().toISOString(),
+                    fornecedor_id: parseInt(fornecedorId),
+                    factura: factura || null,
+                    items: entryProducts.map(item => ({
+                        product_id: item.product_id,
+                        product_name: item.product_name,
+                        quantity: item.quantity,
+                        cost: item.cost,
+                        total: item.total
+                    })),
+                    subtotal: subtotal,
+                    tax: tax,
+                    total: total,
+                    user_id: currentUser?.id || 1,
+                    created_at: new Date().toISOString()
+                };
+                
+                try {
+                    await saveStockEntry(entryData);
+                    
+                    for (const item of entryProducts) {
+                        const product = products.find(p => p.id == item.product_id);
+                        if (product) {
+                            const newStock = (product.current_stock || 0) + item.quantity;
+                            await updateProductStock(item.product_id, newStock);
+                        }
+                    }
+                    
+                    showToast('Entrada de stock registada com sucesso!', 'success');
+                    
+                    resetForm();
+                    
+                    await Promise.all([
+                        loadProducts(),
+                        loadStockEntries(),
+                        loadStatistics(),
+                        loadLowStock()
+                    ]);
+                    updateProductSelect();
+                    
+                } catch (error) {
+                    console.error('Erro ao registrar entrada:', error);
+                    showToast('Erro ao registrar entrada de stock', 'error');
                 }
             }
-        }
 
-        // ==================== EXPORTAR FUNÇÕES ====================
-        window.addProductToEntry = addProductToEntry;
-        window.removeProductFromEntry = removeProductFromEntry;
-        window.registerStockEntry = registerStockEntry;
-        window.resetForm = resetForm;
-        window.toggleSidebar = toggleSidebar;
-        window.toggleMobileSidebar = toggleMobileSidebar;
-        window.toggleSubmenu = toggleSubmenu;
-        window.showToast = showToast;
+            // ==================== RESETAR FORMULÁRIO ====================
+            function resetForm() {
+                entryProducts = [];
+                updateEntryProductsList();
+                updateEntryTotals();
+                
+                DOM.entryNumber.value = generateEntryNumber();
+                DOM.entryDate.value = new Date().toISOString().slice(0, 16);
+                DOM.entryFornecedor.value = '';
+                DOM.entryFactura.value = '';
+                DOM.productSelect.value = '';
+                DOM.productQuantity.value = '';
+                DOM.productCost.value = '';
+            }
+
+            // ==================== RENDERIZAR ====================
+            function renderRecentEntries() {
+                const container = DOM.recentEntriesList;
+                
+                if (!stockEntries || stockEntries.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-sm">
+                            <i class="fas fa-history text-2xl mb-2 opacity-50"></i>
+                            <p>Nenhuma entrada registrada</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = stockEntries.slice(0, 5).map(entry => {
+                    const date = new Date(entry.created_at || entry.data);
+                    const items = entry.items || [];
+                    const totalItems = items.reduce((sum, i) => sum + (i.quantity || 0), 0);
+                    const supplier = suppliers.find(s => s.id == entry.fornecedor_id);
+                    
+                    return `
+                        <div class="border-l-4 border-green-500 pl-3 py-2 hover:bg-gray-50 rounded-r">
+                            <div class="font-medium text-sm">${entry.numero}</div>
+                            <div class="text-xs text-gray-500">${date.toLocaleDateString('pt-BR')} • ${supplier?.nome || 'Fornecedor'}</div>
+                            <div class="text-xs text-gray-500">${items.length} itens • ${totalItems} unidades</div>
+                            <div class="text-sm font-bold text-green-600">AOA ${(entry.total || 0).toLocaleString('pt-BR')}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function renderLowStock(productsList) {
+                const container = DOM.lowStockList;
+                
+                if (!productsList || productsList.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-sm">
+                            <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
+                            <p>Todos os produtos com stock adequado</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = productsList.map(product => {
+                    const stock = product.current_stock || 0;
+                    const min = product.stock_minimo || 0;
+                    const isCritical = stock === 0;
+                    const bgColor = isCritical ? 'bg-red-50' : 'bg-yellow-50';
+                    const textColor = isCritical ? 'text-red-800' : 'text-yellow-800';
+                    const badgeColor = isCritical ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+                    
+                    return `
+                        <div class="flex justify-between items-center p-2 ${bgColor} rounded transition-colors">
+                            <div>
+                                <span class="text-sm font-medium">${product.nome}</span>
+                                <span class="text-xs text-gray-500 block">${product.codigo || ''}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs ${badgeColor} px-2 py-1 rounded font-medium">
+                                    ${stock} / ${min} min
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toast;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        // Fechar modais se houver
+                    }
+                });
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                sidebar.classList.toggle('sidebar-expanded');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            }
+
+            function toggleMobileSidebar() {
+                document.querySelector('.sidebar').classList.toggle('hidden');
+            }
+
+            function toggleSubmenu(el) {
+                const submenu = el.nextElementSibling;
+                const arrow = el.querySelector('.fa-chevron-down');
+                if (submenu) {
+                    submenu.classList.toggle('submenu-open');
+                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
+                }
+            }
+
+            function loadSidebarPreference() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    if (isCollapsed) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        sidebar.classList.remove('sidebar-expanded');
+                    } else {
+                        sidebar.classList.remove('sidebar-collapsed');
+                        sidebar.classList.add('sidebar-expanded');
+                    }
+                }
+            }
+
+            // ==================== EXPORT ====================
+            window.addProductToEntry = addProductToEntry;
+            window.removeProductFromEntry = removeProductFromEntry;
+            window.registerStockEntry = registerStockEntry;
+            window.resetForm = resetForm;
+            window.toggleSidebar = toggleSidebar;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.toggleSubmenu = toggleSubmenu;
+            window.showToast = showToast;
+
+            // ==================== INICIAR ====================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
     </script>
 </body>
 </html>
