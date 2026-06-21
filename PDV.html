@@ -319,30 +319,10 @@
             .product-card { padding: 0.75rem; }
         }
         
-        /* Desktop com sidebar colapsada */
-        @media (min-width: 1024px) {
-            .sidebar.collapsed { width: 65px; }
-            .sidebar.collapsed .sidebar-text { display: none; }
-            .sidebar.collapsed .nav-item { justify-content: center; padding: 0.6rem; }
-            .sidebar.collapsed .logo-text { display: none; }
-            .sidebar.collapsed .user-info { display: none; }
-        }
-        
         /* ==================== UTILITÁRIOS ==================== */
         .badge-status { font-size: 0.55rem; padding: 2px 6px; border-radius: 8px; font-weight: 600; }
         .badge-status.ativo { background: #d1fae5; color: #059669; }
         .badge-status.inativo { background: #fecaca; color: #dc2626; }
-        
-        .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        /* ==================== TOUCH FEEDBACK ==================== */
-        .touchable {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-        .touchable:active {
-            opacity: 0.7;
-        }
         
         /* ==================== CART PANEL MOBILE ==================== */
         .cart-panel {
@@ -774,872 +754,882 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ==================== SUPABASE CONFIG ====================
-        const SUPABASE_CONFIG = {
-            url: 'https://emkggurctrlcgukvhwdg.supabase.co',
-            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
-        };
+        (function() {
+            'use strict';
 
-        let supabase = null;
-        let supabaseReady = false;
+            // ==================== SUPABASE CONFIG ====================
+            const SUPABASE_CONFIG = {
+                url: 'https://emkggurctrlcgukvhwdg.supabase.co',
+                key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
+            };
 
-        try {
-            const { createClient } = window.supabase;
-            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            supabaseReady = true;
-            console.log('✅ Supabase inicializado');
-        } catch (e) {
-            console.error('❌ Erro ao inicializar Supabase:', e);
-            supabaseReady = false;
-        }
+            // ==================== INICIALIZAR SUPABASE ====================
+            // CORRIGIDO: Usar window.supabase em vez de redeclarar a variável
+            let supabase = null;
+            let supabaseReady = false;
 
-        // ==================== STATE ====================
-        const state = {
-            cart: [],
-            products: [],
-            customers: [],
-            heldSales: [],
-            currentUser: null,
-            selectedPaymentMethod: null,
-            currentSale: null,
-            isOnline: navigator.onLine
-        };
-
-        // ==================== DOM REFS ====================
-        const $ = id => document.getElementById(id);
-        const DOM = {
-            productsGrid: $('productsGrid'),
-            loadingProducts: $('loadingProducts'),
-            cartItems: $('cartItems'),
-            cartItemCount: $('cartItemCount'),
-            cartTotal: $('cartTotal'),
-            headerItemCount: $('headerItemCount'),
-            headerTotalAmount: $('headerTotalAmount'),
-            mobileItemCount: $('mobileItemCount'),
-            mobileTotal: $('mobileTotal'),
-            subtotalAmount: $('subtotalAmount'),
-            discountAmount: $('discountAmount'),
-            finalTotalAmount: $('finalTotalAmount'),
-            discountInput: $('discountInput'),
-            discountType: $('discountType'),
-            customerSelect: $('customerSelect'),
-            saleNotes: $('saleNotes'),
-            paymentModal: $('paymentModal'),
-            receiptModal: $('receiptModal'),
-            paymentSummary: $('paymentSummary'),
-            paymentTotal: $('paymentTotal'),
-            paymentMethods: $('paymentMethods'),
-            amountReceived: $('amountReceived'),
-            changeAmount: $('changeAmount'),
-            productSearch: $('productSearch'),
-            categoryFilter: $('categoryFilter'),
-            toastContainer: $('toastContainer'),
-            heldSalesList: $('heldSalesList'),
-            heldSalesModal: $('heldSalesModal'),
-            heldCount: $('heldCount')
-        };
-
-        // ==================== INIT ====================
-        async function init() {
-            await loadUser();
-            await loadProducts();
-            await loadCategories();
-            await loadCustomers();
-            await loadHeldSales();
-            await loadStats();
-            setupEventListeners();
-            updateUI();
-            console.log('✅ PDV inicializado');
-        }
-
-        // ==================== LOAD FUNCTIONS ====================
-        async function loadUser() {
             try {
-                const userStr = localStorage.getItem('user');
-                if (userStr) {
-                    state.currentUser = JSON.parse(userStr);
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                    supabaseReady = true;
+                    console.log('✅ Supabase inicializado com sucesso!');
                 } else {
-                    state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
+                    console.warn('⚠️ Supabase não disponível - modo offline');
+                    supabaseReady = false;
                 }
             } catch (e) {
-                state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
+                console.error('❌ Erro ao inicializar Supabase:', e);
+                supabaseReady = false;
             }
-            updateUserUI();
-        }
 
-        function updateUserUI() {
-            const u = state.currentUser;
-            const name = u?.nome || 'Usuário';
-            const role = u?.cargo || 'Vendedor';
-            const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
-            
-            $('userName').textContent = name;
-            $('userRole').textContent = role;
-            $('userAvatar').src = avatar;
-            $('headerAvatar').src = avatar;
-        }
+            // ==================== STATE ====================
+            const state = {
+                cart: [],
+                products: [],
+                customers: [],
+                heldSales: [],
+                currentUser: null,
+                selectedPaymentMethod: null,
+                currentSale: null,
+                isOnline: navigator.onLine
+            };
 
-        async function loadProducts() {
-            try {
-                if (!supabaseReady) throw new Error('Supabase não disponível');
+            // ==================== DOM REFS ====================
+            const $ = id => document.getElementById(id);
+            const DOM = {
+                productsGrid: $('productsGrid'),
+                loadingProducts: $('loadingProducts'),
+                cartItems: $('cartItems'),
+                cartItemCount: $('cartItemCount'),
+                cartTotal: $('cartTotal'),
+                headerItemCount: $('headerItemCount'),
+                headerTotalAmount: $('headerTotalAmount'),
+                mobileItemCount: $('mobileItemCount'),
+                mobileTotal: $('mobileTotal'),
+                subtotalAmount: $('subtotalAmount'),
+                discountAmount: $('discountAmount'),
+                finalTotalAmount: $('finalTotalAmount'),
+                discountInput: $('discountInput'),
+                discountType: $('discountType'),
+                customerSelect: $('customerSelect'),
+                saleNotes: $('saleNotes'),
+                paymentModal: $('paymentModal'),
+                receiptModal: $('receiptModal'),
+                paymentSummary: $('paymentSummary'),
+                paymentTotal: $('paymentTotal'),
+                paymentMethods: $('paymentMethods'),
+                amountReceived: $('amountReceived'),
+                changeAmount: $('changeAmount'),
+                productSearch: $('productSearch'),
+                categoryFilter: $('categoryFilter'),
+                toastContainer: $('toastContainer'),
+                heldSalesList: $('heldSalesList'),
+                heldSalesModal: $('heldSalesModal'),
+                heldCount: $('heldCount')
+            };
+
+            // ==================== INIT ====================
+            async function init() {
+                await loadUser();
+                await loadProducts();
+                await loadCategories();
+                await loadCustomers();
+                await loadHeldSales();
+                await loadStats();
+                setupEventListeners();
+                updateUI();
+                console.log('✅ PDV inicializado');
+            }
+
+            // ==================== LOAD FUNCTIONS ====================
+            async function loadUser() {
+                try {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        state.currentUser = JSON.parse(userStr);
+                    } else {
+                        state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
+                    }
+                } catch (e) {
+                    state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
+                }
+                updateUserUI();
+            }
+
+            function updateUserUI() {
+                const u = state.currentUser;
+                const name = u?.nome || 'Usuário';
+                const role = u?.cargo || 'Vendedor';
+                const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
                 
-                const { data, error } = await supabase
-                    .from('produtos')
-                    .select('*')
-                    .eq('ativo', true)
-                    .order('nome');
-                    
-                if (error) throw error;
-                state.products = data || [];
-                localStorage.setItem('pdv_products', JSON.stringify(state.products));
-            } catch (e) {
-                console.warn('Erro ao carregar produtos:', e);
-                const local = localStorage.getItem('pdv_products');
-                state.products = local ? JSON.parse(local) : getSampleProducts();
-                showToast('Modo offline - dados locais', 'warning');
+                $('userName').textContent = name;
+                $('userRole').textContent = role;
+                $('userAvatar').src = avatar;
+                $('headerAvatar').src = avatar;
             }
-            renderProducts();
-            DOM.loadingProducts.classList.add('hidden');
-        }
 
-        function getSampleProducts() {
-            return [
-                { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-001', preco: 2500, current_stock: 10, categoria_id: 1, categoria_nome: 'Alimentos' },
-                { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-002', preco: 3500, current_stock: 8, categoria_id: 1, categoria_nome: 'Alimentos' },
-                { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-003', preco: 1800, current_stock: 5, categoria_id: 2, categoria_nome: 'Bebidas' },
-                { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-004', preco: 1200, current_stock: 15, categoria_id: 1, categoria_nome: 'Alimentos' },
-                { id: 5, nome: 'Café em Pó 500g', codigo: 'P-005', preco: 4500, current_stock: 3, categoria_id: 2, categoria_nome: 'Bebidas' },
-                { id: 6, nome: 'Leite Integral 1L', codigo: 'P-006', preco: 850, current_stock: 12, categoria_id: 2, categoria_nome: 'Bebidas' },
-                { id: 7, nome: 'Pão de Forma 500g', codigo: 'P-007', preco: 950, current_stock: 7, categoria_id: 3, categoria_nome: 'Padaria' },
-                { id: 8, nome: 'Sabonete Líquido 200ml', codigo: 'P-008', preco: 1500, current_stock: 6, categoria_id: 4, categoria_nome: 'Higiene' },
-                { id: 9, nome: 'Detergente 500ml', codigo: 'P-009', preco: 650, current_stock: 20, categoria_id: 4, categoria_nome: 'Higiene' },
-                { id: 10, nome: 'Refrigerante 2L', codigo: 'P-010', preco: 1200, current_stock: 4, categoria_id: 2, categoria_nome: 'Bebidas' },
-                { id: 11, nome: 'Biscoito Cream Cracker', codigo: 'P-011', preco: 450, current_stock: 9, categoria_id: 3, categoria_nome: 'Padaria' },
-                { id: 12, nome: 'Macarrão 500g', codigo: 'P-012', preco: 780, current_stock: 6, categoria_id: 1, categoria_nome: 'Alimentos' }
-            ];
-        }
+            async function loadProducts() {
+                try {
+                    if (!supabaseReady) throw new Error('Supabase não disponível');
+                    
+                    const { data, error } = await supabase
+                        .from('produtos')
+                        .select('*')
+                        .eq('ativo', true)
+                        .order('nome');
+                        
+                    if (error) throw error;
+                    state.products = data || [];
+                    localStorage.setItem('pdv_products', JSON.stringify(state.products));
+                } catch (e) {
+                    console.warn('Erro ao carregar produtos:', e);
+                    const local = localStorage.getItem('pdv_products');
+                    state.products = local ? JSON.parse(local) : getSampleProducts();
+                    showToast('Modo offline - dados locais', 'warning');
+                }
+                renderProducts();
+                DOM.loadingProducts.classList.add('hidden');
+            }
 
-        async function loadCategories() {
-            try {
-                if (!supabaseReady) return;
-                const { data, error } = await supabase.from('categorias').select('*').order('nome');
-                if (error) throw error;
-                const select = DOM.categoryFilter;
-                select.innerHTML = '<option value="">Todas</option>';
-                (data || []).forEach(c => {
+            function getSampleProducts() {
+                return [
+                    { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-001', preco: 2500, current_stock: 10, categoria_id: 1, categoria_nome: 'Alimentos' },
+                    { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-002', preco: 3500, current_stock: 8, categoria_id: 1, categoria_nome: 'Alimentos' },
+                    { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-003', preco: 1800, current_stock: 5, categoria_id: 2, categoria_nome: 'Bebidas' },
+                    { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-004', preco: 1200, current_stock: 15, categoria_id: 1, categoria_nome: 'Alimentos' },
+                    { id: 5, nome: 'Café em Pó 500g', codigo: 'P-005', preco: 4500, current_stock: 3, categoria_id: 2, categoria_nome: 'Bebidas' },
+                    { id: 6, nome: 'Leite Integral 1L', codigo: 'P-006', preco: 850, current_stock: 12, categoria_id: 2, categoria_nome: 'Bebidas' },
+                    { id: 7, nome: 'Pão de Forma 500g', codigo: 'P-007', preco: 950, current_stock: 7, categoria_id: 3, categoria_nome: 'Padaria' },
+                    { id: 8, nome: 'Sabonete Líquido 200ml', codigo: 'P-008', preco: 1500, current_stock: 6, categoria_id: 4, categoria_nome: 'Higiene' },
+                    { id: 9, nome: 'Detergente 500ml', codigo: 'P-009', preco: 650, current_stock: 20, categoria_id: 4, categoria_nome: 'Higiene' },
+                    { id: 10, nome: 'Refrigerante 2L', codigo: 'P-010', preco: 1200, current_stock: 4, categoria_id: 2, categoria_nome: 'Bebidas' },
+                    { id: 11, nome: 'Biscoito Cream Cracker', codigo: 'P-011', preco: 450, current_stock: 9, categoria_id: 3, categoria_nome: 'Padaria' },
+                    { id: 12, nome: 'Macarrão 500g', codigo: 'P-012', preco: 780, current_stock: 6, categoria_id: 1, categoria_nome: 'Alimentos' }
+                ];
+            }
+
+            async function loadCategories() {
+                try {
+                    if (!supabaseReady) return;
+                    const { data, error } = await supabase.from('categorias').select('*').order('nome');
+                    if (error) throw error;
+                    const select = DOM.categoryFilter;
+                    select.innerHTML = '<option value="">Todas</option>';
+                    (data || []).forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = c.nome;
+                        select.appendChild(opt);
+                    });
+                } catch (e) { 
+                    console.warn('Erro ao carregar categorias:', e);
+                }
+            }
+
+            async function loadCustomers() {
+                try {
+                    if (!supabaseReady) return;
+                    const { data, error } = await supabase.from('clientes').select('*').order('nome');
+                    if (error) throw error;
+                    state.customers = data || [];
+                    localStorage.setItem('pdv_customers', JSON.stringify(state.customers));
+                } catch (e) {
+                    console.warn('Erro ao carregar clientes:', e);
+                    const local = localStorage.getItem('pdv_customers');
+                    state.customers = local ? JSON.parse(local) : [];
+                }
+                updateCustomerSelect();
+            }
+
+            function updateCustomerSelect() {
+                const select = DOM.customerSelect;
+                const current = select.value;
+                select.innerHTML = '<option value="">Cliente Avulso</option>';
+                state.customers.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.id;
-                    opt.textContent = c.nome;
+                    opt.textContent = `${c.nome}${c.nif ? ` (${c.nif})` : ''}`;
                     select.appendChild(opt);
                 });
-            } catch (e) { 
-                console.warn('Erro ao carregar categorias:', e);
-            }
-        }
-
-        async function loadCustomers() {
-            try {
-                if (!supabaseReady) return;
-                const { data, error } = await supabase.from('clientes').select('*').order('nome');
-                if (error) throw error;
-                state.customers = data || [];
-                localStorage.setItem('pdv_customers', JSON.stringify(state.customers));
-            } catch (e) {
-                console.warn('Erro ao carregar clientes:', e);
-                const local = localStorage.getItem('pdv_customers');
-                state.customers = local ? JSON.parse(local) : [];
-            }
-            updateCustomerSelect();
-        }
-
-        function updateCustomerSelect() {
-            const select = DOM.customerSelect;
-            const current = select.value;
-            select.innerHTML = '<option value="">Cliente Avulso</option>';
-            state.customers.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = `${c.nome}${c.nif ? ` (${c.nif})` : ''}`;
-                select.appendChild(opt);
-            });
-            if (current) select.value = current;
-        }
-
-        async function loadHeldSales() {
-            try {
-                const saved = localStorage.getItem('pdv_held_sales');
-                state.heldSales = saved ? JSON.parse(saved) : [];
-                DOM.heldCount.textContent = state.heldSales.length;
-            } catch (e) {
-                state.heldSales = [];
-            }
-        }
-
-        async function loadStats() {
-            try {
-                if (!supabaseReady) return;
-                const today = new Date().toISOString().split('T')[0];
-                const { data, error } = await supabase
-                    .from('vendas')
-                    .select('total')
-                    .eq('data_venda', today);
-                if (error) throw error;
-                const total = data?.reduce((s, v) => s + v.total, 0) || 0;
-                $('cashAmount').textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-                $('salesToday').textContent = `${data?.length || 0} vendas`;
-            } catch (e) { 
-                console.warn('Erro ao carregar estatísticas:', e);
-            }
-        }
-
-        // ==================== RENDER ====================
-        function renderProducts() {
-            const grid = DOM.productsGrid;
-            const search = DOM.productSearch.value.toLowerCase();
-            const category = DOM.categoryFilter.value;
-
-            let filtered = state.products;
-            if (search) {
-                filtered = filtered.filter(p => 
-                    p.nome?.toLowerCase().includes(search) ||
-                    p.codigo?.toLowerCase().includes(search)
-                );
-            }
-            if (category) {
-                filtered = filtered.filter(p => p.categoria_id == category);
+                if (current) select.value = current;
             }
 
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-6 text-sm">Nenhum produto encontrado</div>`;
-                return;
+            async function loadHeldSales() {
+                try {
+                    const saved = localStorage.getItem('pdv_held_sales');
+                    state.heldSales = saved ? JSON.parse(saved) : [];
+                    DOM.heldCount.textContent = state.heldSales.length;
+                } catch (e) {
+                    state.heldSales = [];
+                }
             }
 
-            grid.innerHTML = filtered.map(p => {
-                const inCart = state.cart.find(c => c.product.id === p.id);
-                const stockClass = (p.current_stock || 0) < 5 ? 'low' : 'ok';
-                const stockLabel = (p.current_stock || 0) < 5 ? '⚠️' : '✅';
-                const imageUrl = p.imagem || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23e5e7eb'/%3E%3Ctext x='30' y='36' text-anchor='middle' font-size='20' fill='%236b7280'%3E${encodeURIComponent(p.nome?.substring(0,2) || '??')}%3C/text%3E%3C/svg%3E`;
-                return `
-                    <div class="product-card ${inCart ? 'border-blue-500 bg-blue-50' : ''}" onclick="addToCart(${p.id})">
-                        <span class="stock-badge ${stockClass}">${stockLabel}</span>
-                        <div class="flex flex-col items-center">
-                            <img src="${imageUrl}" 
-                                 alt="${p.nome}" class="w-12 h-12 rounded-lg object-cover mb-1" 
-                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Crect width=%2760%27 height=%2760%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2730%27 y=%2736%27 text-anchor=%27middle%27 font-size=%2720%27 fill=%27%236b7280%27%3E${encodeURIComponent(p.nome?.substring(0,2) || '??')}%3C/text%3E%3C/svg%3E'">
-                            <h3 class="font-semibold text-gray-800 text-[10px] sm:text-xs text-center truncate w-full">${p.nome}</h3>
-                            <p class="text-[8px] sm:text-[10px] text-gray-500">${p.codigo || 'N/A'}</p>
-                            <p class="text-green-700 font-bold text-[10px] sm:text-xs mt-0.5">AOA ${(p.preco || 0).toLocaleString('pt-BR')}</p>
-                            <p class="text-[8px] text-gray-500">${p.current_stock || 0}</p>
-                            ${inCart ? `<span class="text-[8px] text-blue-600 font-semibold">${inCart.quantity}x</span>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+            async function loadStats() {
+                try {
+                    if (!supabaseReady) return;
+                    const today = new Date().toISOString().split('T')[0];
+                    const { data, error } = await supabase
+                        .from('vendas')
+                        .select('total')
+                        .eq('data_venda', today);
+                    if (error) throw error;
+                    const total = data?.reduce((s, v) => s + v.total, 0) || 0;
+                    $('cashAmount').textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+                    $('salesToday').textContent = `${data?.length || 0} vendas`;
+                } catch (e) { 
+                    console.warn('Erro ao carregar estatísticas:', e);
+                }
+            }
 
-        function updateCartUI() {
-            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-            const total = subtotal - discount;
-            const itemCount = state.cart.reduce((s, i) => s + i.quantity, 0);
+            // ==================== RENDER ====================
+            function renderProducts() {
+                const grid = DOM.productsGrid;
+                const search = DOM.productSearch.value.toLowerCase();
+                const category = DOM.categoryFilter.value;
 
-            // Atualizar todos os lugares que mostram o total
-            const totalStr = `AOA ${total.toLocaleString('pt-BR')}`;
-            const countStr = `${itemCount} itens`;
-            
-            DOM.cartItemCount.textContent = countStr;
-            DOM.cartTotal.textContent = totalStr;
-            DOM.headerItemCount.textContent = itemCount;
-            DOM.headerTotalAmount.textContent = totalStr;
-            DOM.mobileItemCount.textContent = itemCount;
-            DOM.mobileTotal.textContent = totalStr;
-            DOM.subtotalAmount.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
-            DOM.finalTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+                let filtered = state.products;
+                if (search) {
+                    filtered = filtered.filter(p => 
+                        p.nome?.toLowerCase().includes(search) ||
+                        p.codigo?.toLowerCase().includes(search)
+                    );
+                }
+                if (category) {
+                    filtered = filtered.filter(p => p.categoria_id == category);
+                }
 
-            if (state.cart.length === 0) {
-                DOM.cartItems.innerHTML = `
-                    <div class="text-center text-gray-500 py-4 text-xs">
-                        <i class="fas fa-shopping-cart text-2xl mb-1 opacity-30"></i>
-                        <p>Carrinho vazio</p>
-                        <p class="text-[10px]">Adicione produtos</p>
-                    </div>
-                `;
-            } else {
-                DOM.cartItems.innerHTML = state.cart.map((item, index) => `
-                    <div class="cart-item">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-medium text-gray-800 text-xs truncate">${item.product.nome}</h4>
-                                <p class="text-[10px] text-gray-600">AOA ${(item.product.preco || 0).toLocaleString('pt-BR')}</p>
+                if (filtered.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-6 text-sm">Nenhum produto encontrado</div>`;
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(p => {
+                    const inCart = state.cart.find(c => c.product.id === p.id);
+                    const stockClass = (p.current_stock || 0) < 5 ? 'low' : 'ok';
+                    const stockLabel = (p.current_stock || 0) < 5 ? '⚠️' : '✅';
+                    const imageUrl = p.imagem || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23e5e7eb'/%3E%3Ctext x='30' y='36' text-anchor='middle' font-size='20' fill='%236b7280'%3E${encodeURIComponent(p.nome?.substring(0,2) || '??')}%3C/text%3E%3C/svg%3E`;
+                    return `
+                        <div class="product-card ${inCart ? 'border-blue-500 bg-blue-50' : ''}" onclick="addToCart(${p.id})">
+                            <span class="stock-badge ${stockClass}">${stockLabel}</span>
+                            <div class="flex flex-col items-center">
+                                <img src="${imageUrl}" 
+                                     alt="${p.nome}" class="w-12 h-12 rounded-lg object-cover mb-1" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Crect width=%2760%27 height=%2760%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2730%27 y=%2736%27 text-anchor=%27middle%27 font-size=%2720%27 fill=%27%236b7280%27%3E${encodeURIComponent(p.nome?.substring(0,2) || '??')}%3C/text%3E%3C/svg%3E'">
+                                <h3 class="font-semibold text-gray-800 text-[10px] sm:text-xs text-center truncate w-full">${p.nome}</h3>
+                                <p class="text-[8px] sm:text-[10px] text-gray-500">${p.codigo || 'N/A'}</p>
+                                <p class="text-green-700 font-bold text-[10px] sm:text-xs mt-0.5">AOA ${(p.preco || 0).toLocaleString('pt-BR')}</p>
+                                <p class="text-[8px] text-gray-500">${p.current_stock || 0}</p>
+                                ${inCart ? `<span class="text-[8px] text-blue-600 font-semibold">${inCart.quantity}x</span>` : ''}
                             </div>
-                            <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 ml-1 text-xs touchable">
-                                <i class="fas fa-times"></i>
-                            </button>
                         </div>
-                        <div class="flex justify-between items-center mt-0.5">
-                            <div class="flex items-center space-x-0.5">
-                                <button onclick="updateQuantity(${index}, -1)" class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300 text-xs touchable">
-                                    <i class="fas fa-minus text-[8px]"></i>
-                                </button>
-                                <span class="font-semibold w-5 text-center text-sm">${item.quantity}</span>
-                                <button onclick="updateQuantity(${index}, 1)" class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300 text-xs touchable">
-                                    <i class="fas fa-plus text-[8px]"></i>
-                                </button>
-                            </div>
-                            <span class="font-bold text-green-700 text-xs">AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            renderProducts();
-        }
-
-        function updateUI() {
-            updateCartUI();
-            updateCustomerSelect();
-            DOM.heldCount.textContent = state.heldSales.length;
-        }
-
-        // ==================== CART FUNCTIONS ====================
-        function addToCart(productId) {
-            const product = state.products.find(p => p.id === productId);
-            if (!product) return;
-            if (!product.current_stock || product.current_stock <= 0) {
-                showToast('Produto sem stock!', 'error');
-                return;
+                    `;
+                }).join('');
             }
 
-            const existing = state.cart.find(c => c.product.id === productId);
-            if (existing) {
-                if (existing.quantity < product.current_stock) {
-                    existing.quantity++;
+            function updateCartUI() {
+                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                const total = subtotal - discount;
+                const itemCount = state.cart.reduce((s, i) => s + i.quantity, 0);
+
+                const totalStr = `AOA ${total.toLocaleString('pt-BR')}`;
+                const countStr = `${itemCount} itens`;
+                
+                DOM.cartItemCount.textContent = countStr;
+                DOM.cartTotal.textContent = totalStr;
+                DOM.headerItemCount.textContent = itemCount;
+                DOM.headerTotalAmount.textContent = totalStr;
+                DOM.mobileItemCount.textContent = itemCount;
+                DOM.mobileTotal.textContent = totalStr;
+                DOM.subtotalAmount.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
+                DOM.finalTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+
+                if (state.cart.length === 0) {
+                    DOM.cartItems.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-xs">
+                            <i class="fas fa-shopping-cart text-2xl mb-1 opacity-30"></i>
+                            <p>Carrinho vazio</p>
+                            <p class="text-[10px]">Adicione produtos</p>
+                        </div>
+                    `;
                 } else {
+                    DOM.cartItems.innerHTML = state.cart.map((item, index) => `
+                        <div class="cart-item">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-medium text-gray-800 text-xs truncate">${item.product.nome}</h4>
+                                    <p class="text-[10px] text-gray-600">AOA ${(item.product.preco || 0).toLocaleString('pt-BR')}</p>
+                                </div>
+                                <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 ml-1 text-xs touchable">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="flex justify-between items-center mt-0.5">
+                                <div class="flex items-center space-x-0.5">
+                                    <button onclick="updateQuantity(${index}, -1)" class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300 text-xs touchable">
+                                        <i class="fas fa-minus text-[8px]"></i>
+                                    </button>
+                                    <span class="font-semibold w-5 text-center text-sm">${item.quantity}</span>
+                                    <button onclick="updateQuantity(${index}, 1)" class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300 text-xs touchable">
+                                        <i class="fas fa-plus text-[8px]"></i>
+                                    </button>
+                                </div>
+                                <span class="font-bold text-green-700 text-xs">AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                renderProducts();
+            }
+
+            function updateUI() {
+                updateCartUI();
+                updateCustomerSelect();
+                DOM.heldCount.textContent = state.heldSales.length;
+            }
+
+            // ==================== CART FUNCTIONS ====================
+            function addToCart(productId) {
+                const product = state.products.find(p => p.id === productId);
+                if (!product) return;
+                if (!product.current_stock || product.current_stock <= 0) {
+                    showToast('Produto sem stock!', 'error');
+                    return;
+                }
+
+                const existing = state.cart.find(c => c.product.id === productId);
+                if (existing) {
+                    if (existing.quantity < product.current_stock) {
+                        existing.quantity++;
+                    } else {
+                        showToast('Stock insuficiente!', 'error');
+                        return;
+                    }
+                } else {
+                    state.cart.push({ product, quantity: 1 });
+                }
+                updateCartUI();
+                showToast(`${product.nome} adicionado`, 'success');
+            }
+
+            function removeFromCart(index) {
+                state.cart.splice(index, 1);
+                updateCartUI();
+            }
+
+            function updateQuantity(index, change) {
+                const item = state.cart[index];
+                const newQty = item.quantity + change;
+                if (newQty < 1) { removeFromCart(index); return; }
+                if (newQty > item.product.current_stock) {
                     showToast('Stock insuficiente!', 'error');
                     return;
                 }
-            } else {
-                state.cart.push({ product, quantity: 1 });
+                item.quantity = newQty;
+                updateCartUI();
             }
-            updateCartUI();
-            showToast(`${product.nome} adicionado`, 'success');
-        }
 
-        function removeFromCart(index) {
-            state.cart.splice(index, 1);
-            updateCartUI();
-        }
-
-        function updateQuantity(index, change) {
-            const item = state.cart[index];
-            const newQty = item.quantity + change;
-            if (newQty < 1) { removeFromCart(index); return; }
-            if (newQty > item.product.current_stock) {
-                showToast('Stock insuficiente!', 'error');
-                return;
-            }
-            item.quantity = newQty;
-            updateCartUI();
-        }
-
-        function clearCart() {
-            if (state.cart.length === 0) return;
-            if (!confirm('Limpar carrinho?')) return;
-            state.cart = [];
-            DOM.discountInput.value = '';
-            DOM.discountAmount.textContent = '- AOA 0';
-            updateCartUI();
-            showToast('Carrinho limpo', 'info');
-        }
-
-        // ==================== DISCOUNT ====================
-        function applyDiscount() {
-            const value = parseFloat(DOM.discountInput.value) || 0;
-            if (value <= 0) {
+            function clearCart() {
+                if (state.cart.length === 0) return;
+                if (!confirm('Limpar carrinho?')) return;
+                state.cart = [];
+                DOM.discountInput.value = '';
                 DOM.discountAmount.textContent = '- AOA 0';
                 updateCartUI();
-                return;
+                showToast('Carrinho limpo', 'info');
             }
 
-            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-            let discount = 0;
-            if (DOM.discountType.value === 'percent') {
-                if (value > 100) { showToast('Desconto máximo 100%', 'error'); return; }
-                discount = (subtotal * value) / 100;
-            } else {
-                discount = Math.min(value, subtotal);
-            }
+            // ==================== DISCOUNT ====================
+            function applyDiscount() {
+                const value = parseFloat(DOM.discountInput.value) || 0;
+                if (value <= 0) {
+                    DOM.discountAmount.textContent = '- AOA 0';
+                    updateCartUI();
+                    return;
+                }
 
-            DOM.discountAmount.textContent = `- AOA ${discount.toLocaleString('pt-BR')}`;
-            updateCartUI();
-            showToast(`Desconto aplicado: AOA ${discount.toLocaleString('pt-BR')}`, 'success');
-        }
-
-        // ==================== PAYMENT ====================
-        function openPaymentModal() {
-            if (state.cart.length === 0) {
-                showToast('Carrinho vazio!', 'error');
-                return;
-            }
-            DOM.paymentModal.classList.add('active');
-            updatePaymentSummary();
-            setupPaymentMethods();
-            DOM.amountReceived.value = '';
-            DOM.changeAmount.textContent = 'AOA 0,00';
-            setTimeout(() => DOM.amountReceived.focus(), 100);
-        }
-
-        function closePaymentModal() {
-            DOM.paymentModal.classList.remove('active');
-            state.selectedPaymentMethod = null;
-        }
-
-        function updatePaymentSummary() {
-            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-            const total = subtotal - discount;
-
-            DOM.paymentTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-            DOM.paymentSummary.innerHTML = state.cart.map(item => `
-                <div class="flex justify-between">
-                    <span>${item.quantity}x ${item.product.nome}</span>
-                    <span>AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
-                </div>
-            `).join('');
-            if (discount > 0) {
-                DOM.paymentSummary.innerHTML += `
-                    <div class="flex justify-between text-red-600">
-                        <span>Desconto</span>
-                        <span>- AOA ${discount.toLocaleString('pt-BR')}</span>
-                    </div>
-                `;
-            }
-        }
-
-        function setupPaymentMethods() {
-            const methods = [
-                { id: 'cash', nome: 'Dinheiro', icon: 'fa-money-bill-wave', color: 'text-green-600' },
-                { id: 'card', nome: 'Cartão', icon: 'fa-credit-card', color: 'text-blue-600' },
-                { id: 'transfer', nome: 'Transferência', icon: 'fa-university', color: 'text-purple-600' }
-            ];
-
-            DOM.paymentMethods.innerHTML = methods.map(m => `
-                <div class="payment-method" data-method="${m.id}">
-                    <i class="fas ${m.icon} ${m.color} text-xl"></i>
-                    <span class="block text-xs font-medium">${m.nome}</span>
-                </div>
-            `).join('');
-
-            DOM.paymentMethods.querySelectorAll('.payment-method').forEach(el => {
-                el.addEventListener('click', function() {
-                    DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-                    this.classList.add('selected');
-                    state.selectedPaymentMethod = this.dataset.method;
-                    if (this.dataset.method === 'cash') {
-                        setTimeout(() => DOM.amountReceived.focus(), 100);
-                    } else {
-                        const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                        const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-                        DOM.amountReceived.value = (subtotal - discount).toFixed(2);
-                        calculateChange();
-                    }
-                });
-            });
-        }
-
-        function addToAmount(value) {
-            const input = DOM.amountReceived;
-            let current = input.value.replace(',', '.');
-            if (value === '.') {
-                if (!current.includes('.')) input.value = current === '' ? '0.' : current + '.';
-            } else {
-                input.value = current === '0' ? value.toString() : (current + value.toString());
-            }
-            calculateChange();
-        }
-
-        function clearAmount() {
-            DOM.amountReceived.value = '';
-            calculateChange();
-        }
-
-        function calculateChange() {
-            const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
-            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-            const total = subtotal - discount;
-            const change = Math.max(0, received - total);
-            DOM.changeAmount.textContent = `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-
-        // ==================== FINALIZE SALE ====================
-        async function finalizeSale() {
-            if (!state.selectedPaymentMethod) {
-                showToast('Selecione uma forma de pagamento!', 'error');
-                return;
-            }
-
-            const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
-            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-            const total = subtotal - discount;
-
-            if (state.selectedPaymentMethod === 'cash' && received < total) {
-                showToast('Valor recebido insuficiente!', 'error');
-                return;
-            }
-
-            const saleData = {
-                code: `V-${Date.now().toString().slice(-6)}`,
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('pt-BR'),
-                seller: state.currentUser?.nome || 'Vendedor',
-                sellerId: state.currentUser?.id || null,
-                customerId: DOM.customerSelect.value || null,
-                customerName: DOM.customerSelect.value ? 
-                    DOM.customerSelect.options[DOM.customerSelect.selectedIndex]?.text || 'Cliente Avulso' : 
-                    'Cliente Avulso',
-                total: total,
-                subtotal: subtotal,
-                discount: discount,
-                paymentMethod: state.selectedPaymentMethod,
-                amountReceived: received,
-                change: Math.max(0, received - total),
-                notes: DOM.saleNotes.value,
-                items: state.cart.map(item => ({
-                    productId: item.product.id,
-                    productName: item.product.nome,
-                    productCode: item.product.codigo,
-                    quantity: item.quantity,
-                    price: item.product.preco,
-                    total: item.product.preco * item.quantity
-                }))
-            };
-
-            try {
-                if (supabaseReady) {
-                    const { data, error } = await supabase
-                        .from('vendas')
-                        .insert([{
-                            code: saleData.code,
-                            data_venda: saleData.date,
-                            hora: saleData.time,
-                            vendedor_id: saleData.sellerId,
-                            vendedor_nome: saleData.seller,
-                            cliente_id: saleData.customerId,
-                            cliente_nome: saleData.customerName,
-                            total: saleData.total,
-                            subtotal: saleData.subtotal,
-                            desconto: saleData.discount,
-                            forma_pagamento: saleData.paymentMethod,
-                            valor_recebido: saleData.amountReceived,
-                            troco: saleData.change,
-                            observacoes: saleData.notes,
-                            status: 'completed'
-                        }])
-                        .select();
-
-                    if (error) throw error;
-
-                    for (const item of state.cart) {
-                        await supabase
-                            .from('produtos')
-                            .update({ current_stock: item.product.current_stock - item.quantity })
-                            .eq('id', item.product.id);
-                    }
+                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                let discount = 0;
+                if (DOM.discountType.value === 'percent') {
+                    if (value > 100) { showToast('Desconto máximo 100%', 'error'); return; }
+                    discount = (subtotal * value) / 100;
                 } else {
-                    const localSales = JSON.parse(localStorage.getItem('pdv_local_sales') || '[]');
-                    localSales.push({ ...saleData, local_id: Date.now() });
-                    localStorage.setItem('pdv_local_sales', JSON.stringify(localSales));
-                    
-                    for (const item of state.cart) {
-                        const product = state.products.find(p => p.id === item.product.id);
-                        if (product) {
-                            product.current_stock = (product.current_stock || 0) - item.quantity;
-                        }
-                    }
-                    localStorage.setItem('pdv_products', JSON.stringify(state.products));
+                    discount = Math.min(value, subtotal);
                 }
 
-                state.currentSale = saleData;
-                closePaymentModal();
-                showReceipt(saleData);
-                showToast('Venda concluída com sucesso!', 'success');
-                await loadStats();
-                await loadProducts();
-
-            } catch (error) {
-                console.error('Erro ao finalizar venda:', error);
-                showToast('Erro ao finalizar venda!', 'error');
-            }
-        }
-
-        // ==================== RECEIPT ====================
-        function showReceipt(sale) {
-            if (!sale) return;
-
-            const customer = state.customers.find(c => c.id == sale.customerId);
-            
-            $('receiptNumber').textContent = sale.code;
-            $('receiptDate').textContent = new Date(sale.date).toLocaleDateString('pt-BR');
-            $('receiptTime').textContent = sale.time;
-            $('receiptSeller').textContent = sale.seller;
-            $('receiptCustomer').textContent = customer?.nome || 'Cliente Avulso';
-            $('receiptPaymentMethod').textContent = `Pagamento: ${sale.paymentMethod === 'cash' ? 'Dinheiro' : sale.paymentMethod === 'card' ? 'Cartão' : 'Transferência'}`;
-
-            const itemsHtml = sale.items.map(item => `
-                <tr>
-                    <td class="text-left">${item.productName}</td>
-                    <td class="text-center">${item.quantity}</td>
-                    <td class="text-right">AOA ${(item.price || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">AOA ${(item.price * item.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                </tr>
-            `).join('');
-
-            $('receiptItems').innerHTML = itemsHtml;
-
-            const iva = sale.subtotal * 0.14;
-            $('receiptSubtotal').textContent = `AOA ${(sale.subtotal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            $('receiptDiscount').textContent = `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            $('receiptIVA').textContent = `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            $('receiptTotal').textContent = `AOA ${(sale.total + iva).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-
-            DOM.receiptModal.classList.add('active');
-        }
-
-        function closeReceiptModal() {
-            DOM.receiptModal.classList.remove('active');
-        }
-
-        function printReceipt(format) {
-            const content = document.getElementById('receiptContent').cloneNode(true);
-            
-            const printWindow = window.open('', '_blank', 'width=600,height=800');
-            printWindow.document.write(`
-                <html>
-                    <head><title>Fatura</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; padding: ${format === 'a4' ? '40px' : format === 'thermal80' ? '10px' : '5px'}; max-width: ${format === 'a4' ? '210mm' : format === 'thermal80' ? '80mm' : '58mm'}; margin: 0 auto; }
-                        .receipt-preview { background: #fff; padding: 10px; }
-                        .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
-                        .footer { text-align: center; border-top: 2px dashed #333; padding-top: 10px; margin-top: 10px; font-size: 12px; }
-                        table { width: 100%; font-size: ${format === 'a4' ? '14px' : '12px'}; border-collapse: collapse; }
-                        table td, table th { padding: 4px 2px; }
-                        .total-line { display: flex; justify-content: flex-end; gap: 20px; padding: 2px 0; }
-                        .grand-total { font-size: ${format === 'a4' ? '18px' : '16px'}; font-weight: bold; border-top: 2px solid #333; padding-top: 5px; margin-top: 5px; }
-                        .text-right { text-align: right; }
-                        .text-center { text-align: center; }
-                        .text-left { text-align: left; }
-                        @media print { body { padding: 0; } }
-                    </style>
-                    </head>
-                    <body>${content.innerHTML}</body>
-                </html>
-            `);
-            printWindow.document.close();
-            setTimeout(() => printWindow.print(), 500);
-        }
-
-        // ==================== HELD SALES ====================
-        function holdSale() {
-            if (state.cart.length === 0) {
-                showToast('Carrinho vazio!', 'error');
-                return;
+                DOM.discountAmount.textContent = `- AOA ${discount.toLocaleString('pt-BR')}`;
+                updateCartUI();
+                showToast(`Desconto aplicado: AOA ${discount.toLocaleString('pt-BR')}`, 'success');
             }
 
-            const held = {
-                id: Date.now(),
-                items: state.cart.map(item => ({
-                    productId: item.product.id,
-                    productName: item.product.nome,
-                    quantity: item.quantity,
-                    price: item.product.preco,
-                    total: item.product.preco * item.quantity
-                })),
-                timestamp: new Date().toISOString(),
-                subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
-                discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
-                total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) - 
-                       (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
-                seller: state.currentUser?.nome || 'Vendedor',
-                customerId: DOM.customerSelect.value,
-                notes: DOM.saleNotes.value
-            };
-
-            state.heldSales.push(held);
-            localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
-            DOM.heldCount.textContent = state.heldSales.length;
-            clearCart();
-            showToast('Venda suspensa com sucesso!', 'success');
-        }
-
-        function loadHeldSale(id) {
-            const sale = state.heldSales.find(s => s.id === id);
-            if (!sale) { showToast('Venda não encontrada', 'error'); return; }
-
-            state.cart = [];
-            sale.items.forEach(item => {
-                const product = state.products.find(p => p.id === item.productId);
-                if (product) state.cart.push({ product, quantity: item.quantity });
-            });
-
-            if (sale.discount > 0) {
-                DOM.discountInput.value = sale.discount;
-                DOM.discountAmount.textContent = `- AOA ${sale.discount.toLocaleString('pt-BR')}`;
-            }
-            if (sale.customerId) DOM.customerSelect.value = sale.customerId;
-            if (sale.notes) DOM.saleNotes.value = sale.notes;
-
-            state.heldSales = state.heldSales.filter(s => s.id !== id);
-            localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
-            DOM.heldCount.textContent = state.heldSales.length;
-            updateCartUI();
-            DOM.heldSalesModal.classList.remove('active');
-            showToast('Venda suspensa carregada', 'success');
-        }
-
-        function showHeldSales() {
-            if (state.heldSales.length === 0) {
-                showToast('Nenhuma venda suspensa', 'info');
-                return;
+            // ==================== PAYMENT ====================
+            function openPaymentModal() {
+                if (state.cart.length === 0) {
+                    showToast('Carrinho vazio!', 'error');
+                    return;
+                }
+                DOM.paymentModal.classList.add('active');
+                updatePaymentSummary();
+                setupPaymentMethods();
+                DOM.amountReceived.value = '';
+                DOM.changeAmount.textContent = 'AOA 0,00';
+                setTimeout(() => DOM.amountReceived.focus(), 100);
             }
 
-            DOM.heldSalesList.innerHTML = state.heldSales.map(s => `
-                <div class="border rounded-lg p-2 hover:bg-gray-50 cursor-pointer touchable" onclick="loadHeldSale(${s.id})">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h4 class="font-semibold text-sm">Venda #${s.id}</h4>
-                            <p class="text-xs text-gray-600">${new Date(s.timestamp).toLocaleString('pt-BR')}</p>
-                            <p class="text-xs text-gray-600">${s.seller || 'Vendedor'}</p>
+            function closePaymentModal() {
+                DOM.paymentModal.classList.remove('active');
+                state.selectedPaymentMethod = null;
+            }
+
+            function updatePaymentSummary() {
+                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                const total = subtotal - discount;
+
+                DOM.paymentTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+                DOM.paymentSummary.innerHTML = state.cart.map(item => `
+                    <div class="flex justify-between">
+                        <span>${item.quantity}x ${item.product.nome}</span>
+                        <span>AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
+                    </div>
+                `).join('');
+                if (discount > 0) {
+                    DOM.paymentSummary.innerHTML += `
+                        <div class="flex justify-between text-red-600">
+                            <span>Desconto</span>
+                            <span>- AOA ${discount.toLocaleString('pt-BR')}</span>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-green-700 text-sm">AOA ${(s.total || 0).toLocaleString('pt-BR')}</p>
-                            <p class="text-xs text-gray-600">${s.items?.length || 0} itens</p>
+                    `;
+                }
+            }
+
+            function setupPaymentMethods() {
+                const methods = [
+                    { id: 'cash', nome: 'Dinheiro', icon: 'fa-money-bill-wave', color: 'text-green-600' },
+                    { id: 'card', nome: 'Cartão', icon: 'fa-credit-card', color: 'text-blue-600' },
+                    { id: 'transfer', nome: 'Transferência', icon: 'fa-university', color: 'text-purple-600' }
+                ];
+
+                DOM.paymentMethods.innerHTML = methods.map(m => `
+                    <div class="payment-method" data-method="${m.id}">
+                        <i class="fas ${m.icon} ${m.color} text-xl"></i>
+                        <span class="block text-xs font-medium">${m.nome}</span>
+                    </div>
+                `).join('');
+
+                DOM.paymentMethods.querySelectorAll('.payment-method').forEach(el => {
+                    el.addEventListener('click', function() {
+                        DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                        this.classList.add('selected');
+                        state.selectedPaymentMethod = this.dataset.method;
+                        if (this.dataset.method === 'cash') {
+                            setTimeout(() => DOM.amountReceived.focus(), 100);
+                        } else {
+                            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                            DOM.amountReceived.value = (subtotal - discount).toFixed(2);
+                            calculateChange();
+                        }
+                    });
+                });
+            }
+
+            function addToAmount(value) {
+                const input = DOM.amountReceived;
+                let current = input.value.replace(',', '.');
+                if (value === '.') {
+                    if (!current.includes('.')) input.value = current === '' ? '0.' : current + '.';
+                } else {
+                    input.value = current === '0' ? value.toString() : (current + value.toString());
+                }
+                calculateChange();
+            }
+
+            function clearAmount() {
+                DOM.amountReceived.value = '';
+                calculateChange();
+            }
+
+            function calculateChange() {
+                const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
+                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                const total = subtotal - discount;
+                const change = Math.max(0, received - total);
+                DOM.changeAmount.textContent = `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+
+            // ==================== FINALIZE SALE ====================
+            async function finalizeSale() {
+                if (!state.selectedPaymentMethod) {
+                    showToast('Selecione uma forma de pagamento!', 'error');
+                    return;
+                }
+
+                const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
+                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                const total = subtotal - discount;
+
+                if (state.selectedPaymentMethod === 'cash' && received < total) {
+                    showToast('Valor recebido insuficiente!', 'error');
+                    return;
+                }
+
+                const saleData = {
+                    code: `V-${Date.now().toString().slice(-6)}`,
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('pt-BR'),
+                    seller: state.currentUser?.nome || 'Vendedor',
+                    sellerId: state.currentUser?.id || null,
+                    customerId: DOM.customerSelect.value || null,
+                    customerName: DOM.customerSelect.value ? 
+                        DOM.customerSelect.options[DOM.customerSelect.selectedIndex]?.text || 'Cliente Avulso' : 
+                        'Cliente Avulso',
+                    total: total,
+                    subtotal: subtotal,
+                    discount: discount,
+                    paymentMethod: state.selectedPaymentMethod,
+                    amountReceived: received,
+                    change: Math.max(0, received - total),
+                    notes: DOM.saleNotes.value,
+                    items: state.cart.map(item => ({
+                        productId: item.product.id,
+                        productName: item.product.nome,
+                        productCode: item.product.codigo,
+                        quantity: item.quantity,
+                        price: item.product.preco,
+                        total: item.product.preco * item.quantity
+                    }))
+                };
+
+                try {
+                    if (supabaseReady) {
+                        const { data, error } = await supabase
+                            .from('vendas')
+                            .insert([{
+                                code: saleData.code,
+                                data_venda: saleData.date,
+                                hora: saleData.time,
+                                vendedor_id: saleData.sellerId,
+                                vendedor_nome: saleData.seller,
+                                cliente_id: saleData.customerId,
+                                cliente_nome: saleData.customerName,
+                                total: saleData.total,
+                                subtotal: saleData.subtotal,
+                                desconto: saleData.discount,
+                                forma_pagamento: saleData.paymentMethod,
+                                valor_recebido: saleData.amountReceived,
+                                troco: saleData.change,
+                                observacoes: saleData.notes,
+                                status: 'completed'
+                            }])
+                            .select();
+
+                        if (error) throw error;
+
+                        for (const item of state.cart) {
+                            await supabase
+                                .from('produtos')
+                                .update({ current_stock: item.product.current_stock - item.quantity })
+                                .eq('id', item.product.id);
+                        }
+                    } else {
+                        const localSales = JSON.parse(localStorage.getItem('pdv_local_sales') || '[]');
+                        localSales.push({ ...saleData, local_id: Date.now() });
+                        localStorage.setItem('pdv_local_sales', JSON.stringify(localSales));
+                        
+                        for (const item of state.cart) {
+                            const product = state.products.find(p => p.id === item.product.id);
+                            if (product) {
+                                product.current_stock = (product.current_stock || 0) - item.quantity;
+                            }
+                        }
+                        localStorage.setItem('pdv_products', JSON.stringify(state.products));
+                    }
+
+                    state.currentSale = saleData;
+                    closePaymentModal();
+                    showReceipt(saleData);
+                    showToast('Venda concluída com sucesso!', 'success');
+                    await loadStats();
+                    await loadProducts();
+
+                } catch (error) {
+                    console.error('Erro ao finalizar venda:', error);
+                    showToast('Erro ao finalizar venda!', 'error');
+                }
+            }
+
+            // ==================== RECEIPT ====================
+            function showReceipt(sale) {
+                if (!sale) return;
+
+                const customer = state.customers.find(c => c.id == sale.customerId);
+                
+                $('receiptNumber').textContent = sale.code;
+                $('receiptDate').textContent = new Date(sale.date).toLocaleDateString('pt-BR');
+                $('receiptTime').textContent = sale.time;
+                $('receiptSeller').textContent = sale.seller;
+                $('receiptCustomer').textContent = customer?.nome || 'Cliente Avulso';
+                $('receiptPaymentMethod').textContent = `Pagamento: ${sale.paymentMethod === 'cash' ? 'Dinheiro' : sale.paymentMethod === 'card' ? 'Cartão' : 'Transferência'}`;
+
+                const itemsHtml = sale.items.map(item => `
+                    <tr>
+                        <td class="text-left">${item.productName}</td>
+                        <td class="text-center">${item.quantity}</td>
+                        <td class="text-right">AOA ${(item.price || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">AOA ${(item.price * item.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `).join('');
+
+                $('receiptItems').innerHTML = itemsHtml;
+
+                const iva = sale.subtotal * 0.14;
+                $('receiptSubtotal').textContent = `AOA ${(sale.subtotal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                $('receiptDiscount').textContent = `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                $('receiptIVA').textContent = `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                $('receiptTotal').textContent = `AOA ${(sale.total + iva).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+                DOM.receiptModal.classList.add('active');
+            }
+
+            function closeReceiptModal() {
+                DOM.receiptModal.classList.remove('active');
+            }
+
+            function printReceipt(format) {
+                const content = document.getElementById('receiptContent').cloneNode(true);
+                
+                const printWindow = window.open('', '_blank', 'width=600,height=800');
+                printWindow.document.write(`
+                    <html>
+                        <head><title>Fatura</title>
+                        <style>
+                            body { font-family: 'Courier New', monospace; padding: ${format === 'a4' ? '40px' : format === 'thermal80' ? '10px' : '5px'}; max-width: ${format === 'a4' ? '210mm' : format === 'thermal80' ? '80mm' : '58mm'}; margin: 0 auto; }
+                            .receipt-preview { background: #fff; padding: 10px; }
+                            .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
+                            .footer { text-align: center; border-top: 2px dashed #333; padding-top: 10px; margin-top: 10px; font-size: 12px; }
+                            table { width: 100%; font-size: ${format === 'a4' ? '14px' : '12px'}; border-collapse: collapse; }
+                            table td, table th { padding: 4px 2px; }
+                            .total-line { display: flex; justify-content: flex-end; gap: 20px; padding: 2px 0; }
+                            .grand-total { font-size: ${format === 'a4' ? '18px' : '16px'}; font-weight: bold; border-top: 2px solid #333; padding-top: 5px; margin-top: 5px; }
+                            .text-right { text-align: right; }
+                            .text-center { text-align: center; }
+                            .text-left { text-align: left; }
+                            @media print { body { padding: 0; } }
+                        </style>
+                        </head>
+                        <body>${content.innerHTML}</body>
+                    </html>
+                `);
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 500);
+            }
+
+            // ==================== HELD SALES ====================
+            function holdSale() {
+                if (state.cart.length === 0) {
+                    showToast('Carrinho vazio!', 'error');
+                    return;
+                }
+
+                const held = {
+                    id: Date.now(),
+                    items: state.cart.map(item => ({
+                        productId: item.product.id,
+                        productName: item.product.nome,
+                        quantity: item.quantity,
+                        price: item.product.preco,
+                        total: item.product.preco * item.quantity
+                    })),
+                    timestamp: new Date().toISOString(),
+                    subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
+                    discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
+                    total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) - 
+                           (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
+                    seller: state.currentUser?.nome || 'Vendedor',
+                    customerId: DOM.customerSelect.value,
+                    notes: DOM.saleNotes.value
+                };
+
+                state.heldSales.push(held);
+                localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
+                DOM.heldCount.textContent = state.heldSales.length;
+                clearCart();
+                showToast('Venda suspensa com sucesso!', 'success');
+            }
+
+            function loadHeldSale(id) {
+                const sale = state.heldSales.find(s => s.id === id);
+                if (!sale) { showToast('Venda não encontrada', 'error'); return; }
+
+                state.cart = [];
+                sale.items.forEach(item => {
+                    const product = state.products.find(p => p.id === item.productId);
+                    if (product) state.cart.push({ product, quantity: item.quantity });
+                });
+
+                if (sale.discount > 0) {
+                    DOM.discountInput.value = sale.discount;
+                    DOM.discountAmount.textContent = `- AOA ${sale.discount.toLocaleString('pt-BR')}`;
+                }
+                if (sale.customerId) DOM.customerSelect.value = sale.customerId;
+                if (sale.notes) DOM.saleNotes.value = sale.notes;
+
+                state.heldSales = state.heldSales.filter(s => s.id !== id);
+                localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
+                DOM.heldCount.textContent = state.heldSales.length;
+                updateCartUI();
+                DOM.heldSalesModal.classList.remove('active');
+                showToast('Venda suspensa carregada', 'success');
+            }
+
+            function showHeldSales() {
+                if (state.heldSales.length === 0) {
+                    showToast('Nenhuma venda suspensa', 'info');
+                    return;
+                }
+
+                DOM.heldSalesList.innerHTML = state.heldSales.map(s => `
+                    <div class="border rounded-lg p-2 hover:bg-gray-50 cursor-pointer touchable" onclick="loadHeldSale(${s.id})">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold text-sm">Venda #${s.id}</h4>
+                                <p class="text-xs text-gray-600">${new Date(s.timestamp).toLocaleString('pt-BR')}</p>
+                                <p class="text-xs text-gray-600">${s.seller || 'Vendedor'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-green-700 text-sm">AOA ${(s.total || 0).toLocaleString('pt-BR')}</p>
+                                <p class="text-xs text-gray-600">${s.items?.length || 0} itens</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
 
-            DOM.heldSalesModal.classList.add('active');
-        }
-
-        function voidSale() {
-            if (state.cart.length === 0) {
-                showToast('Não há venda para anular', 'warning');
-                return;
+                DOM.heldSalesModal.classList.add('active');
             }
-            if (!confirm('Anular esta venda?')) return;
-            clearCart();
-            showToast('Venda anulada', 'warning');
-        }
 
-        // ==================== QUICK ACTIONS ====================
-        function quickAction(action) {
-            const actions = {
-                'last': () => showToast('Último cliente: Cliente Avulso', 'info'),
-                'held': showHeldSales,
-                'void': voidSale
-            };
-            if (actions[action]) actions[action]();
-        }
-
-        // ==================== FILTERS ====================
-        function filterProducts() {
-            renderProducts();
-        }
-
-        function clearFilters() {
-            DOM.productSearch.value = '';
-            DOM.categoryFilter.value = '';
-            renderProducts();
-        }
-
-        // ==================== SIDEBAR ====================
-        function toggleMobileSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebarOverlay').classList.toggle('open');
-        }
-
-        // ==================== TOAST ====================
-        function showToast(message, type = 'info') {
-            const container = DOM.toastContainer;
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-                <i class="fas ${icons[type] || icons.info}"></i>
-                <span>${message}</span>
-                <button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
-        }
-
-        // ==================== LOGOUT ====================
-        function logout() {
-            if (confirm('Deseja sair do sistema?')) {
-                localStorage.removeItem('user');
-                localStorage.removeItem('isLoggedIn');
-                window.location.href = 'login.html';
-            }
-        }
-
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            DOM.productSearch.addEventListener('input', filterProducts);
-            DOM.categoryFilter.addEventListener('change', filterProducts);
-            DOM.amountReceived.addEventListener('input', calculateChange);
-            DOM.discountInput.addEventListener('keypress', e => { if (e.key === 'Enter') applyDiscount(); });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'f') { e.preventDefault(); DOM.productSearch.focus(); }
-                if (e.key === 'F2') { e.preventDefault(); clearCart(); }
-                if (e.key === 'F3') { e.preventDefault(); openPaymentModal(); }
-                if (e.key === 'F4') { e.preventDefault(); holdSale(); }
-                if (e.key === 'Escape') {
-                    if (DOM.paymentModal.classList.contains('active')) closePaymentModal();
-                    if (DOM.receiptModal.classList.contains('active')) closeReceiptModal();
-                    if (DOM.heldSalesModal.classList.contains('active')) DOM.heldSalesModal.classList.remove('active');
+            function voidSale() {
+                if (state.cart.length === 0) {
+                    showToast('Não há venda para anular', 'warning');
+                    return;
                 }
-            });
+                if (!confirm('Anular esta venda?')) return;
+                clearCart();
+                showToast('Venda anulada', 'warning');
+            }
 
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) this.classList.remove('active');
+            // ==================== QUICK ACTIONS ====================
+            function quickAction(action) {
+                const actions = {
+                    'last': () => showToast('Último cliente: Cliente Avulso', 'info'),
+                    'held': showHeldSales,
+                    'void': voidSale
+                };
+                if (actions[action]) actions[action]();
+            }
+
+            // ==================== FILTERS ====================
+            function filterProducts() {
+                renderProducts();
+            }
+
+            function clearFilters() {
+                DOM.productSearch.value = '';
+                DOM.categoryFilter.value = '';
+                renderProducts();
+            }
+
+            // ==================== SIDEBAR ====================
+            function toggleMobileSidebar() {
+                document.getElementById('sidebar').classList.toggle('open');
+                document.getElementById('sidebarOverlay').classList.toggle('open');
+            }
+
+            // ==================== TOAST ====================
+            function showToast(message, type = 'info') {
+                const container = DOM.toastContainer;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                    <span>${message}</span>
+                    <button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+            }
+
+            // ==================== LOGOUT ====================
+            function logout() {
+                if (confirm('Deseja sair do sistema?')) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('isLoggedIn');
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.productSearch.addEventListener('input', filterProducts);
+                DOM.categoryFilter.addEventListener('change', filterProducts);
+                DOM.amountReceived.addEventListener('input', calculateChange);
+                DOM.discountInput.addEventListener('keypress', e => { if (e.key === 'Enter') applyDiscount(); });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey && e.key === 'f') { e.preventDefault(); DOM.productSearch.focus(); }
+                    if (e.key === 'F2') { e.preventDefault(); clearCart(); }
+                    if (e.key === 'F3') { e.preventDefault(); openPaymentModal(); }
+                    if (e.key === 'F4') { e.preventDefault(); holdSale(); }
+                    if (e.key === 'Escape') {
+                        if (DOM.paymentModal.classList.contains('active')) closePaymentModal();
+                        if (DOM.receiptModal.classList.contains('active')) closeReceiptModal();
+                        if (DOM.heldSalesModal.classList.contains('active')) DOM.heldSalesModal.classList.remove('active');
+                    }
                 });
-            });
-        }
 
-        // ==================== EXPORT ====================
-        window.addToCart = addToCart;
-        window.removeFromCart = removeFromCart;
-        window.updateQuantity = updateQuantity;
-        window.clearCart = clearCart;
-        window.applyDiscount = applyDiscount;
-        window.holdSale = holdSale;
-        window.openPaymentModal = openPaymentModal;
-        window.closePaymentModal = closePaymentModal;
-        window.finalizeSale = finalizeSale;
-        window.closeReceiptModal = closeReceiptModal;
-        window.printReceipt = printReceipt;
-        window.newSale = () => { clearCart(); closeReceiptModal(); showToast('Nova venda iniciada', 'info'); };
-        window.quickAction = quickAction;
-        window.filterProducts = filterProducts;
-        window.clearFilters = clearFilters;
-        window.toggleMobileSidebar = toggleMobileSidebar;
-        window.showToast = showToast;
-        window.addToAmount = addToAmount;
-        window.clearAmount = clearAmount;
-        window.calculateChange = calculateChange;
-        window.loadHeldSale = loadHeldSale;
-        window.showHeldSales = showHeldSales;
-        window.voidSale = voidSale;
-        window.logout = logout;
-        window.renderProducts = renderProducts;
-        window.updateUI = updateUI;
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === this) this.classList.remove('active');
+                    });
+                });
+            }
 
-        // ==================== INIT ====================
-        document.addEventListener('DOMContentLoaded', init);
+            // ==================== EXPORT ====================
+            window.addToCart = addToCart;
+            window.removeFromCart = removeFromCart;
+            window.updateQuantity = updateQuantity;
+            window.clearCart = clearCart;
+            window.applyDiscount = applyDiscount;
+            window.holdSale = holdSale;
+            window.openPaymentModal = openPaymentModal;
+            window.closePaymentModal = closePaymentModal;
+            window.finalizeSale = finalizeSale;
+            window.closeReceiptModal = closeReceiptModal;
+            window.printReceipt = printReceipt;
+            window.newSale = () => { clearCart(); closeReceiptModal(); showToast('Nova venda iniciada', 'info'); };
+            window.quickAction = quickAction;
+            window.filterProducts = filterProducts;
+            window.clearFilters = clearFilters;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.showToast = showToast;
+            window.addToAmount = addToAmount;
+            window.clearAmount = clearAmount;
+            window.calculateChange = calculateChange;
+            window.loadHeldSale = loadHeldSale;
+            window.showHeldSales = showHeldSales;
+            window.voidSale = voidSale;
+            window.logout = logout;
+            window.renderProducts = renderProducts;
+            window.updateUI = updateUI;
+
+            // ==================== INIT ====================
+            document.addEventListener('DOMContentLoaded', init);
+
+        })();
     </script>
 </body>
 </html>
