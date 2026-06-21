@@ -345,18 +345,12 @@
             key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
         };
 
-        let supabase = null;
-        let supabaseReady = false;
-
         // ==================== INICIALIZAR SUPABASE ====================
-        try {
-            const { createClient } = window.supabase;
-            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            supabaseReady = true;
-            console.log('✅ Supabase inicializado com sucesso!');
-        } catch (error) {
-            console.error('❌ Erro ao inicializar Supabase:', error);
-        }
+        // REMOVA o 'const' ou 'let' antes do nome para não duplicar
+        // A variável já foi declarada globalmente
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado com sucesso!');
 
         // ==================== ESTADO ====================
         const state = {
@@ -504,8 +498,8 @@
         if (DOM.loginForm) {
             DOM.loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (state.isLoading || !supabaseReady) {
-                    showToast('Conectando ao servidor...', 'warning');
+                if (state.isLoading) {
+                    showToast('Aguarde...', 'warning');
                     return;
                 }
 
@@ -592,8 +586,8 @@
         if (DOM.registerForm) {
             DOM.registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (state.isLoading || !supabaseReady) {
-                    showToast('Conectando ao servidor...', 'warning');
+                if (state.isLoading) {
+                    showToast('Aguarde...', 'warning');
                     return;
                 }
 
@@ -730,8 +724,8 @@
         if (DOM.recoveryForm) {
             DOM.recoveryForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (state.isLoading || !supabaseReady) {
-                    showToast('Conectando ao servidor...', 'warning');
+                if (state.isLoading) {
+                    showToast('Aguarde...', 'warning');
                     return;
                 }
 
@@ -765,15 +759,8 @@
         }
 
         // ==================== INICIAR ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            if (supabaseReady) {
-                checkExistingSession();
-            } else {
-                // Tentar novamente após 1 segundo
-                setTimeout(() => {
-                    if (supabaseReady) checkExistingSession();
-                }, 1000);
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            checkExistingSession();
         });
 
         console.log('🔐 Sistema de autenticação Supabase carregado!');
