@@ -2,343 +2,312 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>PDV - Ponto de Venda | Kanawa Soft</title>
     <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
     <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://unpkg.com/tabler-icons@latest/icons/tabler-icons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --sidebar-bg-start: #1e3a5f;
-            --sidebar-bg-end: #0f2440;
-            --primary-color: #1e3a5f;
-            --secondary-color: #f59e0b;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
-            --radius: 10px;
-            --shadow: 0 2px 16px rgba(0,0,0,0.06);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f0f4f9;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-        }
-
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; height: 100vh; overflow: hidden; }
+        
         .sidebar {
-            transition: all 0.3s;
-            background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+            width: 240px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: #fff;
+            transition: all 0.3s;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
-            width: 280px;
         }
-        .sidebar-collapsed { width: 70px; }
-        .sidebar-hidden { display: none; }
-
-        .submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        .submenu-open { max-height: 500px; }
-
-        .product-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .cart-item { transition: all 0.3s ease; }
-        .cart-item-remove:hover { color: var(--danger-color); transform: scale(1.1); }
-
-        .payment-method { transition: all 0.2s ease; }
-        .payment-method.selected {
-            border-color: var(--info-color);
-            background-color: #eff6ff;
-        }
-
-        .numeric-keypad button { transition: all 0.2s ease; }
-        .numeric-keypad button:active {
-            transform: scale(0.95);
-            background-color: #e5e7eb;
-        }
-
-        .invoice-container {
-            background: var(--card-bg);
-            border-radius: 12px;
-            position: relative;
-            font-family: 'Courier New', monospace;
-        }
-        .invoice-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-
-        body.mode-a4 .invoice-container {
-            width: 210mm !important;
-            min-height: 297mm;
-            padding: 15mm;
-            margin: 0 auto;
-            background: var(--card-bg);
-            border: none;
-            border-radius: 0;
-            font-size: 12px;
-        }
-        body.mode-thermal-80 .invoice-container {
-            width: 80mm !important;
-            padding: 4mm;
-            margin: 0;
-            background: var(--card-bg);
-            border: none;
-            border-radius: 0;
-            font-size: 10px;
-        }
-        body.mode-thermal-58 .invoice-container {
-            width: 58mm !important;
-            padding: 2mm;
-            margin: 0;
-            background: var(--card-bg);
-            border: none;
-            border-radius: 0;
-            font-size: 8px;
-        }
-
-        @media print {
-            body * { visibility: hidden; }
-            .invoice-container, .invoice-container * { visibility: visible; }
-            .invoice-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100% !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-            body.mode-a4 { background: var(--card-bg) !important; }
-            body.mode-a4 .invoice-container { width: 210mm !important; padding: 15mm !important; }
-            @page { size: A4; margin: 10mm; }
-            body.mode-thermal-80 { background: var(--card-bg) !important; }
-            body.mode-thermal-80 .invoice-container { width: 80mm !important; padding: 2mm !important; }
-            body.mode-thermal-80 * { font-size: 10px !important; line-height: 1.2; }
-            @page { size: 80mm auto; margin: 0; }
-            body.mode-thermal-58 { background: var(--card-bg) !important; }
-            body.mode-thermal-58 .invoice-container { width: 58mm !important; padding: 1mm !important; }
-            body.mode-thermal-58 * { font-size: 8px !important; line-height: 1.1; }
-            @page { size: 58mm auto; margin: 0; }
-            .no-print { display: none !important; }
-        }
-
-        body.mode-thermal-80 table, body.mode-thermal-58 table { width: 100% !important; }
-        body.mode-thermal-80 th, body.mode-thermal-80 td,
-        body.mode-thermal-58 th, body.mode-thermal-58 td { padding: 1px 1px !important; }
-
-        .invoice-container .invoice-header {
-            border-bottom: 2px dashed #333;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        .invoice-container .invoice-footer {
-            border-top: 2px dashed #333;
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-        .invoice-container .invoice-items table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .invoice-container .invoice-items th {
-            border-bottom: 1px solid #333;
-            padding: 4px 2px;
-            text-align: left;
-            font-size: 0.8em;
-        }
-        .invoice-container .invoice-items td {
-            padding: 3px 2px;
-            border-bottom: 1px dotted #ccc;
-        }
-        .invoice-container .invoice-totals {
-            margin-top: 10px;
-            text-align: right;
-        }
-        .invoice-container .invoice-totals .total-line {
+        .sidebar.collapsed { width: 65px; }
+        .sidebar.collapsed .sidebar-text { display: none; }
+        .sidebar.collapsed .sidebar-icon { margin-right: 0; }
+        .sidebar.collapsed .nav-item { justify-content: center; padding: 0.75rem; }
+        .sidebar.collapsed .logo-text { display: none; }
+        .sidebar.collapsed .user-info { display: none; }
+        .sidebar .nav-item {
             display: flex;
-            justify-content: flex-end;
-            gap: 20px;
-            padding: 2px 0;
+            align-items: center;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin: 2px 0;
         }
-        .invoice-container .invoice-totals .grand-total {
-            font-size: 1.2em;
-            font-weight: bold;
-            border-top: 2px solid #333;
-            padding-top: 5px;
-            margin-top: 5px;
+        .sidebar .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .sidebar .nav-item.active { background: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+        .sidebar .nav-item i { width: 20px; margin-right: 12px; font-size: 1rem; }
+        .sidebar .nav-item .badge { margin-left: auto; background: #ef4444; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; }
+        
+        .product-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            position: relative;
         }
-        .invoice-container .invoice-qr {
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #3b82f6; }
+        .product-card .stock-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .product-card .stock-badge.low { background: #fecaca; color: #dc2626; }
+        .product-card .stock-badge.ok { background: #d1fae5; color: #059669; }
+        
+        .cart-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #3b82f6;
+            transition: all 0.2s;
+        }
+        .cart-item:hover { background: #f1f5f9; }
+        
+        .payment-method {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.75rem;
             text-align: center;
-            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
         }
-
+        .payment-method:hover { border-color: #3b82f6; background: #eff6ff; }
+        .payment-method.selected { border-color: #3b82f6; background: #eff6ff; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        .payment-method i { font-size: 1.5rem; display: block; margin-bottom: 0.25rem; }
+        
+        .numeric-keypad button {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .numeric-keypad button:hover { background: #f1f5f9; }
+        .numeric-keypad button:active { transform: scale(0.95); background: #e5e7eb; }
+        
         .toast-container {
             position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 99999;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0.5rem;
             max-width: 380px;
             width: 100%;
         }
         .toast {
-            padding: 12px 16px;
-            border-radius: var(--radius);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
             color: #fff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-            animation: slideInRight 0.35s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
+            gap: 0.75rem;
+            font-size: 0.9rem;
         }
-        .toast.success { background: var(--success-color); }
-        .toast.error { background: var(--danger-color); }
-        .toast.warning { background: var(--warning-color); }
-        .toast.info { background: var(--info-color); }
-        .toast .toast-close {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: #fff;
-            opacity: 0.7;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        .toast .toast-close:hover { opacity: 1; }
-
-        @keyframes slideInRight {
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+        .toast-warning { background: #f59e0b; }
+        .toast-info { background: #3b82f6; }
+        .toast .close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; }
+        .toast .close:hover { opacity: 1; }
+        
+        @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .sidebar-hidden { display: flex; }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
         }
-
-        .flex-center { display: flex; align-items: center; justify-content: center; }
-        .gap-2 { gap: 8px; }
-        .gap-3 { gap: 12px; }
-        .gap-4 { gap: 16px; }
-        .hidden { display: none !important; }
-        .w-full { width: 100%; }
-        .text-muted { color: var(--text-muted); }
-        .text-sm { font-size: 0.8rem; }
-        .text-xs { font-size: 0.7rem; }
-        .font-bold { font-weight: 700; }
-        .font-semibold { font-weight: 600; }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .receipt-preview {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .receipt-preview .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+        .receipt-preview .footer { text-align: center; border-top: 2px dashed #333; padding-top: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem; }
+        .receipt-preview table { width: 100%; font-size: 0.85rem; }
+        .receipt-preview table td, .receipt-preview table th { padding: 0.15rem 0.1rem; }
+        .receipt-preview .total-line { display: flex; justify-content: flex-end; gap: 1rem; padding: 0.1rem 0; }
+        .receipt-preview .grand-total { font-size: 1.1rem; font-weight: bold; border-top: 2px solid #333; padding-top: 0.3rem; margin-top: 0.3rem; }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: 0; top: 0; z-index: 100; transform: translateX(-100%); height: 100vh; width: 280px; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; display: none; }
+            .sidebar-overlay.open { display: block; }
+            .main-content { margin-left: 0 !important; }
+        }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .badge-status { font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .badge-status.ativo { background: #d1fae5; color: #059669; }
+        .badge-status.inativo { background: #fecaca; color: #dc2626; }
+        
+        .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .shift-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .shift-indicator.active { background: #10b981; animation: pulse 2s infinite; }
+        .shift-indicator.inactive { background: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
 
-    <!-- ==================== SIDEBAR ==================== -->
-    <div class="sidebar sidebar-expanded" id="mainSidebar">
-        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="p-4 border-b border-blue-800 flex items-center justify-between">
             <div class="flex items-center">
-                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto mr-3 rounded">
-                <span class="text-xl font-bold" id="sidebarTitle">Kanawa Soft</span>
+                <img src="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" alt="Logo" class="h-8 w-auto rounded">
+                <span class="ml-2 text-lg font-bold logo-text">Kanawa Soft</span>
             </div>
-            <button onclick="window.toggleSidebar()" class="text-white focus:outline-none hover:bg-blue-700 p-2 rounded">
+            <button onclick="toggleSidebar()" class="text-white hover:bg-blue-800 p-1 rounded">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
-        
-        <div class="p-4 border-b border-blue-700 flex items-center space-x-3">
-            <div class="relative">
-                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
-                     alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-blue-300">
-                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
-                <div class="text-xs text-blue-200 truncate" id="userRole">Vendedor</div>
+
+        <div class="p-3 border-b border-blue-800 user-info">
+            <div class="flex items-center space-x-3">
+                <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" class="w-10 h-10 rounded-full object-cover">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold truncate" id="userName">Carregando...</div>
+                    <div class="text-xs text-blue-300 truncate" id="userRole">Vendedor</div>
+                </div>
             </div>
         </div>
 
-        <div class="p-3 border-b border-blue-700 bg-blue-800 mx-2 rounded-lg mt-2">
-            <div class="text-xs text-blue-200 text-center">Turno Activo</div>
-            <div class="text-sm font-bold text-yellow-300 truncate text-center" id="currentShift">08:00 - 16:00</div>
-            <div class="text-xs text-blue-200 text-center mt-1" id="connectionStatus">🟢 Online</div>
+        <div class="p-3 border-b border-blue-800 user-info bg-blue-900/30">
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-blue-300">Turno:</span>
+                <span class="text-white font-medium" id="currentShift">08:00 - 16:00</span>
+            </div>
+            <div class="flex items-center justify-between text-sm mt-1">
+                <span class="text-blue-300">Status:</span>
+                <span id="connectionStatus" class="text-green-400">🟢 Online</span>
+            </div>
         </div>
-        
-        <nav class="flex-1 overflow-y-auto py-2">
-            <ul class="space-y-1 px-2">
-                <li><a href="dashboard.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-tachometer-alt mr-3"></i><span class="font-medium">Dashboard</span></a></li>
-                <li><a href="pdv.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition bg-blue-700"><i class="fas fa-cash-register mr-3 text-yellow-400"></i><span class="font-medium">Ponto de Venda</span></a></li>
-                <li>
-                    <div class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 cursor-pointer transition" onclick="window.toggleSubmenu(this)">
-                        <i class="fas fa-store mr-3"></i>
-                        <span class="flex-1 font-medium">Gestão Comercial</span>
-                        <i class="fas fa-chevron-down text-xs transition-transform"></i>
-                    </div>
-                    <ul class="submenu bg-blue-800 ml-3 rounded-lg mt-1">
-                        <li><a href="produtos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-boxes mr-2 text-sm"></i>Produtos</a></li>
-                        <li><a href="servicos.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-concierge-bell mr-2 text-sm"></i>Serviços</a></li>
-                        <li><a href="estoque.html" class="flex items-center p-3 pl-6 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-pallet mr-2 text-sm"></i>Estoque</a></li>
-                    </ul>
-                </li>
-                <li><a href="vendas.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-line mr-3"></i><span class="font-medium">Minhas Vendas</span></a></li>
-                <li><a href="clientes.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-users mr-3"></i><span class="font-medium">Clientes</span></a></li>
-                <li><a href="relatorios.html" class="flex items-center p-3 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-chart-bar mr-3"></i><span class="font-medium">Relatórios</span></a></li>
-            </ul>
+
+        <nav class="flex-1 overflow-y-auto p-2">
+            <div class="text-xs text-blue-400 uppercase tracking-wider px-3 py-2 sidebar-text">Menu</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="PDV.html" class="nav-item active">
+                <i class="fas fa-cash-register"></i>
+                <span class="sidebar-text">Ponto de Venda</span>
+                <span class="badge">Ativo</span>
+            </a>
+            <a href="produtos.html" class="nav-item">
+                <i class="fas fa-boxes"></i>
+                <span class="sidebar-text">Produtos</span>
+            </a>
+            <a href="clientes.html" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span class="sidebar-text">Clientes</span>
+            </a>
+            <a href="vendas.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span class="sidebar-text">Vendas</span>
+            </a>
+            <a href="relatorios.html" class="nav-item">
+                <i class="fas fa-file-alt"></i>
+                <span class="sidebar-text">Relatórios</span>
+            </a>
+            <div class="border-t border-blue-800 my-2"></div>
+            <a href="#" class="nav-item" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="sidebar-text">Sair</span>
+            </a>
         </nav>
 
-        <div class="p-4 border-t border-blue-700 bg-blue-800">
-            <div class="flex items-center justify-between text-xs mb-2">
-                <span class="text-blue-200">Caixa:</span>
+        <div class="p-3 border-t border-blue-800 bg-blue-900/20 user-info">
+            <div class="flex justify-between text-sm">
+                <span class="text-blue-300">Caixa:</span>
                 <span class="text-green-400 font-semibold" id="cashAmount">AOA 0</span>
             </div>
-            <div class="text-center text-sm">
-                <div class="font-semibold text-yellow-300" id="salesTodayLabel">PDV Activo</div>
-                <div class="text-blue-200" id="salesToday">Vendas: 0 hoje</div>
+            <div class="flex justify-between text-sm">
+                <span class="text-blue-300">Vendas Hoje:</span>
+                <span class="text-white" id="salesToday">0</span>
             </div>
         </div>
     </div>
-    
-    <!-- ==================== MAIN CONTENT ==================== -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
         <!-- Header -->
-        <header class="bg-white shadow-sm z-10 border-b">
-            <div class="flex items-center justify-between p-4">
-                <div class="flex items-center space-x-4">
-                    <button onclick="window.toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded">
+        <header class="bg-white shadow-sm border-b flex-shrink-0">
+            <div class="flex items-center justify-between px-4 py-2">
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded-lg">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
-                    <h1 class="text-xl font-bold text-gray-800">PONTO DE VENDA</h1>
+                    <h1 class="text-xl font-bold text-gray-800">Ponto de Venda</h1>
                     <div class="hidden md:flex items-center space-x-2 text-sm text-gray-600 bg-green-50 px-3 py-1 rounded-full">
-                        <i class="fas fa-user-clock text-green-600"></i>
+                        <span class="shift-indicator active" id="shiftIndicator"></span>
                         <span id="headerShift">Turno: 08:00-16:00</span>
                     </div>
                 </div>
-                
                 <div class="flex items-center space-x-4">
-                    <div class="hidden md:flex items-center space-x-4 bg-blue-50 px-4 py-2 rounded-lg">
+                    <div class="hidden md:flex items-center space-x-3 bg-blue-50 px-4 py-1.5 rounded-lg">
                         <div class="text-center">
                             <div class="text-xs text-gray-600">Itens</div>
                             <div class="font-bold text-blue-700" id="headerItemCount">0</div>
@@ -349,1393 +318,1101 @@
                             <div class="font-bold text-green-700" id="headerTotalAmount">AOA 0</div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" 
-                             alt="Vendedor" class="w-8 h-8 rounded-full">
-                        <span class="hidden md:inline text-gray-700" id="headerUserName">Carregando...</span>
-                    </div>
+                    <img id="headerAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" class="w-8 h-8 rounded-full object-cover">
                 </div>
             </div>
         </header>
-        
+
         <!-- PDV Content -->
-        <main class="flex-1 overflow-hidden flex">
+        <div class="flex-1 flex overflow-hidden">
             <!-- Products Panel -->
-            <div class="flex-1 flex flex-col border-r bg-white">
-                <div class="p-4 border-b bg-gray-50">
-                    <div class="flex flex-col md:flex-row gap-3">
+            <div class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+                <div class="p-3 bg-white border-b flex-shrink-0">
+                    <div class="flex flex-col sm:flex-row gap-2">
                         <div class="flex-1 relative">
-                            <input type="text" id="productSearch" placeholder="Buscar produto por nome, código ou categoria..." 
-                                   class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <input type="text" id="productSearch" placeholder="Buscar produto..." 
+                                   class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         </div>
-                        <div class="flex gap-2">
-                            <select id="categoryFilter" class="border rounded-lg px-3 py-3 focus:ring-2 focus:ring-blue-500">
-                                <option value="">Todas Categorias</option>
-                            </select>
-                            <button onclick="window.clearFilters()" class="bg-gray-200 hover:bg-gray-300 px-4 py-3 rounded-lg transition-colors">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
+                        <select id="categoryFilter" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas</option>
+                        </select>
+                        <button onclick="clearFilters()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-4">
+                <div class="flex-1 overflow-y-auto p-3" id="productsContainer">
                     <div id="loadingProducts" class="text-center py-8">
                         <i class="fas fa-spinner fa-spin text-2xl text-blue-500 mb-2"></i>
                         <p class="text-gray-600">Carregando produtos...</p>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="productsGrid"></div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3" id="productsGrid"></div>
                 </div>
             </div>
 
             <!-- Cart Panel -->
-            <div class="w-96 flex flex-col bg-white shadow-lg">
-                <div class="p-4 border-b bg-blue-600 text-white">
+            <div class="w-96 flex flex-col bg-white border-l flex-shrink-0">
+                <div class="p-3 bg-blue-600 text-white flex-shrink-0">
                     <div class="flex justify-between items-center">
-                        <h2 class="text-lg font-bold">CARRINHO DE VENDA</h2>
-                        <button onclick="window.clearCart()" class="text-white hover:text-red-200 transition-colors" title="Limpar Carrinho">
+                        <h2 class="font-bold"><i class="fas fa-shopping-cart mr-2"></i> Carrinho</h2>
+                        <button onclick="clearCart()" class="text-white hover:text-red-200 transition-colors" title="Limpar">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
-                    <div class="mt-2 flex justify-between text-sm">
+                    <div class="flex justify-between text-sm mt-1">
                         <span id="cartItemCount">0 itens</span>
-                        <span id="cartTotal">Total: AOA 0</span>
+                        <span id="cartTotal">AOA 0</span>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-4" id="cartItems">
+                <div class="flex-1 overflow-y-auto p-3" id="cartItems">
                     <div class="text-center text-gray-500 py-8">
-                        <i class="fas fa-shopping-cart text-4xl mb-2 opacity-50"></i>
-                        <p>Nenhum produto no carrinho</p>
-                        <p class="text-sm">Adicione produtos para iniciar a venda</p>
+                        <i class="fas fa-shopping-cart text-4xl mb-2 opacity-30"></i>
+                        <p>Carrinho vazio</p>
+                        <p class="text-sm">Adicione produtos</p>
                     </div>
                 </div>
 
-                <div class="border-t p-4 space-y-4">
+                <div class="border-t p-3 bg-gray-50 flex-shrink-0">
                     <div class="space-y-2 text-sm">
-                        <div class="flex justify-between"><span>Subtotal:</span><span id="subtotalAmount">AOA 0</span></div>
-                        <div class="flex justify-between"><span>Desconto:</span><span id="discountAmount">AOA 0</span></div>
-                        <div class="flex justify-between font-bold text-lg border-t pt-2"><span>Total:</span><span id="finalTotalAmount">AOA 0</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600">Subtotal:</span><span id="subtotalAmount" class="font-medium">AOA 0</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600">Desconto:</span><span id="discountAmount" class="text-red-600">- AOA 0</span></div>
+                        <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Total:</span><span id="finalTotalAmount" class="text-green-700">AOA 0</span></div>
                     </div>
 
-                    <div class="flex gap-2">
-                        <input type="number" id="discountInput" placeholder="Desconto" 
-                               class="flex-1 border rounded-lg px-3 py-2 text-right" min="0" step="0.01">
+                    <div class="flex gap-2 mt-3">
+                        <input type="number" id="discountInput" placeholder="Desconto" class="flex-1 border rounded-lg px-3 py-2 text-right" min="0" step="0.01">
                         <select id="discountType" class="border rounded-lg px-2">
                             <option value="amount">AOA</option>
                             <option value="percent">%</option>
                         </select>
-                        <button onclick="window.applyDiscount()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors">
-                            <i class="fas fa-percentage"></i>
+                        <button onclick="applyDiscount()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-check"></i>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="window.holdSale()" class="bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-medium transition-colors">
-                            <i class="fas fa-pause mr-2"></i> Suspender
+                    <div class="grid grid-cols-2 gap-2 mt-3">
+                        <button onclick="holdSale()" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2.5 rounded-lg font-medium transition-colors text-sm">
+                            <i class="fas fa-pause mr-1"></i> Suspender
                         </button>
-                        <button onclick="window.openPaymentModal()" class="bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors">
-                            <i class="fas fa-credit-card mr-2"></i> Pagar
+                        <button onclick="openPaymentModal()" class="bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium transition-colors text-sm">
+                            <i class="fas fa-credit-card mr-1"></i> Pagar
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="window.quickAction('last_customer')" class="bg-gray-200 hover:bg-gray-300 py-2 rounded-lg text-sm transition-colors">
-                            <i class="fas fa-redo mr-1"></i> Último
+                    <div class="grid grid-cols-3 gap-2 mt-2">
+                        <button onclick="quickAction('last')" class="bg-gray-200 hover:bg-gray-300 py-2 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-undo mr-1"></i> Último
                         </button>
-                        <button onclick="window.quickAction('hold_sale')" class="bg-gray-200 hover:bg-gray-300 py-2 rounded-lg text-sm transition-colors">
+                        <button onclick="quickAction('held')" class="bg-gray-200 hover:bg-gray-300 py-2 rounded-lg text-sm transition-colors">
                             <i class="fas fa-history mr-1"></i> Suspensas
+                            <span class="text-xs bg-blue-500 text-white rounded-full px-1.5 ml-1" id="heldCount">0</span>
                         </button>
-                        <button onclick="window.quickAction('void_sale')" class="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm transition-colors">
+                        <button onclick="quickAction('void')" class="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm transition-colors">
                             <i class="fas fa-times mr-1"></i> Anular
                         </button>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
-    <!-- ==================== PAYMENT MODAL ==================== -->
-    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center">
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Finalizar Venda</h3>
-                <button onclick="window.closePaymentModal()" class="text-gray-500 hover:text-gray-700">
+                <button onclick="closePaymentModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
-            <div class="p-6 overflow-y-auto max-h-[60vh]">
-                <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 class="font-semibold text-gray-800 mb-3">Resumo da Venda</h4>
-                    <div id="paymentSummary" class="space-y-2 text-sm"></div>
-                    <div class="border-t mt-3 pt-3 font-bold text-lg">
-                        Total: <span id="paymentTotal">AOA 0</span>
-                    </div>
-                </div>
 
-                <div class="mb-6">
-                    <h4 class="font-semibold text-gray-800 mb-3">Forma de Pagamento</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="paymentMethods"></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor Recebido</label>
-                        <input type="number" id="amountReceived" 
-                               class="w-full border rounded-lg px-3 py-3 text-2xl font-bold text-right" 
-                               placeholder="0,00" min="0" step="0.01">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Troco</label>
-                        <div id="changeAmount" class="w-full border rounded-lg px-3 py-3 text-2xl font-bold text-right bg-gray-100">
-                            AOA 0,00
-                        </div>
-                    </div>
-                </div>
-
-                <div class="numeric-keypad grid grid-cols-3 gap-2 mb-6">
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(1)">1</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(2)">2</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(3)">3</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(4)">4</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(5)">5</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(6)">6</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(7)">7</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(8)">8</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(9)">9</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount('.')">.</button>
-                    <button class="bg-gray-200 hover:bg-gray-300 py-4 rounded-lg font-bold text-xl" onclick="window.addToAmount(0)">0</button>
-                    <button class="bg-red-200 hover:bg-red-300 py-4 rounded-lg font-bold text-xl" onclick="window.clearAmount()">
-                        <i class="fas fa-backspace"></i>
-                    </button>
-                </div>
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente (Opcional)</label>
-                        <select id="customerSelect" class="w-full border rounded-lg px-3 py-2">
-                            <option value="">Cliente Avulso</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
-                        <textarea id="saleNotes" class="w-full border rounded-lg px-3 py-2" rows="2" placeholder="Observações da venda..."></textarea>
-                    </div>
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Resumo</h4>
+                <div id="paymentSummary" class="space-y-1 text-sm"></div>
+                <div class="border-t mt-2 pt-2 font-bold text-lg flex justify-between">
+                    <span>Total:</span>
+                    <span id="paymentTotal" class="text-green-700">AOA 0</span>
                 </div>
             </div>
-            
-            <div class="p-6 border-t bg-gray-50 flex justify-between">
-                <button onclick="window.closePaymentModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    Cancelar
-                </button>
-                <button onclick="window.finalizeSale()" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium">
-                    <i class="fas fa-check-circle mr-2"></i> Finalizar Venda
+
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Forma de Pagamento</h4>
+                <div class="grid grid-cols-3 gap-2" id="paymentMethods"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Recebido</label>
+                    <input type="number" id="amountReceived" class="w-full border rounded-lg px-3 py-3 text-2xl font-bold text-right" placeholder="0,00" min="0" step="0.01">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Troco</label>
+                    <div id="changeAmount" class="w-full border rounded-lg px-3 py-3 text-2xl font-bold text-right bg-gray-100">AOA 0,00</div>
+                </div>
+            </div>
+
+            <div class="numeric-keypad grid grid-cols-3 gap-2 mb-4">
+                <button onclick="addToAmount(1)">1</button>
+                <button onclick="addToAmount(2)">2</button>
+                <button onclick="addToAmount(3)">3</button>
+                <button onclick="addToAmount(4)">4</button>
+                <button onclick="addToAmount(5)">5</button>
+                <button onclick="addToAmount(6)">6</button>
+                <button onclick="addToAmount(7)">7</button>
+                <button onclick="addToAmount(8)">8</button>
+                <button onclick="addToAmount(9)">9</button>
+                <button onclick="addToAmount('.')">.</button>
+                <button onclick="addToAmount(0)">0</button>
+                <button onclick="clearAmount()" class="bg-red-100 hover:bg-red-200"><i class="fas fa-backspace"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                    <select id="customerSelect" class="w-full border rounded-lg px-3 py-2">
+                        <option value="">Cliente Avulso</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                    <textarea id="saleNotes" class="w-full border rounded-lg px-3 py-2" rows="2" placeholder="Observações..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4 pt-4 border-t">
+                <button onclick="closePaymentModal()" class="flex-1 border border-gray-300 rounded-lg py-3 hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button onclick="finalizeSale()" class="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-colors">
+                    <i class="fas fa-check mr-2"></i> Finalizar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== RECEIPT MODAL ==================== -->
-    <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800">Fatura Gerada</h3>
-                <button onclick="window.closeReceiptModal()" class="text-gray-500 hover:text-gray-700">
+    <!-- Receipt Modal -->
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Fatura / Recibo</h3>
+                <button onclick="closeReceiptModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
-            <div class="p-6 overflow-y-auto max-h-[60vh]">
-                <div class="invoice-container bg-white p-6 rounded-xl invoice-shadow text-left border">
-                    <div class="invoice-header text-center">
-                        <h2 id="faturaCompanyName" class="text-xl font-bold text-gray-800">Nome da Empresa</h2>
-                        <p id="faturaCompanyNIF" class="text-gray-600 text-sm">NIF: </p>
-                        <p id="faturaCompanyAddress" class="text-gray-600 text-sm"></p>
-                        <p id="faturaCompanyPhone" class="text-gray-600 text-sm"></p>
-                        <p id="faturaCompanyEmail" class="text-gray-600 text-sm"></p>
-                    </div>
 
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-700">FATURA Nº</p>
-                            <p class="text-2xl font-bold text-gray-800" id="faturaNumber">000001</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm text-gray-600" id="faturaDate"></p>
-                            <p class="text-sm text-gray-600" id="faturaHora"></p>
-                        </div>
-                    </div>
+            <div class="receipt-preview border rounded-lg" id="receiptContent">
+                <div class="header">
+                    <h2 class="text-xl font-bold" id="receiptCompanyName">Kanawa Soft</h2>
+                    <p id="receiptCompanyInfo">NIF: 000000000</p>
+                    <p id="receiptCompanyAddress">Endereço da Empresa</p>
+                    <p id="receiptCompanyPhone">+244 900 000 000</p>
+                </div>
 
-                    <hr class="mb-4 border-gray-300">
-
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-700">CLIENTE:</p>
-                            <p id="faturaClientName" class="text-gray-800 font-medium">Cliente Avulso</p>
-                            <p id="faturaClientNIF" class="text-gray-600 text-sm"></p>
-                            <p id="faturaClientEndereco" class="text-gray-600 text-sm"></p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs font-semibold text-gray-700">VENDEDOR:</p>
-                            <p id="faturaSeller" class="text-gray-800 font-medium"></p>
-                            <p id="faturaVendedorId" class="text-gray-600 text-sm"></p>
-                        </div>
+                <div class="flex justify-between text-sm">
+                    <div>
+                        <p><strong>Fatura Nº:</strong> <span id="receiptNumber">000001</span></p>
+                        <p><strong>Data:</strong> <span id="receiptDate"></span></p>
+                        <p><strong>Hora:</strong> <span id="receiptTime"></span></p>
                     </div>
-
-                    <div class="invoice-items">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th class="text-left">DESCRIÇÃO</th>
-                                    <th class="text-right">QTD</th>
-                                    <th class="text-right">PREÇO</th>
-                                    <th class="text-right">TOTAL</th>
-                                </tr>
-                            </thead>
-                            <tbody id="faturaItems"></tbody>
-                        </table>
+                    <div class="text-right">
+                        <p><strong>Vendedor:</strong> <span id="receiptSeller">Vendedor</span></p>
+                        <p><strong>Cliente:</strong> <span id="receiptCustomer">Cliente Avulso</span></p>
                     </div>
+                </div>
 
-                    <div class="invoice-totals">
-                        <div class="total-line"><span>Subtotal:</span><span id="faturaSubtotal" class="font-semibold">AOA 0,00</span></div>
-                        <div class="total-line text-red-600"><span>Desconto:</span><span id="faturaDesconto" class="font-semibold">- AOA 0,00</span></div>
-                        <div class="total-line text-green-600"><span>IVA (14%):</span><span id="faturaIVA" class="font-semibold">AOA 0,00</span></div>
-                        <div class="total-line grand-total"><span>TOTAL:</span><span id="faturaTotal" class="text-green-700">AOA 0,00</span></div>
-                    </div>
+                <hr class="my-2 border-dashed">
 
-                    <div class="grid grid-cols-2 gap-4 mt-4 p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-700">PAGAMENTO:</p>
-                            <div class="text-sm text-gray-600">
-                                <div><span class="font-medium">Método:</span> <span id="faturaPaymentMethod"></span></div>
-                                <div><span class="font-medium">Recebido:</span> <span id="faturaAmountReceived"></span></div>
-                                <div><span class="font-medium">Troco:</span> <span id="faturaChange"></span></div>
-                            </div>
-                        </div>
-                        <div class="invoice-qr">
-                            <div id="faturaQrCode" class="inline-block p-2 bg-white border rounded"></div>
-                        </div>
-                    </div>
+                <table>
+                    <thead>
+                        <tr><th class="text-left">Descrição</th><th class="text-center">Qtd</th><th class="text-right">Preço</th><th class="text-right">Total</th></tr>
+                    </thead>
+                    <tbody id="receiptItems"></tbody>
+                </table>
 
-                    <div class="mt-4 pt-3 border-t border-gray-300">
-                        <p class="text-xs text-gray-500 text-center" id="faturaTermos">Esta fatura foi gerada automaticamente pelo sistema. Obrigado pela sua preferência!</p>
-                        <p class="text-xs text-gray-500 text-center mt-1" id="faturaFooterInfo">Sistema de Gestão - PDV</p>
-                    </div>
+                <div class="mt-2">
+                    <div class="total-line"><span>Subtotal:</span><span id="receiptSubtotal">AOA 0,00</span></div>
+                    <div class="total-line text-red-600"><span>Desconto:</span><span id="receiptDiscount">- AOA 0,00</span></div>
+                    <div class="total-line"><span>IVA (14%):</span><span id="receiptIVA">AOA 0,00</span></div>
+                    <div class="total-line grand-total"><span>TOTAL:</span><span id="receiptTotal" class="text-green-700">AOA 0,00</span></div>
+                </div>
+
+                <div class="footer">
+                    <p id="receiptPaymentMethod">Pagamento: Dinheiro</p>
+                    <p id="receiptTerms">Obrigado pela preferência!</p>
                 </div>
             </div>
-            
-            <div class="p-6 border-t bg-gray-50">
-                <div class="grid grid-cols-4 gap-3">
-                    <button onclick="window.printA4()" class="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-print mr-2"></i> A4
-                    </button>
-                    <button onclick="window.printThermal80()" class="bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-receipt mr-2"></i> 80mm
-                    </button>
-                    <button onclick="window.printThermal58()" class="bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-receipt mr-2"></i> 58mm
-                    </button>
-                    <button onclick="window.newSale()" class="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-plus mr-2"></i> Nova Venda
-                    </button>
-                </div>
+
+            <div class="flex gap-2 mt-4 pt-4 border-t flex-wrap">
+                <button onclick="printReceipt('a4')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-print mr-1"></i> A4
+                </button>
+                <button onclick="printReceipt('thermal80')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-receipt mr-1"></i> 80mm
+                </button>
+                <button onclick="printReceipt('thermal58')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-receipt mr-1"></i> 58mm
+                </button>
+                <button onclick="newSale()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors ml-auto">
+                    <i class="fas fa-plus mr-1"></i> Nova Venda
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== TOAST CONTAINER ==================== -->
-    <div id="toastContainer" class="toast-container"></div>
+    <!-- Held Sales Modal -->
+    <div class="modal-overlay" id="heldSalesModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Vendas Suspensas</h3>
+                <button onclick="document.getElementById('heldSalesModal').classList.remove('active')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="heldSalesList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            <div class="mt-4 pt-4 border-t flex justify-end">
+                <button onclick="document.getElementById('heldSalesModal').classList.remove('active')" class="border border-gray-300 rounded-lg px-6 py-2 hover:bg-gray-50">Fechar</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- ==================== SUPABASE SDK ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js">
-    </script>
-    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
-        (function() {
-            'use strict';
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_CONFIG = {
+            url: 'https://ycrcivteglvozfvoiyzs.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcmNpdnRlZ2x2b3pmdm9peXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjE1NzIsImV4cCI6MjA5NjkzNzU3Mn0.RuFTiSnORdGUthVP4Q9l2RWq4duhLqpey9O0b7QjR6A'
+        };
 
-            // ==================== SUPABASE CONFIG ====================
-            const SUPABASE_CONFIG = {
-                url: 'https://khuqlsjohhhokttrkluo.supabase.co',
-                key: 'sb_secret_nuTkOXL3yQLkhFYJSxGYbw_UBdTknBq'
-            };
+        // ==================== INICIALIZAR SUPABASE ====================
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado');
 
-            // ==================== INICIALIZAR SUPABASE ====================
-            let supabase = null;
-            let supabaseReady = false;
+        // ==================== STATE ====================
+        const state = {
+            cart: [],
+            products: [],
+            customers: [],
+            heldSales: [],
+            currentUser: null,
+            selectedPaymentMethod: null,
+            currentSale: null,
+            isOnline: navigator.onLine
+        };
 
+        // ==================== DOM REFS ====================
+        const $ = id => document.getElementById(id);
+        const DOM = {
+            productsGrid: $('productsGrid'),
+            loadingProducts: $('loadingProducts'),
+            cartItems: $('cartItems'),
+            cartItemCount: $('cartItemCount'),
+            cartTotal: $('cartTotal'),
+            headerItemCount: $('headerItemCount'),
+            headerTotalAmount: $('headerTotalAmount'),
+            subtotalAmount: $('subtotalAmount'),
+            discountAmount: $('discountAmount'),
+            finalTotalAmount: $('finalTotalAmount'),
+            discountInput: $('discountInput'),
+            discountType: $('discountType'),
+            customerSelect: $('customerSelect'),
+            saleNotes: $('saleNotes'),
+            paymentModal: $('paymentModal'),
+            receiptModal: $('receiptModal'),
+            paymentSummary: $('paymentSummary'),
+            paymentTotal: $('paymentTotal'),
+            paymentMethods: $('paymentMethods'),
+            amountReceived: $('amountReceived'),
+            changeAmount: $('changeAmount'),
+            productSearch: $('productSearch'),
+            categoryFilter: $('categoryFilter'),
+            toastContainer: $('toastContainer'),
+            heldSalesList: $('heldSalesList'),
+            heldSalesModal: $('heldSalesModal'),
+            heldCount: $('heldCount')
+        };
+
+        // ==================== INIT ====================
+        async function init() {
+            await loadUser();
+            await loadProducts();
+            await loadCategories();
+            await loadCustomers();
+            await loadHeldSales();
+            await loadStats();
+            setupEventListeners();
+            updateUI();
+            console.log('✅ PDV inicializado');
+        }
+
+        // ==================== LOAD FUNCTIONS ====================
+        async function loadUser() {
             try {
-                supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-                supabaseReady = true;
-                console.log('✅ Supabase inicializado com sucesso!');
-            } catch (error) {
-                console.error('❌ Erro ao inicializar Supabase:', error);
-            }
-
-            // ==================== CONFIG ====================
-            const SYSTEM_CONFIG = {
-                systemName: 'Kanawa Soft',
-                companyName: 'Nome da Empresa',
-                companyNIF: 'NIF: 000000000',
-                companyAddress: 'Endereço da Empresa',
-                companyPhone: '+244 900 000 000',
-                companyEmail: 'contato@empresa.com',
-                currency: 'AOA',
-                taxRate: 0.14,
-                invoiceTerms: 'Esta fatura foi gerada automaticamente pelo sistema. Obrigado pela sua preferência!',
-                invoiceFooter: 'Sistema de Gestão - PDV'
-            };
-
-            // ==================== ESTADO ====================
-            const state = {
-                initialized: false,
-                supabase: supabase,
-                cart: [],
-                products: [],
-                customers: [],
-                heldSales: [],
-                currentUser: null,
-                currentShift: null,
-                currentSale: null,
-                selectedPaymentMethod: null,
-                isOnline: navigator.onLine,
-                dbSource: 'local',
-                syncInterval: null,
-                editingId: null
-            };
-
-            // ==================== DOM REFS ====================
-            const DOM = {
-                productsGrid: document.getElementById('productsGrid'),
-                loadingProducts: document.getElementById('loadingProducts'),
-                cartItems: document.getElementById('cartItems'),
-                cartItemCount: document.getElementById('cartItemCount'),
-                cartTotal: document.getElementById('cartTotal'),
-                headerItemCount: document.getElementById('headerItemCount'),
-                headerTotalAmount: document.getElementById('headerTotalAmount'),
-                subtotalAmount: document.getElementById('subtotalAmount'),
-                discountAmount: document.getElementById('discountAmount'),
-                finalTotalAmount: document.getElementById('finalTotalAmount'),
-                discountInput: document.getElementById('discountInput'),
-                discountType: document.getElementById('discountType'),
-                customerSelect: document.getElementById('customerSelect'),
-                saleNotes: document.getElementById('saleNotes'),
-                paymentModal: document.getElementById('paymentModal'),
-                receiptModal: document.getElementById('receiptModal'),
-                paymentSummary: document.getElementById('paymentSummary'),
-                paymentTotal: document.getElementById('paymentTotal'),
-                paymentMethods: document.getElementById('paymentMethods'),
-                amountReceived: document.getElementById('amountReceived'),
-                changeAmount: document.getElementById('changeAmount'),
-                productSearch: document.getElementById('productSearch'),
-                categoryFilter: document.getElementById('categoryFilter'),
-                toastContainer: document.getElementById('toastContainer')
-            };
-
-            // ==================== INICIALIZAÇÃO ====================
-            function init() {
-                if (state.initialized) return;
-                state.initialized = true;
-
-                if (!supabase) {
-                    try {
-                        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-                        state.supabase = supabase;
-                        supabaseReady = true;
-                    } catch (e) {
-                        console.error('Erro ao criar cliente Supabase:', e);
-                    }
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    state.currentUser = JSON.parse(userStr);
+                } else {
+                    state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
                 }
-
-                checkConnectivity();
-                loadData();
-                setupEventListeners();
-                loadSidebarPreference();
-
-                // Sincronização periódica
-                state.syncInterval = setInterval(syncData, 30000);
+            } catch (e) {
+                state.currentUser = { id: 1, nome: 'Usuário', email: 'user@email.com', cargo: 'Vendedor' };
             }
+            updateUserUI();
+        }
 
-            // ==================== CONECTIVIDADE ====================
-            function checkConnectivity() {
-                window.addEventListener('online', () => {
-                    state.isOnline = true;
-                    updateConnectionStatus('🟢 Online');
-                    syncData();
-                    showNotification('Conexão restaurada!', 'success');
-                });
-                
-                window.addEventListener('offline', () => {
-                    state.isOnline = false;
-                    updateConnectionStatus('🔴 Offline');
-                    showNotification('Modo offline ativado', 'warning');
-                });
-                
-                state.isOnline = navigator.onLine;
-                updateConnectionStatus(state.isOnline ? '🟢 Online' : '🔴 Offline');
+        function updateUserUI() {
+            const u = state.currentUser;
+            const name = u?.nome || 'Usuário';
+            const role = u?.cargo || 'Vendedor';
+            const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+            
+            $('userName').textContent = name;
+            $('userRole').textContent = role;
+            $('userAvatar').src = avatar;
+            $('headerAvatar').src = avatar;
+            $('headerUserName') && ($('headerUserName').textContent = name);
+        }
+
+        async function loadProducts() {
+            try {
+                if (!supabaseReady) throw new Error('Supabase não disponível');
+                const { data, error } = await supabase
+                    .from('produtos')
+                    .select('*')
+                    .eq('ativo', true)
+                    .order('nome');
+                if (error) throw error;
+                state.products = data || [];
+                localStorage.setItem('pdv_products', JSON.stringify(state.products));
+            } catch (e) {
+                const local = localStorage.getItem('pdv_products');
+                state.products = local ? JSON.parse(local) : getSampleProducts();
+                showToast('Modo offline - dados locais', 'warning');
             }
+            renderProducts();
+            DOM.loadingProducts.classList.add('hidden');
+        }
 
-            function updateConnectionStatus(status) {
-                document.getElementById('connectionStatus').textContent = status;
-            }
+        function getSampleProducts() {
+            return [
+                { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-001', preco: 2500, current_stock: 10, categoria_id: 1, categoria_nome: 'Alimentos' },
+                { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-002', preco: 3500, current_stock: 8, categoria_id: 1, categoria_nome: 'Alimentos' },
+                { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-003', preco: 1800, current_stock: 5, categoria_id: 2, categoria_nome: 'Bebidas' },
+                { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-004', preco: 1200, current_stock: 15, categoria_id: 1, categoria_nome: 'Alimentos' },
+                { id: 5, nome: 'Café em Pó 500g', codigo: 'P-005', preco: 4500, current_stock: 3, categoria_id: 2, categoria_nome: 'Bebidas' },
+                { id: 6, nome: 'Leite Integral 1L', codigo: 'P-006', preco: 850, current_stock: 12, categoria_id: 2, categoria_nome: 'Bebidas' },
+                { id: 7, nome: 'Pão de Forma 500g', codigo: 'P-007', preco: 950, current_stock: 7, categoria_id: 3, categoria_nome: 'Padaria' },
+                { id: 8, nome: 'Sabonete Líquido 200ml', codigo: 'P-008', preco: 1500, current_stock: 6, categoria_id: 4, categoria_nome: 'Higiene' }
+            ];
+        }
 
-            // ==================== CARREGAR DADOS ====================
-            async function loadData() {
-                try {
-                    await Promise.all([
-                        loadUserData(),
-                        loadProducts(),
-                        loadCategories(),
-                        loadCustomers(),
-                        loadStatistics(),
-                        loadCompanyData(),
-                        loadShiftData(),
-                        loadHeldSales()
-                    ]);
-                    state.dbSource = 'supabase';
-                    console.log('✅ Dados carregados do Supabase');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao carregar do Supabase:', error);
-                    await loadLocalData();
-                    state.dbSource = 'local';
-                    console.log('✅ Dados carregados do Local Storage (offline)');
-                    showNotification('Modo offline - dados locais', 'warning');
-                }
-            }
-
-            async function loadUserData() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('usuarios').select('*').limit(1);
-                        state.currentUser = data?.[0] || { id: 1, nome: 'Usuário', email: 'usuario@email.com',
-                            cargo: 'Vendedor' };
-                    } else {
-                        state.currentUser = { id: 1, nome: 'Usuário Offline', cargo: 'Vendedor' };
-                    }
-                    updateUserUI();
-                } catch (e) {
-                    state.currentUser = { id: 1, nome: 'Usuário Offline', cargo: 'Vendedor' };
-                }
-            }
-
-            function updateUserUI() {
-                const u = state.currentUser;
-                document.getElementById('userName').textContent = u.nome;
-                document.getElementById('headerUserName').textContent = u.nome;
-                document.getElementById('userRole').textContent = u.cargo || 'Vendedor';
-                const avatar =
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=10B981&color=fff`;
-                document.getElementById('userAvatar').src = avatar;
-                document.getElementById('headerUserAvatar').src = avatar;
-            }
-
-            async function loadProducts() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('produtos').select('*').order('nome');
-                        state.products = data || [];
-                    } else {
-                        const local = localStorage.getItem('pdv_products');
-                        state.products = local ? JSON.parse(local) : getSampleProducts();
-                    }
-                    renderProducts(state.products);
-                    DOM.loadingProducts.classList.add('hidden');
-                    DOM.productsGrid.classList.remove('hidden');
-                    localStorage.setItem('pdv_products', JSON.stringify(state.products));
-                } catch (e) {
-                    const local = localStorage.getItem('pdv_products');
-                    state.products = local ? JSON.parse(local) : getSampleProducts();
-                    renderProducts(state.products);
-                    DOM.loadingProducts.classList.add('hidden');
-                    DOM.productsGrid.classList.remove('hidden');
-                }
-            }
-
-            function getSampleProducts() {
-                return [
-                    { id: 1, nome: 'Arroz Integral 1kg', codigo: 'P-1001', preco: 2500, current_stock: 10,
-                    categoria_id: 1 },
-                    { id: 2, nome: 'Feijão Carioca 1kg', codigo: 'P-1002', preco: 3500, current_stock: 8,
-                    categoria_id: 1 },
-                    { id: 3, nome: 'Óleo de Soja 900ml', codigo: 'P-1003', preco: 1800, current_stock: 5,
-                    categoria_id: 2 },
-                    { id: 4, nome: 'Açúcar Refinado 1kg', codigo: 'P-1004', preco: 1200, current_stock: 15,
-                    categoria_id: 1 },
-                    { id: 5, nome: 'Café em Pó 500g', codigo: 'P-1005', preco: 4500, current_stock: 3, categoria_id: 2 }
-                ];
-            }
-
-            async function loadCategories() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('categorias').select('*').order('nome');
-                        const categories = data || [];
-                        const filter = DOM.categoryFilter;
-                        filter.innerHTML = '<option value="">Todas Categorias</option>';
-                        categories.forEach(c => {
-                            const opt = document.createElement('option');
-                            opt.value = c.id;
-                            opt.textContent = c.nome;
-                            filter.appendChild(opt);
-                        });
-                    }
-                } catch (e) { /* ignore */ }
-            }
-
-            async function loadCustomers() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('clientes').select('*').order('nome');
-                        state.customers = data || [];
-                    } else {
-                        const local = localStorage.getItem('pdv_customers');
-                        state.customers = local ? JSON.parse(local) : [];
-                    }
-                    updateCustomerSelect();
-                    localStorage.setItem('pdv_customers', JSON.stringify(state.customers));
-                } catch (e) {
-                    const local = localStorage.getItem('pdv_customers');
-                    state.customers = local ? JSON.parse(local) : [];
-                    updateCustomerSelect();
-                }
-            }
-
-            function updateCustomerSelect() {
-                const select = DOM.customerSelect;
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Cliente Avulso</option>';
-                state.customers.forEach(c => {
+        async function loadCategories() {
+            try {
+                if (!supabaseReady) return;
+                const { data, error } = await supabase.from('categorias').select('*').order('nome');
+                if (error) throw error;
+                const select = DOM.categoryFilter;
+                select.innerHTML = '<option value="">Todas</option>';
+                (data || []).forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.id;
-                    opt.textContent = `${c.nome}${c.nif ? ` - NIF: ${c.nif}` : ''}`;
+                    opt.textContent = c.nome;
                     select.appendChild(opt);
                 });
-                if (currentValue) select.value = currentValue;
+            } catch (e) { /* ignore */ }
+        }
+
+        async function loadCustomers() {
+            try {
+                if (!supabaseReady) return;
+                const { data, error } = await supabase.from('clientes').select('*').order('nome');
+                if (error) throw error;
+                state.customers = data || [];
+                localStorage.setItem('pdv_customers', JSON.stringify(state.customers));
+            } catch (e) {
+                const local = localStorage.getItem('pdv_customers');
+                state.customers = local ? JSON.parse(local) : [];
+            }
+            updateCustomerSelect();
+        }
+
+        function updateCustomerSelect() {
+            const select = DOM.customerSelect;
+            const current = select.value;
+            select.innerHTML = '<option value="">Cliente Avulso</option>';
+            state.customers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.nome}${c.nif ? ` (${c.nif})` : ''}`;
+                select.appendChild(opt);
+            });
+            if (current) select.value = current;
+        }
+
+        async function loadHeldSales() {
+            try {
+                const saved = localStorage.getItem('pdv_held_sales');
+                state.heldSales = saved ? JSON.parse(saved) : [];
+                DOM.heldCount.textContent = state.heldSales.length;
+            } catch (e) {
+                state.heldSales = [];
+            }
+        }
+
+        async function loadStats() {
+            try {
+                if (!supabaseReady) return;
+                const today = new Date().toISOString().split('T')[0];
+                const { data, error } = await supabase
+                    .from('vendas')
+                    .select('total')
+                    .eq('data_venda', today);
+                if (error) throw error;
+                const total = data?.reduce((s, v) => s + v.total, 0) || 0;
+                $('cashAmount').textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+                $('salesToday').textContent = `${data?.length || 0} vendas`;
+            } catch (e) { /* ignore */ }
+        }
+
+        // ==================== RENDER ====================
+        function renderProducts() {
+            const grid = DOM.productsGrid;
+            const search = DOM.productSearch.value.toLowerCase();
+            const category = DOM.categoryFilter.value;
+
+            let filtered = state.products;
+            if (search) {
+                filtered = filtered.filter(p => 
+                    p.nome?.toLowerCase().includes(search) ||
+                    p.codigo?.toLowerCase().includes(search)
+                );
+            }
+            if (category) {
+                filtered = filtered.filter(p => p.categoria_id == category);
             }
 
-            async function loadStatistics() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('metrics').select('*').limit(1);
-                        const metrics = data?.[0] || { salesToday: 0, salesCount: 0 };
-                        document.getElementById('cashAmount').textContent =
-                            `AOA ${(metrics.salesToday || 0).toLocaleString('pt-BR')}`;
-                        document.getElementById('salesToday').textContent = `Vendas: ${metrics.salesCount || 0} hoje`;
-                    }
-                } catch (e) { /* ignore */ }
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-8">Nenhum produto encontrado</div>`;
+                return;
             }
 
-            async function loadCompanyData() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('empresa').select('*').limit(1);
-                        const company = data?.[0] || {};
-                        document.getElementById('faturaCompanyName').textContent = company.nome || SYSTEM_CONFIG
-                        .companyName;
-                        document.getElementById('faturaCompanyNIF').textContent = `NIF: ${company.nif || SYSTEM_CONFIG.companyNIF}`;
-                        document.getElementById('faturaCompanyAddress').textContent = company.endereco || SYSTEM_CONFIG
-                            .companyAddress;
-                        document.getElementById('faturaCompanyPhone').textContent = company.telefone || SYSTEM_CONFIG
-                            .companyPhone;
-                        document.getElementById('faturaCompanyEmail').textContent = company.email || SYSTEM_CONFIG
-                            .companyEmail;
-                    }
-                } catch (e) { /* ignore */ }
-            }
-
-            async function loadShiftData() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('shifts').select('*').eq('active', true).limit(1);
-                        state.currentShift = data?.[0] || null;
-                        const shift = state.currentShift;
-                        document.getElementById('currentShift').textContent = shift ? `${shift.start_time} - ${shift.end_time}` :
-                            '08:00 - 16:00';
-                        document.getElementById('headerShift').textContent = shift ?
-                            `Turno: ${shift.start_time}-${shift.end_time}` : 'Turno: 08:00-16:00';
-                    }
-                } catch (e) { /* ignore */ }
-            }
-
-            async function loadHeldSales() {
-                try {
-                    if (supabase) {
-                        const { data } = await supabase.from('held_sales').select('*').eq('status', 'held').order(
-                        'created_at', { ascending: false });
-                        state.heldSales = data || [];
-                    } else {
-                        state.heldSales = [];
-                    }
-                } catch (e) {
-                    state.heldSales = [];
-                }
-            }
-
-            async function loadLocalData() {
-                const localProducts = localStorage.getItem('pdv_products');
-                state.products = localProducts ? JSON.parse(localProducts) : getSampleProducts();
-                renderProducts(state.products);
-                DOM.loadingProducts.classList.add('hidden');
-                DOM.productsGrid.classList.remove('hidden');
-
-                const localCustomers = localStorage.getItem('pdv_customers');
-                state.customers = localCustomers ? JSON.parse(localCustomers) : [];
-                updateCustomerSelect();
-
-                state.currentUser = { id: 1, nome: 'Usuário Offline', cargo: 'Vendedor' };
-                updateUserUI();
-            }
-
-            // ==================== RENDER ====================
-            function renderProducts(productsToRender) {
-                const grid = DOM.productsGrid;
-                const searchTerm = DOM.productSearch.value.toLowerCase();
-                const categoryFilter = DOM.categoryFilter.value;
-
-                let filtered = productsToRender;
-                if (searchTerm) {
-                    filtered = filtered.filter(p =>
-                        (p.nome?.toLowerCase().includes(searchTerm)) ||
-                        (p.codigo?.toLowerCase().includes(searchTerm)) ||
-                        (p.descricao?.toLowerCase().includes(searchTerm))
-                    );
-                }
-                if (categoryFilter) {
-                    filtered = filtered.filter(p => p.categoria_id == categoryFilter);
-                }
-
-                if (filtered.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full text-center py-8 text-gray-500">
-                            <i class="fas fa-box-open text-4xl mb-2 opacity-50"></i>
-                            <p>Nenhum produto encontrado</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                grid.innerHTML = filtered.map(p => `
-                    <div class="product-card bg-white rounded-lg shadow border cursor-pointer transition-all duration-200 p-4">
-                        <div class="flex items-start space-x-3">
-                            <img src="${p.image || 'https://via.placeholder.com/100x100?text=Produto'}" 
-                                 alt="${p.nome}" class="w-16 h-16 rounded-lg object-cover">
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-semibold text-gray-800 truncate">${p.nome}</h3>
-                                <p class="text-sm text-gray-600">Cód: ${p.codigo || 'N/A'}</p>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="font-bold text-green-700">AOA ${(p.preco || 0).toLocaleString('pt-BR')}</span>
-                                    <span class="text-xs ${(p.current_stock || 0) < 5 ? 'text-red-600' : 'text-gray-500'}">
-                                        Stock: ${p.current_stock || 0}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="window.addToCart(${p.id})" 
-                                class="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors font-medium ${(!p.current_stock || p.current_stock === 0) ? 'opacity-50 cursor-not-allowed' : ''}"
-                                ${(!p.current_stock || p.current_stock === 0) ? 'disabled' : ''}>
-                            <i class="fas fa-cart-plus mr-2"></i>
-                            ${(!p.current_stock || p.current_stock === 0) ? 'Sem Stock' : 'Adicionar'}
-                        </button>
-                    </div>
-                `).join('');
-            }
-
-            // ==================== CARRINHO ====================
-            function addToCart(productId) {
-                const product = state.products.find(p => p.id === productId);
-                if (!product || !product.current_stock || product.current_stock === 0) return;
-
-                const existing = state.cart.find(item => item.product.id === productId);
-                if (existing) {
-                    if (existing.quantity < product.current_stock) {
-                        existing.quantity++;
-                    } else {
-                        showNotification('Stock insuficiente!', 'error');
-                        return;
-                    }
-                } else {
-                    state.cart.push({ product, quantity: 1 });
-                }
-
-                updateCartDisplay();
-                showNotification(`${product.nome} adicionado ao carrinho`, 'success');
-            }
-
-            function updateCartDisplay() {
-                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-                const total = subtotal - discount;
-
-                DOM.cartItemCount.textContent = `${state.cart.reduce((s, i) => s + i.quantity, 0)} itens`;
-                DOM.cartTotal.textContent = `Total: AOA ${total.toLocaleString('pt-BR')}`;
-                DOM.headerItemCount.textContent = state.cart.reduce((s, i) => s + i.quantity, 0);
-                DOM.headerTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-                DOM.subtotalAmount.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
-                DOM.finalTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-
-                if (state.cart.length === 0) {
-                    DOM.cartItems.innerHTML = `
-                        <div class="text-center text-gray-500 py-8">
-                            <i class="fas fa-shopping-cart text-4xl mb-2 opacity-50"></i>
-                            <p>Nenhum produto no carrinho</p>
-                            <p class="text-sm">Adicione produtos para iniciar a venda</p>
-                        </div>
-                    `;
-                } else {
-                    DOM.cartItems.innerHTML = state.cart.map((item, index) => `
-                        <div class="cart-item bg-gray-50 rounded-lg p-3 mb-2">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-semibold text-gray-800 truncate">${item.product.nome}</h4>
-                                    <p class="text-sm text-gray-600">AOA ${item.product.preco.toLocaleString('pt-BR')} cada</p>
-                                </div>
-                                <button onclick="window.removeFromCart(${index})" class="cart-item-remove text-gray-400 hover:text-red-500 ml-2 transition-all">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="window.updateQuantity(${index}, -1)" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                        <i class="fas fa-minus text-xs"></i>
-                                    </button>
-                                    <span class="font-semibold w-8 text-center">${item.quantity}</span>
-                                    <button onclick="window.updateQuantity(${index}, 1)" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                        <i class="fas fa-plus text-xs"></i>
-                                    </button>
-                                </div>
-                                <span class="font-bold text-green-700">AOA ${(item.product.preco * item.quantity).toLocaleString('pt-BR')}</span>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            function removeFromCart(index) {
-                state.cart.splice(index, 1);
-                updateCartDisplay();
-            }
-
-            function updateQuantity(index, change) {
-                const item = state.cart[index];
-                const newQty = item.quantity + change;
-                if (newQty < 1) { removeFromCart(index); return; }
-                if (newQty > item.product.current_stock) {
-                    showNotification('Stock insuficiente!', 'error');
-                    return;
-                }
-                item.quantity = newQty;
-                updateCartDisplay();
-            }
-
-            function clearCart() {
-                if (state.cart.length === 0) return;
-                if (confirm('Tem certeza que deseja limpar o carrinho?')) {
-                    state.cart = [];
-                    DOM.discountInput.value = '';
-                    DOM.discountAmount.textContent = 'AOA 0';
-                    updateCartDisplay();
-                    showNotification('Carrinho limpo', 'info');
-                }
-            }
-
-            // ==================== DESCONTO ====================
-            function applyDiscount() {
-                const value = parseFloat(DOM.discountInput.value) || 0;
-                if (value <= 0) {
-                    DOM.discountAmount.textContent = 'AOA 0';
-                    updateCartDisplay();
-                    return;
-                }
-
-                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                let discount = 0;
-                if (DOM.discountType.value === 'percent') {
-                    if (value > 100) { showNotification('Desconto não pode ser maior que 100%', 'error'); return; }
-                    discount = (subtotal * value) / 100;
-                } else {
-                    discount = Math.min(value, subtotal);
-                }
-
-                DOM.discountAmount.textContent = `AOA ${discount.toLocaleString('pt-BR')}`;
-                updateCartDisplay();
-                showNotification(`Desconto de AOA ${discount.toLocaleString('pt-BR')} aplicado`, 'success');
-            }
-
-            // ==================== PAGAMENTO ====================
-            function openPaymentModal() {
-                if (state.cart.length === 0) {
-                    showNotification('Adicione produtos ao carrinho primeiro!', 'error');
-                    return;
-                }
-                DOM.paymentModal.classList.remove('hidden');
-                updatePaymentSummary();
-                setupPaymentMethods();
-                calculateChange();
-                setTimeout(() => DOM.amountReceived.focus(), 100);
-            }
-
-            function closePaymentModal() {
-                DOM.paymentModal.classList.add('hidden');
-                state.selectedPaymentMethod = null;
-                DOM.amountReceived.value = '';
-                DOM.changeAmount.textContent = 'AOA 0,00';
-            }
-
-            function updatePaymentSummary() {
-                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-                const total = subtotal - discount;
-
-                DOM.paymentTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
-                DOM.paymentSummary.innerHTML = state.cart.map(item => `
-                    <div class="flex justify-between">
-                        <span>${item.quantity}x ${item.product.nome}</span>
-                        <span>AOA ${(item.product.preco * item.quantity).toLocaleString('pt-BR')}</span>
-                    </div>
-                `).join('');
-                if (discount > 0) {
-                    DOM.paymentSummary.innerHTML += `
-                        <div class="flex justify-between text-red-600">
-                            <span>Desconto</span>
-                            <span>- AOA ${discount.toLocaleString('pt-BR')}</span>
-                        </div>
-                    `;
-                }
-            }
-
-            function setupPaymentMethods() {
-                const methods = [
-                    { id: 'cash', nome: 'Dinheiro', icon: 'fa-money-bill-wave', color: 'bg-green-500' },
-                    { id: 'card', nome: 'Cartão', icon: 'fa-credit-card', color: 'bg-blue-500' },
-                    { id: 'transfer', nome: 'Transferência', icon: 'fa-university', color: 'bg-purple-500' }
-                ];
-
-                DOM.paymentMethods.innerHTML = methods.map(m => `
-                    <div class="payment-method border-2 border-gray-200 rounded-lg p-4 text-center cursor-pointer" data-method="${m.id}">
-                        <div class="${m.color} text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="${m.icon} text-xl"></i>
-                        </div>
-                        <span class="font-medium">${m.nome}</span>
-                    </div>
-                `).join('');
-
-                DOM.paymentMethods.querySelectorAll('.payment-method').forEach(el => {
-                    el.addEventListener('click', function() {
-                        DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove(
-                        'selected'));
-                        this.classList.add('selected');
-                        state.selectedPaymentMethod = this.dataset.method;
-                        if (this.dataset.method === 'cash') {
-                            setTimeout(() => DOM.amountReceived.focus(), 100);
-                        } else {
-                            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '')
-                                .replace(',', '.')) || 0;
-                            DOM.amountReceived.value = (subtotal - discount).toFixed(2);
-                            calculateChange();
-                        }
-                    });
-                });
-            }
-
-            function addToAmount(value) {
-                const input = DOM.amountReceived;
-                let current = input.value.replace(',', '.');
-                if (value === '.') {
-                    if (!current.includes('.')) input.value = current === '' ? '0.' : current + '.';
-                } else {
-                    input.value = current === '0' ? value.toString() : (current + value.toString());
-                }
-                calculateChange();
-            }
-
-            function clearAmount() {
-                DOM.amountReceived.value = '';
-                calculateChange();
-            }
-
-            function calculateChange() {
-                const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
-                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-                const total = subtotal - discount;
-                const change = Math.max(0, received - total);
-                DOM.changeAmount.textContent =
-                    `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            }
-
-            // ==================== FINALIZAR VENDA ====================
-            async function finalizeSale() {
-                if (!state.selectedPaymentMethod) {
-                    showNotification('Selecione uma forma de pagamento!', 'error');
-                    return;
-                }
-
-                const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
-                const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
-                const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
-                const total = subtotal - discount;
-
-                if (state.selectedPaymentMethod === 'cash' && received < total) {
-                    showNotification('Valor recebido insuficiente!', 'error');
-                    return;
-                }
-
-                await processSale(total, received);
-            }
-
-            async function processSale(total, received) {
-                try {
-                    const customerId = DOM.customerSelect.value;
-                    const customerName = customerId ? DOM.customerSelect.options[DOM.customerSelect.selectedIndex].text :
-                        'Cliente Avulso';
-                    const saleData = {
-                        code: `V-${Date.now()}`,
-                        date: new Date().toISOString().split('T')[0],
-                        time: new Date().toLocaleTimeString('pt-BR'),
-                        seller: state.currentUser?.nome || 'Vendedor',
-                        sellerId: state.currentUser?.id || null,
-                        customerId: customerId || null,
-                        customerName: customerName,
-                        total: total,
-                        subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
-                        discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) ||
-                            0,
-                        paymentMethod: state.selectedPaymentMethod,
-                        amountReceived: received,
-                        change: Math.max(0, received - total),
-                        notes: DOM.saleNotes.value,
-                        shiftId: state.currentShift?.id || null,
-                        items: state.cart.map(item => ({
-                            productId: item.product.id,
-                            productName: item.product.nome,
-                            productCode: item.product.codigo,
-                            quantity: item.quantity,
-                            price: item.product.preco,
-                            total: item.product.preco * item.quantity,
-                            cost: item.product.custo || 0
-                        }))
-                    };
-
-                    state.currentSale = await saveSale(saleData);
-
-                    // Atualizar stock
-                    for (const item of state.cart) {
-                        const newStock = item.product.current_stock - item.quantity;
-                        await updateProductStock(item.product.id, newStock);
-                    }
-
-                    await loadStatistics();
-                    closePaymentModal();
-                    showReceipt();
-                    showNotification('Venda concluída com sucesso!', 'success');
-                    await loadProducts();
-
-                } catch (error) {
-                    console.error('Erro ao processar venda:', error);
-                    showNotification('Erro ao finalizar venda!', 'error');
-                }
-            }
-
-            async function saveSale(sale) {
-                try {
-                    if (supabase) {
-                        const { data, error } = await supabase.from('vendas').insert([{
-                            code: sale.code,
-                            date: sale.date,
-                            time: sale.time,
-                            seller_id: sale.sellerId,
-                            seller_name: sale.seller,
-                            customer_id: sale.customerId,
-                            customer_name: sale.customerName,
-                            total: sale.total,
-                            subtotal: sale.subtotal,
-                            discount: sale.discount,
-                            payment_method: sale.paymentMethod,
-                            amount_received: sale.amountReceived,
-                            change_amount: sale.change,
-                            notes: sale.notes,
-                            shift_id: sale.shiftId,
-                            status: 'completed',
-                            items: sale.items
-                        }]).select();
-                        if (error) throw error;
-                        return data?.[0] || { id: Date.now(), code: sale.code, ...sale };
-                    }
-                    return { id: Date.now(), code: sale.code, ...sale };
-                } catch (e) {
-                    return { id: Date.now(), code: sale.code, ...sale };
-                }
-            }
-
-            async function updateProductStock(productId, newStock) {
-                try {
-                    if (supabase) {
-                        await supabase.from('produtos').update({ current_stock: newStock }).eq('id', productId);
-                    }
-                    const local = state.products.find(p => p.id === productId);
-                    if (local) local.current_stock = newStock;
-                } catch (e) {
-                    const local = state.products.find(p => p.id === productId);
-                    if (local) local.current_stock = newStock;
-                }
-            }
-
-            // ==================== FATURA ====================
-            function showReceipt() {
-                const sale = state.currentSale;
-                if (!sale) return;
-
-                const customer = state.customers.find(c => c.id == sale.customerId);
-
-                document.getElementById('faturaNumber').textContent = sale.code || sale.id.toString().padStart(6, '0');
-                const now = new Date();
-                document.getElementById('faturaDate').textContent = now.toLocaleDateString('pt-BR');
-                document.getElementById('faturaHora').textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit',
-                    minute: '2-digit' });
-
-                document.getElementById('faturaClientName').textContent = customer?.nome || 'Cliente Avulso';
-                document.getElementById('faturaClientNIF').textContent = customer?.nif ? `NIF: ${customer.nif}` : '';
-                document.getElementById('faturaClientEndereco').textContent = customer?.endereco || '';
-
-                document.getElementById('faturaSeller').textContent = state.currentUser?.nome || 'Vendedor';
-                document.getElementById('faturaVendedorId').textContent = state.currentUser?.id ? `ID: ${state.currentUser.id}` :
-                    '';
-
-                const tbody = document.getElementById('faturaItems');
-                tbody.innerHTML = sale.items.map(item => `
-                    <tr class="border-b border-gray-200">
-                        <td class="py-2 text-sm">${item.productName}</td>
-                        <td class="py-2 text-sm text-center">${item.quantity}</td>
-                        <td class="py-2 text-sm text-right">AOA ${item.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td class="py-2 text-sm text-right font-semibold">AOA ${(item.price * item.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    </tr>
-                `).join('');
-
-                const subtotal = sale.items.reduce((s, i) => s + (i.price * i.quantity), 0);
-                const iva = subtotal * SYSTEM_CONFIG.taxRate;
-                const totalComIVA = subtotal - (sale.discount || 0) + iva;
-
-                document.getElementById('faturaSubtotal').textContent =
-                    `AOA ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaDesconto').textContent =
-                    `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaIVA').textContent =
-                    `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaTotal').textContent =
-                    `AOA ${totalComIVA.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-
-                const methodNames = { cash: 'Dinheiro', card: 'Cartão', transfer: 'Transferência' };
-                document.getElementById('faturaPaymentMethod').textContent = methodNames[sale.paymentMethod] || sale
-                    .paymentMethod;
-                document.getElementById('faturaAmountReceived').textContent =
-                    `AOA ${(sale.amountReceived || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-                document.getElementById('faturaChange').textContent =
-                    `AOA ${(sale.change || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-
-                document.getElementById('faturaTermos').textContent = SYSTEM_CONFIG.invoiceTerms;
-                document.getElementById('faturaFooterInfo').textContent = SYSTEM_CONFIG.invoiceFooter;
-                document.getElementById('faturaQrCode').innerHTML = `
-                    <div style="width:80px;height:80px;background:white;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#666;">
-                        <div class="text-center">
-                            <i class="fas fa-qrcode text-4xl text-gray-400"></i>
-                            <div style="font-size:6px;margin-top:4px;">${sale.code}</div>
+            grid.innerHTML = filtered.map(p => {
+                const inCart = state.cart.find(c => c.product.id === p.id);
+                const stockClass = (p.current_stock || 0) < 5 ? 'low' : 'ok';
+                const stockLabel = (p.current_stock || 0) < 5 ? '⚠️ Baixo' : '✅ Em stock';
+                return `
+                    <div class="product-card ${inCart ? 'border-blue-500 bg-blue-50' : ''}" onclick="addToCart(${p.id})">
+                        <span class="stock-badge ${stockClass}">${stockLabel}</span>
+                        <div class="flex flex-col items-center">
+                            <img src="${p.imagem || `https://via.placeholder.com/80x80?text=${encodeURIComponent(p.nome.substring(0,2))}`}" 
+                                 alt="${p.nome}" class="w-16 h-16 rounded-lg object-cover mb-2">
+                            <h3 class="font-semibold text-gray-800 text-sm text-center truncate w-full">${p.nome}</h3>
+                            <p class="text-xs text-gray-500">${p.codigo || 'N/A'}</p>
+                            <p class="text-green-700 font-bold text-sm mt-1">AOA ${(p.preco || 0).toLocaleString('pt-BR')}</p>
+                            <p class="text-xs text-gray-500">Stock: ${p.current_stock || 0}</p>
+                            ${inCart ? `<span class="text-xs text-blue-600 font-semibold">${inCart.quantity} no carrinho</span>` : ''}
                         </div>
                     </div>
                 `;
+            }).join('');
+        }
 
-                DOM.receiptModal.classList.remove('hidden');
-            }
+        function updateCartUI() {
+            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+            const total = subtotal - discount;
 
-            function printA4() {
-                document.body.classList.add("mode-a4");
-                document.body.classList.remove("mode-thermal-80", "mode-thermal-58");
-                setTimeout(() => {
-                    window.print();
-                    setTimeout(() => document.body.classList.remove("mode-a4"), 500);
-                }, 300);
-            }
+            DOM.cartItemCount.textContent = `${state.cart.reduce((s, i) => s + i.quantity, 0)} itens`;
+            DOM.cartTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+            DOM.headerItemCount.textContent = state.cart.reduce((s, i) => s + i.quantity, 0);
+            DOM.headerTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+            DOM.subtotalAmount.textContent = `AOA ${subtotal.toLocaleString('pt-BR')}`;
+            DOM.finalTotalAmount.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
 
-            function printThermal80() {
-                document.body.classList.add("mode-thermal-80");
-                document.body.classList.remove("mode-a4", "mode-thermal-58");
-                setTimeout(() => {
-                    window.print();
-                    setTimeout(() => document.body.classList.remove("mode-thermal-80"), 500);
-                }, 300);
-            }
-
-            function printThermal58() {
-                document.body.classList.add("mode-thermal-58");
-                document.body.classList.remove("mode-a4", "mode-thermal-80");
-                setTimeout(() => {
-                    window.print();
-                    setTimeout(() => document.body.classList.remove("mode-thermal-58"), 500);
-                }, 300);
-            }
-
-            function closeReceiptModal() {
-                DOM.receiptModal.classList.add('hidden');
-                newSale();
-            }
-
-            function newSale() {
-                state.cart = [];
-                DOM.discountInput.value = '';
-                DOM.discountAmount.textContent = 'AOA 0';
-                DOM.customerSelect.value = '';
-                DOM.saleNotes.value = '';
-                updateCartDisplay();
-                closeReceiptModal();
-                showNotification('Nova venda iniciada', 'info');
-            }
-
-            // ==================== AÇÕES ====================
-            function holdSale() {
-                if (state.cart.length === 0) {
-                    showNotification('Carrinho vazio!', 'error');
-                    return;
-                }
-                const sale = {
-                    id: Date.now(),
-                    items: state.cart.map(item => ({
-                        productId: item.product.id,
-                        productName: item.product.nome,
-                        quantity: item.quantity,
-                        price: item.product.preco,
-                        total: item.product.preco * item.quantity
-                    })),
-                    timestamp: new Date().toISOString(),
-                    subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
-                    discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
-                    total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) -
-                        (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
-                    seller: state.currentUser?.nome || 'Vendedor',
-                    sellerId: state.currentUser?.id || null,
-                    customerId: DOM.customerSelect.value,
-                    notes: DOM.saleNotes.value,
-                    shiftId: state.currentShift?.id
-                };
-                state.heldSales.push(sale);
-                showNotification('Venda suspensa com sucesso', 'success');
-                clearCart();
-            }
-
-            function showHeldSales() {
-                if (state.heldSales.length === 0) {
-                    showNotification('Nenhuma venda suspensa encontrada', 'info');
-                    return;
-                }
-
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                modal.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-                        <div class="p-6 border-b flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-gray-800">Vendas Suspensas</h3>
-                            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-times text-xl"></i>
+            if (state.cart.length === 0) {
+                DOM.cartItems.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-shopping-cart text-4xl mb-2 opacity-30"></i>
+                        <p>Carrinho vazio</p>
+                        <p class="text-sm">Adicione produtos</p>
+                    </div>
+                `;
+            } else {
+                DOM.cartItems.innerHTML = state.cart.map((item, index) => `
+                    <div class="cart-item">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-800 truncate">${item.product.nome}</h4>
+                                <p class="text-sm text-gray-600">AOA ${(item.product.preco || 0).toLocaleString('pt-BR')}</p>
+                            </div>
+                            <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 ml-2">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
-                        <div class="p-6 overflow-y-auto max-h-[60vh]">
-                            ${state.heldSales.map(s => `
-                                <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="window.loadHeldSale(${s.id})">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h4 class="font-semibold">Venda #${s.id}</h4>
-                                            <p class="text-sm text-gray-600">${new Date(s.timestamp).toLocaleString('pt-BR')}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold text-green-700">AOA ${(s.total || 0).toLocaleString('pt-BR')}</p>
-                                            <p class="text-sm text-gray-600">${s.seller || 'Vendedor'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="p-6 border-t bg-gray-50 flex justify-end">
-                            <button onclick="this.closest('.fixed').remove()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Fechar</button>
+                        <div class="flex justify-between items-center mt-1">
+                            <div class="flex items-center space-x-1">
+                                <button onclick="updateQuantity(${index}, -1)" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span class="font-semibold w-6 text-center">${item.quantity}</span>
+                                <button onclick="updateQuantity(${index}, 1)" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            <span class="font-bold text-green-700">AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
                         </div>
                     </div>
+                `).join('');
+            }
+            renderProducts();
+        }
+
+        function updateUI() {
+            updateCartUI();
+            updateCustomerSelect();
+            DOM.heldCount.textContent = state.heldSales.length;
+        }
+
+        // ==================== CART FUNCTIONS ====================
+        function addToCart(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+            if (!product.current_stock || product.current_stock <= 0) {
+                showToast('Produto sem stock!', 'error');
+                return;
+            }
+
+            const existing = state.cart.find(c => c.product.id === productId);
+            if (existing) {
+                if (existing.quantity < product.current_stock) {
+                    existing.quantity++;
+                } else {
+                    showToast('Stock insuficiente!', 'error');
+                    return;
+                }
+            } else {
+                state.cart.push({ product, quantity: 1 });
+            }
+            updateCartUI();
+            showToast(`${product.nome} adicionado`, 'success');
+        }
+
+        function removeFromCart(index) {
+            state.cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function updateQuantity(index, change) {
+            const item = state.cart[index];
+            const newQty = item.quantity + change;
+            if (newQty < 1) { removeFromCart(index); return; }
+            if (newQty > item.product.current_stock) {
+                showToast('Stock insuficiente!', 'error');
+                return;
+            }
+            item.quantity = newQty;
+            updateCartUI();
+        }
+
+        function clearCart() {
+            if (state.cart.length === 0) return;
+            if (!confirm('Limpar carrinho?')) return;
+            state.cart = [];
+            DOM.discountInput.value = '';
+            DOM.discountAmount.textContent = '- AOA 0';
+            updateCartUI();
+            showToast('Carrinho limpo', 'info');
+        }
+
+        // ==================== DISCOUNT ====================
+        function applyDiscount() {
+            const value = parseFloat(DOM.discountInput.value) || 0;
+            if (value <= 0) {
+                DOM.discountAmount.textContent = '- AOA 0';
+                updateCartUI();
+                return;
+            }
+
+            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+            let discount = 0;
+            if (DOM.discountType.value === 'percent') {
+                if (value > 100) { showToast('Desconto máximo 100%', 'error'); return; }
+                discount = (subtotal * value) / 100;
+            } else {
+                discount = Math.min(value, subtotal);
+            }
+
+            DOM.discountAmount.textContent = `- AOA ${discount.toLocaleString('pt-BR')}`;
+            updateCartUI();
+            showToast(`Desconto aplicado: AOA ${discount.toLocaleString('pt-BR')}`, 'success');
+        }
+
+        // ==================== PAYMENT ====================
+        function openPaymentModal() {
+            if (state.cart.length === 0) {
+                showToast('Carrinho vazio!', 'error');
+                return;
+            }
+            DOM.paymentModal.classList.add('active');
+            updatePaymentSummary();
+            setupPaymentMethods();
+            DOM.amountReceived.value = '';
+            DOM.changeAmount.textContent = 'AOA 0,00';
+            setTimeout(() => DOM.amountReceived.focus(), 100);
+        }
+
+        function closePaymentModal() {
+            DOM.paymentModal.classList.remove('active');
+            state.selectedPaymentMethod = null;
+        }
+
+        function updatePaymentSummary() {
+            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+            const total = subtotal - discount;
+
+            DOM.paymentTotal.textContent = `AOA ${total.toLocaleString('pt-BR')}`;
+            DOM.paymentSummary.innerHTML = state.cart.map(item => `
+                <div class="flex justify-between">
+                    <span>${item.quantity}x ${item.product.nome}</span>
+                    <span>AOA ${((item.product.preco || 0) * item.quantity).toLocaleString('pt-BR')}</span>
+                </div>
+            `).join('');
+            if (discount > 0) {
+                DOM.paymentSummary.innerHTML += `
+                    <div class="flex justify-between text-red-600">
+                        <span>Desconto</span>
+                        <span>- AOA ${discount.toLocaleString('pt-BR')}</span>
+                    </div>
                 `;
-                document.body.appendChild(modal);
             }
+        }
 
-            function loadHeldSale(saleId) {
-                const sale = state.heldSales.find(s => s.id == saleId);
-                if (!sale) { showNotification('Venda não encontrada', 'error'); return; }
+        function setupPaymentMethods() {
+            const methods = [
+                { id: 'cash', nome: 'Dinheiro', icon: 'fa-money-bill-wave', color: 'text-green-600' },
+                { id: 'card', nome: 'Cartão', icon: 'fa-credit-card', color: 'text-blue-600' },
+                { id: 'transfer', nome: 'Transferência', icon: 'fa-university', color: 'text-purple-600' }
+            ];
 
-                state.cart = [];
-                if (sale.items) {
-                    sale.items.forEach(item => {
-                        const product = state.products.find(p => p.id === item.productId);
-                        if (product) state.cart.push({ product, quantity: item.quantity });
-                    });
-                }
-                if (sale.discount > 0) {
-                    DOM.discountInput.value = sale.discount;
-                    DOM.discountAmount.textContent = `AOA ${sale.discount.toLocaleString('pt-BR')}`;
-                }
-                if (sale.customerId) DOM.customerSelect.value = sale.customerId;
-                if (sale.notes) DOM.saleNotes.value = sale.notes;
+            DOM.paymentMethods.innerHTML = methods.map(m => `
+                <div class="payment-method" data-method="${m.id}">
+                    <i class="fas ${m.icon} ${m.color} text-2xl"></i>
+                    <span class="block text-sm font-medium">${m.nome}</span>
+                </div>
+            `).join('');
 
-                updateCartDisplay();
-                state.heldSales = state.heldSales.filter(s => s.id != saleId);
-                showNotification('Venda suspensa carregada com sucesso', 'success');
-                document.querySelector('.fixed.inset-0')?.remove();
-            }
-
-            function voidSale() {
-                if (state.cart.length === 0) { showNotification('Não há venda para anular', 'warning'); return; }
-                if (confirm('Tem certeza que deseja anular esta venda?')) {
-                    clearCart();
-                    showNotification('Venda anulada', 'warning');
-                }
-            }
-
-            function quickAction(action) {
-                const actions = {
-                    'last_customer': () => showNotification('Último cliente carregado', 'info'),
-                    'hold_sale': showHeldSales,
-                    'void_sale': voidSale
-                };
-                if (actions[action]) actions[action]();
-            }
-
-            // ==================== FILTROS ====================
-            function filterProducts() {
-                renderProducts(state.products);
-            }
-
-            function clearFilters() {
-                DOM.productSearch.value = '';
-                DOM.categoryFilter.value = '';
-                renderProducts(state.products);
-            }
-
-            // ==================== SINCRONIZAÇÃO ====================
-            async function syncData() {
-                if (!state.isOnline || !supabase) return;
-                try {
-                    await loadProducts();
-                    await loadCustomers();
-                    await loadStatistics();
-                    showNotification('Dados sincronizados com sucesso!', 'success');
-                } catch (e) {
-                    console.error('Erro na sincronização:', e);
-                }
-            }
-
-            // ==================== NOTIFICAÇÕES ====================
-            function showNotification(message, type = 'info') {
-                const container = DOM.toastContainer;
-                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle',
-                    warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-                const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500',
-                    info: 'bg-blue-500' };
-
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.innerHTML = `
-                    <i class="fas ${icons[type] || icons.info}"></i>
-                    <span>${message}</span>
-                    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-                `;
-                container.appendChild(toast);
-                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
-            }
-
-            // ==================== SIDEBAR ====================
-            function toggleSidebar() {
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.toggle('sidebar-collapsed');
-                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
-            }
-
-            function toggleMobileSidebar() {
-                document.querySelector('.sidebar').classList.toggle('hidden');
-            }
-
-            function toggleSubmenu(el) {
-                const submenu = el.nextElementSibling;
-                const arrow = el.querySelector('.fa-chevron-down');
-                if (submenu) {
-                    submenu.classList.toggle('submenu-open');
-                    if (arrow) arrow.style.transform = submenu.classList.contains('submenu-open') ? 'rotate(180deg)' : '';
-                }
-            }
-
-            function loadSidebarPreference() {
-                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar && isCollapsed) {
-                    sidebar.classList.add('sidebar-collapsed');
-                }
-            }
-
-            // ==================== EVENT LISTENERS ====================
-            function setupEventListeners() {
-                DOM.productSearch.addEventListener('input', filterProducts);
-                DOM.categoryFilter.addEventListener('change', filterProducts);
-                DOM.amountReceived.addEventListener('input', calculateChange);
-                DOM.discountInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') applyDiscount();
-                });
-
-                document.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 'f') { e.preventDefault();
-                        DOM.productSearch.focus(); }
-                    if (e.key === 'F2') { e.preventDefault();
-                        newSale(); }
-                    if (e.key === 'F3') { e.preventDefault();
-                        openPaymentModal(); }
-                    if (e.key === 'F4') { e.preventDefault();
-                        holdSale(); }
-                    if (e.key === 'Escape') {
-                        if (!DOM.paymentModal.classList.contains('hidden')) closePaymentModal();
-                        if (!DOM.receiptModal.classList.contains('hidden')) closeReceiptModal();
+            DOM.paymentMethods.querySelectorAll('.payment-method').forEach(el => {
+                el.addEventListener('click', function() {
+                    DOM.paymentMethods.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                    state.selectedPaymentMethod = this.dataset.method;
+                    if (this.dataset.method === 'cash') {
+                        setTimeout(() => DOM.amountReceived.focus(), 100);
+                    } else {
+                        const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+                        const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+                        DOM.amountReceived.value = (subtotal - discount).toFixed(2);
+                        calculateChange();
                     }
                 });
-            }
+            });
+        }
 
-            // ==================== EXPORT ====================
-            window.addToCart = addToCart;
-            window.removeFromCart = removeFromCart;
-            window.updateQuantity = updateQuantity;
-            window.clearCart = clearCart;
-            window.applyDiscount = applyDiscount;
-            window.holdSale = holdSale;
-            window.openPaymentModal = openPaymentModal;
-            window.closePaymentModal = closePaymentModal;
-            window.finalizeSale = finalizeSale;
-            window.newSale = newSale;
-            window.printA4 = printA4;
-            window.printThermal80 = printThermal80;
-            window.printThermal58 = printThermal58;
-            window.closeReceiptModal = closeReceiptModal;
-            window.quickAction = quickAction;
-            window.clearFilters = clearFilters;
-            window.toggleSidebar = toggleSidebar;
-            window.toggleMobileSidebar = toggleMobileSidebar;
-            window.toggleSubmenu = toggleSubmenu;
-            window.showNotification = showNotification;
-            window.addToAmount = addToAmount;
-            window.clearAmount = clearAmount;
-            window.calculateChange = calculateChange;
-            window.loadHeldSale = loadHeldSale;
-            window.showHeldSales = showHeldSales;
-            window.voidSale = voidSale;
-
-            // ==================== INICIAR ====================
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
+        function addToAmount(value) {
+            const input = DOM.amountReceived;
+            let current = input.value.replace(',', '.');
+            if (value === '.') {
+                if (!current.includes('.')) input.value = current === '' ? '0.' : current + '.';
             } else {
-                init();
+                input.value = current === '0' ? value.toString() : (current + value.toString());
+            }
+            calculateChange();
+        }
+
+        function clearAmount() {
+            DOM.amountReceived.value = '';
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
+            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+            const total = subtotal - discount;
+            const change = Math.max(0, received - total);
+            DOM.changeAmount.textContent = `AOA ${change.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // ==================== FINALIZE SALE ====================
+        async function finalizeSale() {
+            if (!state.selectedPaymentMethod) {
+                showToast('Selecione uma forma de pagamento!', 'error');
+                return;
             }
 
-        })();
+            const received = parseFloat(DOM.amountReceived.value.replace(',', '.')) || 0;
+            const subtotal = state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0);
+            const discount = parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+            const total = subtotal - discount;
+
+            if (state.selectedPaymentMethod === 'cash' && received < total) {
+                showToast('Valor recebido insuficiente!', 'error');
+                return;
+            }
+
+            // Build sale data
+            const saleData = {
+                code: `V-${Date.now().toString().slice(-6)}`,
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('pt-BR'),
+                seller: state.currentUser?.nome || 'Vendedor',
+                sellerId: state.currentUser?.id || null,
+                customerId: DOM.customerSelect.value || null,
+                customerName: DOM.customerSelect.value ? 
+                    DOM.customerSelect.options[DOM.customerSelect.selectedIndex]?.text || 'Cliente Avulso' : 
+                    'Cliente Avulso',
+                total: total,
+                subtotal: subtotal,
+                discount: discount,
+                paymentMethod: state.selectedPaymentMethod,
+                amountReceived: received,
+                change: Math.max(0, received - total),
+                notes: DOM.saleNotes.value,
+                items: state.cart.map(item => ({
+                    productId: item.product.id,
+                    productName: item.product.nome,
+                    productCode: item.product.codigo,
+                    quantity: item.quantity,
+                    price: item.product.preco,
+                    total: item.product.preco * item.quantity
+                }))
+            };
+
+            try {
+                // Save sale
+                const { data, error } = await supabase
+                    .from('vendas')
+                    .insert([{
+                        code: saleData.code,
+                        data_venda: saleData.date,
+                        hora: saleData.time,
+                        vendedor_id: saleData.sellerId,
+                        vendedor_nome: saleData.seller,
+                        cliente_id: saleData.customerId,
+                        cliente_nome: saleData.customerName,
+                        total: saleData.total,
+                        subtotal: saleData.subtotal,
+                        desconto: saleData.discount,
+                        forma_pagamento: saleData.paymentMethod,
+                        valor_recebido: saleData.amountReceived,
+                        troco: saleData.change,
+                        observacoes: saleData.notes,
+                        status: 'completed'
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                // Update product stock
+                for (const item of state.cart) {
+                    await supabase
+                        .from('produtos')
+                        .update({ current_stock: item.product.current_stock - item.quantity })
+                        .eq('id', item.product.id);
+                }
+
+                state.currentSale = saleData;
+                closePaymentModal();
+                showReceipt(saleData);
+                showToast('Venda concluída com sucesso!', 'success');
+                await loadStats();
+                await loadProducts();
+
+            } catch (error) {
+                console.error('Erro ao finalizar venda:', error);
+                showToast('Erro ao finalizar venda!', 'error');
+            }
+        }
+
+        // ==================== RECEIPT ====================
+        function showReceipt(sale) {
+            if (!sale) return;
+
+            const customer = state.customers.find(c => c.id == sale.customerId);
+            
+            $('receiptNumber').textContent = sale.code;
+            $('receiptDate').textContent = new Date(sale.date).toLocaleDateString('pt-BR');
+            $('receiptTime').textContent = sale.time;
+            $('receiptSeller').textContent = sale.seller;
+            $('receiptCustomer').textContent = customer?.nome || 'Cliente Avulso';
+            $('receiptPaymentMethod').textContent = `Pagamento: ${sale.paymentMethod === 'cash' ? 'Dinheiro' : sale.paymentMethod === 'card' ? 'Cartão' : 'Transferência'}`;
+
+            const itemsHtml = sale.items.map(item => `
+                <tr>
+                    <td class="text-left">${item.productName}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">AOA ${(item.price || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">AOA ${(item.price * item.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                </tr>
+            `).join('');
+
+            $('receiptItems').innerHTML = itemsHtml;
+
+            const iva = sale.subtotal * 0.14;
+            $('receiptSubtotal').textContent = `AOA ${(sale.subtotal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            $('receiptDiscount').textContent = `- AOA ${(sale.discount || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            $('receiptIVA').textContent = `AOA ${iva.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            $('receiptTotal').textContent = `AOA ${(sale.total + iva).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+            DOM.receiptModal.classList.add('active');
+        }
+
+        function closeReceiptModal() {
+            DOM.receiptModal.classList.remove('active');
+        }
+
+        function printReceipt(format) {
+            const body = document.body;
+            const content = document.getElementById('receiptContent').cloneNode(true);
+            
+            const printWindow = window.open('', '_blank', 'width=600,height=800');
+            printWindow.document.write(`
+                <html>
+                    <head><title>Fatura</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; padding: ${format === 'a4' ? '40px' : format === 'thermal80' ? '10px' : '5px'}; max-width: ${format === 'a4' ? '210mm' : format === 'thermal80' ? '80mm' : '58mm'}; margin: 0 auto; }
+                        .receipt-preview { background: #fff; padding: 10px; }
+                        .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
+                        .footer { text-align: center; border-top: 2px dashed #333; padding-top: 10px; margin-top: 10px; font-size: 12px; }
+                        table { width: 100%; font-size: ${format === 'a4' ? '14px' : '12px'}; border-collapse: collapse; }
+                        table td, table th { padding: 4px 2px; }
+                        .total-line { display: flex; justify-content: flex-end; gap: 20px; padding: 2px 0; }
+                        .grand-total { font-size: ${format === 'a4' ? '18px' : '16px'}; font-weight: bold; border-top: 2px solid #333; padding-top: 5px; margin-top: 5px; }
+                        .text-right { text-align: right; }
+                        .text-center { text-align: center; }
+                        .text-left { text-align: left; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                    </head>
+                    <body>${content.innerHTML}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 500);
+        }
+
+        // ==================== HELD SALES ====================
+        function holdSale() {
+            if (state.cart.length === 0) {
+                showToast('Carrinho vazio!', 'error');
+                return;
+            }
+
+            const held = {
+                id: Date.now(),
+                items: state.cart.map(item => ({
+                    productId: item.product.id,
+                    productName: item.product.nome,
+                    quantity: item.quantity,
+                    price: item.product.preco,
+                    total: item.product.preco * item.quantity
+                })),
+                timestamp: new Date().toISOString(),
+                subtotal: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0),
+                discount: parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0,
+                total: state.cart.reduce((s, i) => s + (i.product.preco * i.quantity), 0) - 
+                       (parseFloat(DOM.discountAmount.textContent.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0),
+                seller: state.currentUser?.nome || 'Vendedor',
+                customerId: DOM.customerSelect.value,
+                notes: DOM.saleNotes.value
+            };
+
+            state.heldSales.push(held);
+            localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
+            DOM.heldCount.textContent = state.heldSales.length;
+            clearCart();
+            showToast('Venda suspensa com sucesso!', 'success');
+        }
+
+        function loadHeldSale(id) {
+            const sale = state.heldSales.find(s => s.id === id);
+            if (!sale) { showToast('Venda não encontrada', 'error'); return; }
+
+            state.cart = [];
+            sale.items.forEach(item => {
+                const product = state.products.find(p => p.id === item.productId);
+                if (product) state.cart.push({ product, quantity: item.quantity });
+            });
+
+            if (sale.discount > 0) {
+                DOM.discountInput.value = sale.discount;
+                DOM.discountAmount.textContent = `- AOA ${sale.discount.toLocaleString('pt-BR')}`;
+            }
+            if (sale.customerId) DOM.customerSelect.value = sale.customerId;
+            if (sale.notes) DOM.saleNotes.value = sale.notes;
+
+            state.heldSales = state.heldSales.filter(s => s.id !== id);
+            localStorage.setItem('pdv_held_sales', JSON.stringify(state.heldSales));
+            DOM.heldCount.textContent = state.heldSales.length;
+            updateCartUI();
+            DOM.heldSalesModal.classList.remove('active');
+            showToast('Venda suspensa carregada', 'success');
+        }
+
+        function showHeldSales() {
+            if (state.heldSales.length === 0) {
+                showToast('Nenhuma venda suspensa', 'info');
+                return;
+            }
+
+            DOM.heldSalesList.innerHTML = state.heldSales.map(s => `
+                <div class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onclick="loadHeldSale(${s.id})">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold">Venda #${s.id}</h4>
+                            <p class="text-sm text-gray-600">${new Date(s.timestamp).toLocaleString('pt-BR')}</p>
+                            <p class="text-sm text-gray-600">${s.seller || 'Vendedor'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-green-700">AOA ${(s.total || 0).toLocaleString('pt-BR')}</p>
+                            <p class="text-sm text-gray-600">${s.items?.length || 0} itens</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            DOM.heldSalesModal.classList.add('active');
+        }
+
+        function voidSale() {
+            if (state.cart.length === 0) {
+                showToast('Não há venda para anular', 'warning');
+                return;
+            }
+            if (!confirm('Anular esta venda?')) return;
+            clearCart();
+            showToast('Venda anulada', 'warning');
+        }
+
+        // ==================== QUICK ACTIONS ====================
+        function quickAction(action) {
+            const actions = {
+                'last': () => showToast('Último cliente: Cliente Avulso', 'info'),
+                'held': showHeldSales,
+                'void': voidSale
+            };
+            if (actions[action]) actions[action]();
+        }
+
+        // ==================== FILTERS ====================
+        function filterProducts() {
+            renderProducts();
+        }
+
+        function clearFilters() {
+            DOM.productSearch.value = '';
+            DOM.categoryFilter.value = '';
+            renderProducts();
+        }
+
+        // ==================== SIDEBAR ====================
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('open');
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const container = DOM.toastContainer;
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.info}"></i>
+                <span>${message}</span>
+                <button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        // ==================== LOGOUT ====================
+        function logout() {
+            if (confirm('Deseja sair do sistema?')) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            DOM.productSearch.addEventListener('input', filterProducts);
+            DOM.categoryFilter.addEventListener('change', filterProducts);
+            DOM.amountReceived.addEventListener('input', calculateChange);
+            DOM.discountInput.addEventListener('keypress', e => { if (e.key === 'Enter') applyDiscount(); });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'f') { e.preventDefault(); DOM.productSearch.focus(); }
+                if (e.key === 'F2') { e.preventDefault(); clearCart(); }
+                if (e.key === 'F3') { e.preventDefault(); openPaymentModal(); }
+                if (e.key === 'F4') { e.preventDefault(); holdSale(); }
+                if (e.key === 'Escape') {
+                    if (DOM.paymentModal.classList.contains('active')) closePaymentModal();
+                    if (DOM.receiptModal.classList.contains('active')) closeReceiptModal();
+                    if (DOM.heldSalesModal.classList.contains('active')) DOM.heldSalesModal.classList.remove('active');
+                }
+            });
+
+            // Fechar modais ao clicar fora
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) this.classList.remove('active');
+                });
+            });
+        }
+
+        // ==================== EXPORT ====================
+        window.addToCart = addToCart;
+        window.removeFromCart = removeFromCart;
+        window.updateQuantity = updateQuantity;
+        window.clearCart = clearCart;
+        window.applyDiscount = applyDiscount;
+        window.holdSale = holdSale;
+        window.openPaymentModal = openPaymentModal;
+        window.closePaymentModal = closePaymentModal;
+        window.finalizeSale = finalizeSale;
+        window.closeReceiptModal = closeReceiptModal;
+        window.printReceipt = printReceipt;
+        window.newSale = () => { clearCart(); closeReceiptModal(); showToast('Nova venda iniciada', 'info'); };
+        window.quickAction = quickAction;
+        window.filterProducts = filterProducts;
+        window.clearFilters = clearFilters;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleMobileSidebar = toggleMobileSidebar;
+        window.showToast = showToast;
+        window.addToAmount = addToAmount;
+        window.clearAmount = clearAmount;
+        window.calculateChange = calculateChange;
+        window.loadHeldSale = loadHeldSale;
+        window.showHeldSales = showHeldSales;
+        window.voidSale = voidSale;
+        window.logout = logout;
+        window.renderProducts = renderProducts;
+        window.updateUI = updateUI;
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
