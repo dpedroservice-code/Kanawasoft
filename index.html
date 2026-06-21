@@ -147,11 +147,45 @@
             80% { transform: translateX(5px); }
         }
 
-        .error-text { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none; }
-        .error-text.show { display: block; }
+        /* Status de conexão */
+        .connection-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .connection-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .connection-status .dot.online { background: #10b981; }
+        .connection-status .dot.offline { background: #ef4444; animation: pulse 1.5s infinite; }
+        .connection-status .dot.checking { background: #f59e0b; animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
+    <!-- Status de Conexão -->
+    <div class="connection-status" id="connectionStatus">
+        <span class="dot checking" id="statusDot"></span>
+        <span id="statusText">Verificando conexão...</span>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
@@ -361,17 +395,46 @@
         };
 
         // ==================== INICIALIZAR SUPABASE ====================
-        let supabase = null;
+        // USAR window.supabase PARA ACESSAR O CLIENTE DO CDN
+        let supabaseClient = null;
         let supabaseReady = false;
 
-        try {
-            const { createClient } = window.supabase;
-            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            supabaseReady = true;
-            console.log('✅ Supabase inicializado com sucesso!');
-        } catch (error) {
-            console.error('❌ Erro ao inicializar Supabase:', error);
+        function initSupabase() {
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    console.error('❌ Supabase SDK não carregado!');
+                    updateConnectionStatus(false);
+                    return false;
+                }
+
+                const { createClient } = window.supabase;
+                supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+                supabaseReady = true;
+                console.log('✅ Supabase inicializado com sucesso!');
+                updateConnectionStatus(true);
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
+                updateConnectionStatus(false);
+                return false;
+            }
         }
+
+        function updateConnectionStatus(isOnline) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (isOnline) {
+                dot.className = 'dot online';
+                statusText.textContent = '✅ Conectado';
+            } else {
+                dot.className = 'dot offline';
+                statusText.textContent = '⚠️ Offline';
+            }
+        }
+
+        // Tentar inicializar imediatamente
+        initSupabase();
 
         // ==================== ESTADO ====================
         const state = {
@@ -532,7 +595,7 @@
                     return;
                 }
 
-                if (!supabaseReady || !supabase) {
+                if (!supabaseReady || !supabaseClient) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
@@ -545,7 +608,6 @@
                 const acceptTerms = document.getElementById('acceptTerms').checked;
                 const role = DOM.registerRole.value;
 
-                // Validações
                 if (!name || !email || !password) {
                     showToast('Preencha todos os campos obrigatórios', 'warning');
                     return;
@@ -561,7 +623,6 @@
                     return;
                 }
 
-                // Validação de email
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     showToast('Digite um email válido', 'error');
@@ -585,20 +646,7 @@
                 showLoading('Criando sua conta...', 'Verificando dados...');
 
                 try {
-                    // Verificar se o email já existe
-                    const { data: existingUser, error: checkError } = await supabase
-                        .from('profiles')
-                        .select('email')
-                        .eq('email', email)
-                        .maybeSingle();
-
-                    if (existingUser) {
-                        showToast('Este email já está cadastrado. Faça login.', 'warning');
-                        hideLoading();
-                        return;
-                    }
-
-                    const { data, error } = await supabase.auth.signUp({
+                    const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
                         options: {
@@ -619,7 +667,7 @@
                         throw new Error('Falha ao criar usuário');
                     }
 
-                    const { error: profileError } = await supabase
+                    const { error: profileError } = await supabaseClient
                         .from('profiles')
                         .insert({
                             id: data.user.id,
@@ -632,7 +680,6 @@
 
                     if (profileError) {
                         console.error('Erro ao criar perfil:', profileError);
-                        // Continuar mesmo com erro no perfil
                     }
 
                     let empresa = null;
@@ -642,7 +689,7 @@
                         const companyPhone = document.getElementById('companyPhone').value.trim();
                         const companyAddress = document.getElementById('companyAddress').value.trim();
 
-                        const { data: empresaData, error: empresaError } = await supabase
+                        const { data: empresaData, error: empresaError } = await supabaseClient
                             .from('empresas')
                             .insert({
                                 usuario_id: data.user.id,
@@ -712,7 +759,7 @@
                     return;
                 }
 
-                if (!supabaseReady || !supabase) {
+                if (!supabaseReady || !supabaseClient) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
@@ -729,7 +776,7 @@
                 showLoading('Verificando credenciais...', 'Aguardando resposta do servidor');
                 
                 try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
                         email: email,
                         password: password
                     });
@@ -759,7 +806,7 @@
                     let userName = email.split('@')[0];
 
                     try {
-                        const { data: profile, error: profileErr } = await supabase
+                        const { data: profile, error: profileErr } = await supabaseClient
                             .from('profiles')
                             .select('*')
                             .eq('id', data.user.id)
@@ -823,7 +870,7 @@
                     return;
                 }
 
-                if (!supabaseReady || !supabase) {
+                if (!supabaseReady || !supabaseClient) {
                     showToast('Erro de conexão com o servidor', 'error');
                     return;
                 }
@@ -838,7 +885,7 @@
                 showLoading('Enviando email de recuperação...', 'Aguarde um momento');
 
                 try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
                         redirectTo: window.location.origin + '/login.html'
                     });
 
@@ -870,8 +917,18 @@
         // ==================== INICIAR ====================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM carregado!');
+            
+            // Verificar funções
+            console.log('showRegisterCard disponível?', typeof window.showRegisterCard === 'function');
+            console.log('showRecoveryCard disponível?', typeof window.showRecoveryCard === 'function');
+            console.log('showLoginCard disponível?', typeof window.showLoginCard === 'function');
+            console.log('supabaseClient disponível?', !!supabaseClient);
+            
+            // Carregar email salvo
             loadSavedEmail();
-            checkExistingSession();
+            
+            // Verificar sessão existente
+            setTimeout(checkExistingSession, 1000);
         });
 
         console.log('🔐 Sistema de autenticação Supabase carregado!');
