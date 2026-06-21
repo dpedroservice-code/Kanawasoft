@@ -819,23 +819,20 @@
     <!-- ==================== SUPABASE CONFIG ==================== -->
     <script>
         // ==================== SUPABASE CONFIG ====================
+        // ATUALIZADO com as novas credenciais
         const SUPABASE_CONFIG = {
-            url: 'https://emkggurctrlcgukvhwdg.supabase.co',
+            // URL do seu projeto NOVO
+            url: 'https://supabase.co',
+            
+            // A nova chave ANON pública
             key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVta2dndXJjdHJsY2d1a3Zod2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMDE4OTcsImV4cCI6MjA5NzU3Nzg5N30.F2w7yFAX0Ub_o86T_YHkjO6aL_shGX-H9ESlOJtE6Jo'
         };
 
         // ==================== INICIALIZAR SUPABASE ====================
-        let supabase = null;
-        let supabaseReady = false;
-
-        try {
-            const { createClient } = window.supabase;
-            supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            supabaseReady = true;
-            console.log('✅ Supabase inicializado com sucesso!');
-        } catch (error) {
-            console.error('❌ Erro ao inicializar Supabase:', error);
-        }
+        // CORRIGIDO: removido 'let' para evitar duplicação da variável
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+        supabaseReady = true;
+        console.log('✅ Supabase inicializado com sucesso!');
 
         // ==================== INÍCIO DO SCRIPT PRINCIPAL ====================
         (function() {
@@ -983,7 +980,7 @@
                 vendas: [],
                 notificacoes: [],
                 isOnline: navigator.onLine,
-                dbReady: supabaseReady,
+                dbReady: true,
                 initialized: false,
                 user: null
             };
@@ -1161,7 +1158,7 @@
             // ==================== BUSCA DE DADOS SUPABASE ====================
             async function fetchData(tableName, filters = null) {
                 try {
-                    if (!state.dbReady || !state.isOnline) {
+                    if (!state.isOnline) {
                         return [];
                     }
                     let query = supabase.from(tableName).select('*');
@@ -1181,7 +1178,7 @@
 
             async function updateData(tableName, id, data) {
                 try {
-                    if (!state.dbReady || !state.isOnline) {
+                    if (!state.isOnline) {
                         throw new Error('Offline');
                     }
                     const { error } = await supabase
@@ -1203,7 +1200,7 @@
                     if (userStr) {
                         state.user = JSON.parse(userStr);
                         state.currentUser = state.user;
-                    } else if (state.dbReady && state.isOnline) {
+                    } else if (state.isOnline) {
                         const users = await fetchData('profiles');
                         if (users && users.length > 0) {
                             state.currentUser = users[0];
@@ -1250,7 +1247,7 @@
 
             async function loadCompanyData() {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         const companies = await fetchData('empresas');
                         if (companies && companies.length > 0) {
                             state.companyData = companies[0];
@@ -1336,7 +1333,7 @@
                         revenueGoal: 0, salesChange: 0, currentShift: '--'
                     };
                     
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         const metricsData = await fetchData('metrics');
                         if (metricsData && metricsData.length > 0) {
                             metrics = { ...metrics, ...metricsData[0] };
@@ -1615,7 +1612,7 @@
                     phone: document.getElementById('profilePhoneInput').value
                 };
                 try {
-                    if (state.dbReady && state.isOnline && state.currentUser) {
+                    if (state.isOnline && state.currentUser) {
                         await updateData('profiles', state.currentUser.id, data);
                     }
                     state.currentUser = { ...state.currentUser, ...data };
@@ -1631,7 +1628,7 @@
 
             async function markAsRead(id) {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         await updateData('notificacoes', id, { lida: true });
                     }
                     await loadNotifications();
@@ -1641,7 +1638,7 @@
 
             async function markAllRead() {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         for (const n of state.notificacoes.filter(n => !n.lida)) {
                             await updateData('notificacoes', n.id, { lida: true });
                         }
@@ -1654,7 +1651,7 @@
 
             async function clearNotifications() {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         for (const n of state.notificacoes) {
                             await updateData('notificacoes', n.id, { lida: true });
                         }
@@ -1668,7 +1665,7 @@
 
             async function markAsPurchased(productId) {
                 try {
-                    if (state.dbReady && state.isOnline) {
+                    if (state.isOnline) {
                         await updateData('produtos', productId, { estoque: 0 });
                     }
                     showToast('Item marcado como comprado!', 'success');
@@ -1789,7 +1786,7 @@
                 checkConnection();
 
                 // Verificar autenticação
-                if (supabaseReady) {
+                if (supabase) {
                     supabase.auth.onAuthStateChange((event, session) => {
                         if (event === 'SIGNED_IN') {
                             console.log('👤 Usuário autenticado:', session?.user?.email);
@@ -1810,7 +1807,7 @@
                     loadDashboard();
                 } else if (!state.initialized) {
                     // Verificar se há sessão ativa no Supabase
-                    if (supabaseReady) {
+                    if (supabase) {
                         supabase.auth.getSession().then(({ data }) => {
                             if (data.session) {
                                 loadDashboard();
