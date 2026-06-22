@@ -157,7 +157,6 @@
             display: flex; align-items: center; gap: 4px;
         }
         .sidebar .sidebar-user .user-role .role-badge {
-            background: rgba(255,255,255,0.1);
             padding: 1px 8px;
             border-radius: 10px;
             font-size: 0.55rem;
@@ -839,14 +838,15 @@
             }
 
             // ==================== PERMISSIONS SYSTEM ====================
+            // CORRIGIDO: Admin agora tem acesso a TODOS os módulos
             const ROLES = {
                 admin: {
                     level: 100,
                     label: 'Administrador',
                     icon: 'fa-crown',
                     color: '#fbbf24',
-                    modules: ['*'],
-                    permissions: ['*']
+                    modules: ['*'], // Acesso a todos os módulos
+                    permissions: ['*'] // Todas as permissões
                 },
                 gerente: {
                     level: 80,
@@ -879,47 +879,47 @@
                 }
             };
 
-            // Módulos com suas permissões
-            const MODULES = {
-                dashboard: { label: 'Dashboard', icon: 'fa-tachometer-alt', requiredRole: 'vendedor' },
-                pdv: { label: 'Ponto de Venda', icon: 'fa-cash-register', requiredRole: 'vendedor' },
-                produtos: { label: 'Produtos', icon: 'fa-boxes', requiredRole: 'vendedor' },
-                servicos: { label: 'Serviços', icon: 'fa-concierge-bell', requiredRole: 'vendedor' },
-                clientes: { label: 'Clientes', icon: 'fa-users', requiredRole: 'vendedor' },
-                vendas: { label: 'Histórico de Vendas', icon: 'fa-chart-line', requiredRole: 'vendedor' },
-                orcamentos: { label: 'Orçamentos', icon: 'fa-file-invoice', requiredRole: 'vendedor' },
-                'entrada-estoque': { label: 'Entrada de Estoque', icon: 'fa-arrow-down', requiredRole: 'estoquista' },
-                'saida-estoque': { label: 'Saída de Estoque', icon: 'fa-arrow-up', requiredRole: 'estoquista' },
-                transferencia: { label: 'Transferência', icon: 'fa-exchange-alt', requiredRole: 'estoquista' },
-                inventario: { label: 'Inventário', icon: 'fa-clipboard-list', requiredRole: 'estoquista' },
-                fornecedores: { label: 'Fornecedores', icon: 'fa-truck', requiredRole: 'estoquista' },
-                compras: { label: 'Compras', icon: 'fa-shopping-cart', requiredRole: 'estoquista' },
-                categorias: { label: 'Categorias', icon: 'fa-tags', requiredRole: 'estoquista' },
-                'movimentos-caixa': { label: 'Movimentos de Caixa', icon: 'fa-cash-register', requiredRole: 'gerente' },
-                'contas-bancarias': { label: 'Contas Bancárias', icon: 'fa-university', requiredRole: 'gerente' },
-                faturas: { label: 'Faturas', icon: 'fa-file-invoice-dollar', requiredRole: 'gerente' },
-                recibos: { label: 'Recibos', icon: 'fa-receipt', requiredRole: 'gerente' },
-                despesas: { label: 'Despesas', icon: 'fa-receipt', requiredRole: 'gerente' },
-                'relatorios-financeiros': { label: 'Relatórios Financeiros', icon: 'fa-chart-pie', requiredRole: 'gerente' },
-                funcionarios: { label: 'Funcionários', icon: 'fa-user-plus', requiredRole: 'admin' },
-                turnos: { label: 'Turnos', icon: 'fa-user-clock', requiredRole: 'admin' },
-                'folha-pagamento': { label: 'Folha de Pagamento', icon: 'fa-money-check', requiredRole: 'admin' },
-                agenda: { label: 'Agenda', icon: 'fa-calendar-alt', requiredRole: 'vendedor' },
-                eventos: { label: 'Eventos', icon: 'fa-bullhorn', requiredRole: 'vendedor' },
-                ferias: { label: 'Férias', icon: 'fa-umbrella-beach', requiredRole: 'admin' },
-                hotelaria: { label: 'Hotelaria', icon: 'fa-hotel', requiredRole: 'gerente' },
-                restaurante: { label: 'Restaurante', icon: 'fa-utensils', requiredRole: 'gerente' },
-                'servicos-digitais': { label: 'Serviços Digitais', icon: 'fa-tools', requiredRole: 'gerente' },
-                cobrancas: { label: 'Cobranças', icon: 'fa-envelope', requiredRole: 'gerente' },
-                projetos: { label: 'Projetos', icon: 'fa-project-diagram', requiredRole: 'gerente' },
-                marketing: { label: 'Marketing', icon: 'fa-bullhorn', requiredRole: 'gerente' },
-                relatorios: { label: 'Relatórios Gerais', icon: 'fa-chart-bar', requiredRole: 'gerente' },
-                empresa: { label: 'Dados da Empresa', icon: 'fa-building', requiredRole: 'admin' },
-                usuarios: { label: 'Usuários', icon: 'fa-user-cog', requiredRole: 'admin' },
-                backup: { label: 'Backup', icon: 'fa-database', requiredRole: 'admin' },
-                sincronizacao: { label: 'Sincronização', icon: 'fa-sync', requiredRole: 'admin' },
-                logs: { label: 'Logs do Sistema', icon: 'fa-history', requiredRole: 'admin' },
-                configuracoes: { label: 'Configurações', icon: 'fa-sliders-h', requiredRole: 'admin' }
+            // Mapeamento de módulos para verificação de permissão
+            const MODULE_ROLES = {
+                dashboard: ['admin', 'gerente', 'vendedor', 'estoquista'],
+                pdv: ['admin', 'gerente', 'vendedor'],
+                produtos: ['admin', 'gerente', 'vendedor', 'estoquista'],
+                servicos: ['admin', 'gerente', 'vendedor'],
+                clientes: ['admin', 'gerente', 'vendedor'],
+                vendas: ['admin', 'gerente', 'vendedor'],
+                orcamentos: ['admin', 'gerente', 'vendedor'],
+                'entrada-estoque': ['admin', 'gerente', 'estoquista'],
+                'saida-estoque': ['admin', 'gerente', 'estoquista'],
+                transferencia: ['admin', 'gerente', 'estoquista'],
+                inventario: ['admin', 'gerente', 'estoquista'],
+                fornecedores: ['admin', 'gerente', 'estoquista'],
+                compras: ['admin', 'gerente', 'estoquista'],
+                categorias: ['admin', 'gerente', 'estoquista'],
+                'movimentos-caixa': ['admin', 'gerente'],
+                'contas-bancarias': ['admin', 'gerente'],
+                faturas: ['admin', 'gerente', 'vendedor'],
+                recibos: ['admin', 'gerente', 'vendedor'],
+                despesas: ['admin', 'gerente'],
+                'relatorios-financeiros': ['admin', 'gerente'],
+                funcionarios: ['admin'],
+                turnos: ['admin'],
+                'folha-pagamento': ['admin'],
+                agenda: ['admin', 'gerente', 'vendedor'],
+                eventos: ['admin', 'gerente', 'vendedor'],
+                ferias: ['admin'],
+                hotelaria: ['admin', 'gerente'],
+                restaurante: ['admin', 'gerente'],
+                'servicos-digitais': ['admin', 'gerente'],
+                cobrancas: ['admin', 'gerente'],
+                projetos: ['admin', 'gerente'],
+                marketing: ['admin', 'gerente'],
+                relatorios: ['admin', 'gerente'],
+                empresa: ['admin'],
+                usuarios: ['admin'],
+                backup: ['admin'],
+                sincronizacao: ['admin'],
+                logs: ['admin'],
+                configuracoes: ['admin']
             };
 
             // ==================== CONFIG ====================
@@ -1131,15 +1131,18 @@
                 return colors[role] || '#94a3b8';
             }
 
+            // ==================== PERMISSÕES CORRIGIDAS ====================
             function hasPermission(moduleId) {
                 if (!state.userRole) return false;
+                
+                // Admin tem acesso a tudo
                 if (state.userRole === 'admin') return true;
                 
-                const roleConfig = ROLES[state.userRole];
-                if (!roleConfig) return false;
+                // Verifica se o role tem acesso ao módulo
+                const allowedRoles = MODULE_ROLES[moduleId];
+                if (!allowedRoles) return false;
                 
-                // Verifica se o módulo está na lista de módulos permitidos
-                return roleConfig.modules.includes('*') || roleConfig.modules.includes(moduleId);
+                return allowedRoles.includes(state.userRole);
             }
 
             function canAccess(moduleId) {
@@ -1206,6 +1209,7 @@
                 modules.forEach(mod => {
                     const menuGroup = config.menu[mod.key];
                     if (menuGroup && menuGroup.items) {
+                        // Verifica se há pelo menos um item acessível
                         const hasAccessibleItems = menuGroup.items.some(item => canAccess(item.id));
                         if (!hasAccessibleItems) return;
 
@@ -1219,7 +1223,7 @@
                             const accessible = canAccess(item.id);
                             const isActive = item.id === 'dashboard' ? 'active' : '';
                             const disabled = accessible ? '' : 'disabled';
-                            const onclick = accessible ? `window.openModule('${item.id}')` : '';
+                            const onclick = accessible ? `window.openModule('${item.id}')` : 'event.stopPropagation();';
                             html += `<button class="menu-item ${isActive} ${disabled}" onclick="${onclick}" ${!accessible ? 'title="Sem permissão"' : ''}>
                                 <i class="fas ${item.icon}"></i><span>${item.label}</span>
                                 ${!accessible ? '<i class="fas fa-lock text-[10px] opacity-50 ml-auto"></i>' : ''}
@@ -1261,7 +1265,7 @@
                     const colors = colorMap[action.color] || colorMap.blue;
                     const isSync = action.id === 'sync';
                     const accessible = canAccess(action.id);
-                    const onclick = isSync ? `window.syncData()` : (accessible ? `window.openModule('${action.id}')` : '');
+                    const onclick = isSync ? `window.syncData()` : (accessible ? `window.openModule('${action.id}')` : 'event.stopPropagation();');
                     html += `
                         <div class="quick-action ${!accessible ? 'opacity-50 cursor-not-allowed' : ''}" onclick="${onclick}" ${!accessible ? 'title="Sem permissão"' : ''}>
                             <div class="icon" style="background:${colors.bg};color:${colors.color};">
@@ -1349,9 +1353,9 @@
                         if (!userError && userData) {
                             state.currentUser = {
                                 id: userData.id,
-                                name: userData.nome,
+                                name: userData.nome || userData.name,
                                 email: userData.email,
-                                phone: userData.telefone,
+                                phone: userData.telefone || userData.phone,
                                 role: userData.role || 'vendedor'
                             };
                             state.userRole = state.currentUser.role;
@@ -1413,6 +1417,7 @@
                     document.getElementById('profilePhoneInput').value = state.currentUser.phone || '';
 
                     console.log(`👤 Usuário: ${state.currentUser.name} (${roleLabel})`);
+                    console.log(`📋 Permissões: ${state.userPermissions.join(', ') || 'Todas'}`);
                 } catch (error) {
                     console.error('Erro ao carregar usuário:', error);
                 }
@@ -1780,12 +1785,15 @@
             }
             window.toggleDarkMode = toggleDarkMode;
 
+            // CORRIGIDO: Logout agora redireciona para index.html (login)
             function logout() {
                 if (confirm('Tem certeza que deseja sair?')) {
                     localStorage.removeItem('user');
                     localStorage.removeItem('isLoggedIn');
                     showToast('Saindo do sistema...', 'info');
-                    setTimeout(() => window.location.href = 'login.html', 800);
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 800);
                 }
             }
             window.logout = logout;
@@ -2025,8 +2033,11 @@
                     });
                 }
 
+                // CORRIGIDO: Verifica se está logado e redireciona para index.html se não estiver
                 const userStr = localStorage.getItem('user');
-                if (userStr && !state.initialized) {
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                
+                if (userStr && isLoggedIn === 'true' && !state.initialized) {
                     loadDashboard();
                 } else if (!state.initialized) {
                     if (supabaseReady && supabase) {
@@ -2034,17 +2045,18 @@
                             if (data.session) {
                                 loadDashboard();
                             } else {
-                                if (localStorage.getItem('isLoggedIn') === 'true') {
-                                    loadDashboard();
-                                } else {
-                                    window.location.href = 'login.html';
-                                }
+                                window.location.href = 'index.html';
                             }
                         }).catch(() => {
-                            loadDashboard();
+                            window.location.href = 'index.html';
                         });
                     } else {
-                        loadDashboard();
+                        // Fallback: se não tiver sessão, redireciona para login
+                        if (!isLoggedIn || isLoggedIn !== 'true') {
+                            window.location.href = 'index.html';
+                        } else {
+                            loadDashboard();
+                        }
                     }
                 }
             }
@@ -2054,8 +2066,10 @@
                 applySystemConfig();
                 setupEventListeners();
 
-                if (localStorage.getItem('isLoggedIn') === 'true') {
-                    loadDashboard();
+                // Se não estiver logado, redireciona para index.html
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                if (!isLoggedIn || isLoggedIn !== 'true') {
+                    window.location.href = 'index.html';
                 }
             }
 
