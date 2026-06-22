@@ -79,6 +79,10 @@
             flex-shrink: 0;
             z-index: 1000;
             box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
         }
         .top-header .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
         .top-header .logo img { height: 32px; width: auto; border-radius: 6px; }
@@ -157,6 +161,7 @@
         .table-container .status-badge.active { background: #d1fae5; color: #059669; }
         .table-container .status-badge.inactive { background: #fecaca; color: #dc2626; }
         .table-container .status-badge.low-stock { background: #fef3c7; color: #d97706; }
+        .table-container .status-badge.out-stock { background: #fee2e2; color: #dc2626; }
 
         /* ==================== FORM ==================== */
         .form-group { margin-bottom: 16px; }
@@ -795,10 +800,11 @@
                     if (category) {
                         query = query.eq('categoria_id', parseInt(category));
                     }
+                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
                     if (stockFilter === 'low') {
-                        query = query.lt('current_stock', 5).gt('current_stock', 0);
+                        query = query.lt('estoque', 5).gt('estoque', 0);
                     } else if (stockFilter === 'out') {
-                        query = query.eq('current_stock', 0);
+                        query = query.eq('estoque', 0);
                     } else if (stockFilter === 'active') {
                         query = query.eq('ativo', true);
                     } else if (stockFilter === 'inactive') {
@@ -847,10 +853,11 @@
                 }
 
                 tbody.innerHTML = state.products.map(p => {
-                    const stock = p.current_stock || 0;
+                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
+                    const stock = p.estoque || 0;
                     let stockClass = stock > 5 ? 'active' : 'low-stock';
                     let stockLabel = stock > 5 ? 'Em stock' : 'Baixo stock';
-                    if (stock === 0) { stockClass = 'inactive'; stockLabel = 'Sem stock'; }
+                    if (stock === 0) { stockClass = 'out-stock'; stockLabel = 'Sem stock'; }
                     
                     const statusClass = p.ativo !== false ? 'active' : 'inactive';
                     const statusLabel = p.ativo !== false ? 'Ativo' : 'Inativo';
@@ -945,6 +952,7 @@
             // ==================== SAVE PRODUCT ====================
             async function saveProduct() {
                 const id = DOM.productId.value;
+                // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
                 const data = {
                     nome: DOM.prodNome.value.trim(),
                     codigo: DOM.prodCodigo.value.trim(),
@@ -952,7 +960,7 @@
                     unidade: DOM.prodUnidade.value,
                     preco: parseFloat(DOM.prodPreco.value) || 0,
                     custo: parseFloat(DOM.prodCusto.value) || 0,
-                    current_stock: parseInt(DOM.prodStock.value) || 0,
+                    estoque: parseInt(DOM.prodStock.value) || 0,
                     estoque_minimo: parseInt(DOM.prodStockMin.value) || 5,
                     descricao: DOM.prodDescricao.value.trim(),
                     imagem: DOM.prodImagem.value.trim() || null,
@@ -1014,7 +1022,8 @@
                     DOM.prodUnidade.value = data.unidade || 'un';
                     DOM.prodPreco.value = data.preco || '';
                     DOM.prodCusto.value = data.custo || '';
-                    DOM.prodStock.value = data.current_stock || 0;
+                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
+                    DOM.prodStock.value = data.estoque || 0;
                     DOM.prodStockMin.value = data.estoque_minimo || 5;
                     DOM.prodDescricao.value = data.descricao || '';
                     DOM.prodImagem.value = data.imagem || '';
@@ -1103,7 +1112,7 @@
                 if (confirm('Deseja sair do sistema?')) {
                     localStorage.removeItem('user');
                     localStorage.removeItem('isLoggedIn');
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             }
 
