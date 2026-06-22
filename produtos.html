@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Produtos - Kanawa Soft</title>
+    <title>Importar Produtos - Kanawa Soft</title>
     <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
     <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS para ler Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -128,68 +130,93 @@
         }
         .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
 
+        /* ==================== UPLOAD ZONE ==================== */
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafbfc;
+        }
+        .upload-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background: #dbeafe;
+            transform: scale(1.01);
+        }
+        .upload-zone .icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+        .upload-zone h4 {
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .upload-zone p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .upload-zone .formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .upload-zone .formats span {
+            background: #e8edf4;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
         /* ==================== TABLE ==================== */
         .table-container {
             overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
         }
         .table-container table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
         .table-container th {
             background: #f8fafc;
             text-align: left;
-            padding: 10px 12px;
+            padding: 8px 10px;
             font-weight: 600;
             color: #475569;
             border-bottom: 2px solid #e8edf4;
+            position: sticky;
+            top: 0;
+            z-index: 10;
             white-space: nowrap;
         }
         .table-container td {
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-bottom: 1px solid #e8edf4;
             vertical-align: middle;
         }
         .table-container tr:hover td { background: #f8fafc; }
         .table-container .status-badge {
-            font-size: 0.65rem;
-            padding: 3px 10px;
+            font-size: 0.6rem;
+            padding: 2px 10px;
             border-radius: 20px;
             font-weight: 600;
         }
-        .table-container .status-badge.active { background: #d1fae5; color: #059669; }
-        .table-container .status-badge.inactive { background: #fecaca; color: #dc2626; }
-        .table-container .status-badge.low-stock { background: #fef3c7; color: #d97706; }
-        .table-container .status-badge.out-stock { background: #fee2e2; color: #dc2626; }
-
-        /* ==================== FORM ==================== */
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #475569;
-            margin-bottom: 4px;
-        }
-        .form-group .required { color: #ef4444; }
-        .form-control {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #e8edf4;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            background: #fff;
-            color: #0f172a;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        .form-control.error { border-color: #ef4444; }
-        .form-control.success { border-color: #10b981; }
+        .table-container .status-badge.success { background: #d1fae5; color: #059669; }
+        .table-container .status-badge.error { background: #fecaca; color: #dc2626; }
+        .table-container .status-badge.warning { background: #fef3c7; color: #d97706; }
 
         /* ==================== MODAL ==================== */
         .modal-overlay {
@@ -207,43 +234,58 @@
         .modal-content {
             background: #fff;
             border-radius: 16px;
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             animation: fadeIn 0.25s ease;
+            padding: 24px;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #e8edf4;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 1;
-            border-radius: 16px 16px 0 0;
+            margin-bottom: 16px;
         }
-        .modal-header h3 { font-size: 1.05rem; font-weight: 600; color: #0f172a; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; color: #0f172a; }
         .modal-header button { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; transition: all 0.3s; }
-        .modal-header button:hover { color: #0f172a; transform: rotate(90deg); }
-        .modal-body { padding: 20px; }
+        .modal-header button:hover { color: #0f172a; }
         .modal-footer {
-            padding: 12px 20px;
-            border-top: 1px solid #e8edf4;
             display: flex;
             justify-content: flex-end;
             gap: 8px;
-            position: sticky;
-            bottom: 0;
+            padding-top: 16px;
+            border-top: 1px solid #e8edf4;
+            margin-top: 16px;
+        }
+
+        /* ==================== MAPPING ==================== */
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .mapping-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        .mapping-item select {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #e8edf4;
+            border-radius: 6px;
+            font-size: 0.75rem;
             background: #fff;
-            border-radius: 0 0 16px 16px;
         }
 
         /* ==================== TOAST ==================== */
@@ -322,9 +364,9 @@
             .top-header .logo img { height: 28px; }
             .main-wrapper { margin-top: 56px; }
             .page-content { padding: 12px; }
-            .modal-content { margin: 10px; }
-            .table-container { font-size: 0.75rem; }
-            .table-container th, .table-container td { padding: 6px 8px; }
+            .upload-zone { padding: 24px 16px; }
+            .mapping-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 10px; padding: 16px; }
         }
 
         @media (max-width: 480px) {
@@ -333,7 +375,6 @@
             .page-content { padding: 8px; }
             .table-container { font-size: 0.7rem; }
             .table-container th, .table-container td { padding: 4px 6px; }
-            .modal-body { padding: 12px; }
         }
 
         /* ==================== UTILITIES ==================== */
@@ -361,19 +402,80 @@
         .btn-outline:hover { background: #f8fafc; }
         .btn-sm { padding: 4px 12px; font-size: 0.7rem; }
         .btn-sm i { font-size: 0.65rem; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .text-center { text-align: center; }
+        .text-muted { color: #94a3b8; }
+        .text-sm { font-size: 0.8rem; }
+        .text-xs { font-size: 0.7rem; }
+        .text-xl { font-size: 1.15rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .w-full { width: 100%; }
+        .hidden { display: none !important; }
+        .p-3 { padding: 12px; }
+        .p-4 { padding: 16px; }
+        .rounded-full { border-radius: 9999px; }
+        .space-y-2 > * + * { margin-top: 8px; }
 
-        .empty-state {
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e8edf4;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
-            padding: 40px 20px;
+        }
+        .stat-card .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .stat-card .label {
+            font-size: 0.7rem;
             color: #94a3b8;
         }
-        .empty-state i { font-size: 3rem; margin-bottom: 12px; opacity: 0.3; }
-        .empty-state h4 { font-size: 1.1rem; color: #475569; margin-bottom: 4px; }
-        .empty-state p { font-size: 0.85rem; }
+        .stat-card .number.success { color: #10b981; }
+        .stat-card .number.error { color: #ef4444; }
+        .stat-card .number.warning { color: #f59e0b; }
+        .stat-card .number.info { color: #3b82f6; }
 
         @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .grid-2 { grid-template-columns: 1fr; }
         }
     </style>
@@ -423,10 +525,14 @@
                 <i class="fas fa-cash-register"></i>
                 <span>Ponto de Venda</span>
             </a>
-            <a href="produtos.html" class="nav-item active text-xs">
+            <a href="produtos.html" class="nav-item text-xs">
                 <i class="fas fa-boxes"></i>
                 <span>Produtos</span>
-                <span class="badge">Gestão</span>
+            </a>
+            <a href="importar-produtos.html" class="nav-item active text-xs">
+                <i class="fas fa-file-import"></i>
+                <span>Importar</span>
+                <span class="badge">Excel</span>
             </a>
             <a href="clientes.html" class="nav-item text-xs">
                 <i class="fas fa-users"></i>
@@ -482,173 +588,130 @@
                 <!-- Page Header -->
                 <div class="flex flex-wrap items-center justify-between mb-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-800">Produtos</h1>
-                        <p class="text-sm text-gray-500">Gerencie seu catálogo de produtos</p>
+                        <h1 class="text-2xl font-bold text-gray-800">Importar Produtos</h1>
+                        <p class="text-sm text-gray-500">Importe produtos em massa via Excel ou CSV</p>
                     </div>
                     <div class="flex gap-2 mt-2 sm:mt-0">
-                        <button onclick="openModal()" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Novo Produto
-                        </button>
-                        <button onclick="syncData()" class="btn btn-outline">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Filters -->
-                <div class="card p-3 mb-4">
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <div class="flex-1 min-w-[150px]">
-                            <input type="text" id="searchInput" placeholder="Buscar produto..." 
-                                   class="form-control" style="font-size:0.8rem;">
-                        </div>
-                        <select id="categoryFilter" class="form-control" style="width:auto;min-width:120px;font-size:0.8rem;">
-                            <option value="">Todas categorias</option>
-                        </select>
-                        <select id="stockFilter" class="form-control" style="width:auto;min-width:120px;font-size:0.8rem;">
-                            <option value="">Todos</option>
-                            <option value="low">Stock Baixo</option>
-                            <option value="out">Sem Stock</option>
-                            <option value="active">Ativos</option>
-                            <option value="inactive">Inativos</option>
-                        </select>
-                        <button onclick="clearFilters()" class="btn btn-outline btn-sm">
-                            <i class="fas fa-times"></i> Limpar
+                        <a href="produtos.html" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                        <button onclick="downloadTemplate()" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Baixar Modelo
                         </button>
                     </div>
                 </div>
 
-                <!-- Products Table -->
-                <div class="card">
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Produto</th>
-                                    <th>Categoria</th>
-                                    <th class="text-right">Preço</th>
-                                    <th class="text-center">Stock</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="productsTableBody">
-                                <tr>
-                                    <td colspan="7" class="text-center py-8 text-gray-500">
-                                        <i class="fas fa-spinner fa-spin mr-2"></i> Carregando produtos...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Pagination -->
-                    <div class="flex flex-wrap items-center justify-between p-3 border-t border-gray-100">
-                        <div class="text-sm text-gray-500" id="paginationInfo">Mostrando 0 de 0 produtos</div>
-                        <div class="flex gap-1">
-                            <button onclick="prevPage()" class="btn btn-outline btn-sm" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
-                            <span class="text-sm text-gray-600 px-2 py-1" id="pageInfo">Página 1</span>
-                            <button onclick="nextPage()" class="btn btn-outline btn-sm" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+                <!-- Upload Zone -->
+                <div class="card p-4 mb-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">1. Selecione o arquivo</h3>
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                        <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <h4>Clique aqui ou arraste o arquivo</h4>
+                        <p>Arquivos suportados: .xlsx, .xls, .csv</p>
+                        <div class="formats">
+                            <span>Excel (.xlsx)</span>
+                            <span>Excel (.xls)</span>
+                            <span>CSV (.csv)</span>
                         </div>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFile(event)">
+                    </div>
+                    <div id="fileInfo" class="hidden mt-3 p-3 bg-green-50 rounded-lg flex items-center justify-between">
+                        <div>
+                            <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                            <span id="fileName" class="font-medium">arquivo.xlsx</span>
+                            <span id="fileSize" class="text-sm text-gray-500 ml-2"></span>
+                        </div>
+                        <button onclick="clearFile()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div id="previewSection" class="hidden">
+                    <div class="card p-4 mb-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">2. Mapeamento de Colunas</h3>
+                        <p class="text-sm text-gray-500 mb-3">Mapeie as colunas do seu arquivo para os campos do sistema</p>
+                        
+                        <div class="mapping-grid" id="mappingGrid">
+                            <!-- Mapeamento dinâmico -->
+                        </div>
+                    </div>
+
+                    <div class="card p-4 mb-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">3. Pré-visualização</h3>
+                        <p class="text-sm text-gray-500 mb-3">Verifique os dados antes de importar</p>
+                        
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-card">
+                                <div class="number info" id="totalRows">0</div>
+                                <div class="label">Total de Linhas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="number success" id="validRows">0</div>
+                                <div class="label">Válidos</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="number error" id="errorRows">0</div>
+                                <div class="label">Com Erros</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="number warning" id="duplicateRows">0</div>
+                                <div class="label">Duplicados</div>
+                            </div>
+                        </div>
+
+                        <div class="table-container" id="previewTable">
+                            <!-- Tabela de pré-visualização -->
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 justify-end">
+                        <button onclick="clearFile()" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button onclick="importProducts()" class="btn btn-success" id="importBtn">
+                            <i class="fas fa-upload"></i> Importar Produtos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="card p-4 mt-4">
+                    <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-history text-blue-500"></i> Histórico de Importações
+                    </h3>
+                    <div id="historyList">
+                        <div class="text-center text-muted py-4 text-sm">Nenhuma importação realizada</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== PRODUCT MODAL ==================== -->
-    <div class="modal-overlay" id="productModal">
+    <!-- ==================== IMPORT MODAL ==================== -->
+    <div class="modal-overlay" id="importModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Novo Produto</h3>
-                <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+                <h3><i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Importando...</h3>
+                <button onclick="closeImportModal()"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body">
-                <form id="productForm" onsubmit="event.preventDefault(); saveProduct();">
-                    <input type="hidden" id="productId" value="">
-                    
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Nome do Produto <span class="required">*</span></label>
-                            <input type="text" id="prodNome" class="form-control" placeholder="Ex: Arroz Integral" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Código <span class="required">*</span></label>
-                            <input type="text" id="prodCodigo" class="form-control" placeholder="Ex: P-001" required>
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Categoria</label>
-                            <select id="prodCategoria" class="form-control">
-                                <option value="">Selecione</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Unidade</label>
-                            <select id="prodUnidade" class="form-control">
-                                <option value="un">Unidade</option>
-                                <option value="kg">Quilograma</option>
-                                <option value="g">Grama</option>
-                                <option value="l">Litro</option>
-                                <option value="ml">Mililitro</option>
-                                <option value="cx">Caixa</option>
-                                <option value="pc">Pacote</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Preço de Venda <span class="required">*</span></label>
-                            <input type="number" id="prodPreco" class="form-control" placeholder="0,00" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Preço de Custo</label>
-                            <input type="number" id="prodCusto" class="form-control" placeholder="0,00" step="0.01" min="0">
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Stock Inicial</label>
-                            <input type="number" id="prodStock" class="form-control" placeholder="0" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label>Stock Mínimo</label>
-                            <input type="number" id="prodStockMin" class="form-control" placeholder="0" min="0" value="5">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Descrição</label>
-                        <textarea id="prodDescricao" class="form-control" rows="2" placeholder="Descrição do produto..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Imagem (URL)</label>
-                        <input type="url" id="prodImagem" class="form-control" placeholder="https://exemplo.com/imagem.jpg">
-                    </div>
-
-                    <div class="flex items-center gap-4 mt-2">
-                        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                            <input type="checkbox" id="prodAtivo" checked>
-                            <span>Produto Ativo</span>
-                        </label>
-                    </div>
-                </form>
+            <div>
+                <p class="text-sm text-gray-600 mb-2" id="importStatus">Preparando para importar...</p>
+                <div class="progress-bar">
+                    <div class="fill" id="importProgress"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-right" id="importProgressText">0%</p>
+            </div>
+            <div id="importResult" class="hidden mt-4">
+                <div class="p-4 rounded-lg" id="importResultContent"></div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeModal()" class="btn btn-outline">Cancelar</button>
-                <button onclick="saveProduct()" class="btn btn-primary" id="saveBtn">
-                    <i class="fas fa-save"></i> Salvar
-                </button>
+                <button onclick="closeImportModal()" class="btn btn-outline" id="importModalCloseBtn">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== SCRIPT ==================== -->
     <script>
         (function() {
             'use strict';
@@ -674,42 +737,40 @@
 
             // ==================== STATE ====================
             const state = {
-                products: [],
-                categories: [],
                 currentUser: null,
-                currentPage: 1,
-                pageSize: 15,
-                totalCount: 0,
-                editingId: null,
-                isOnline: navigator.onLine
+                fileData: null,
+                headers: [],
+                rows: [],
+                mapping: {},
+                categories: [],
+                importHistory: []
             };
 
             // ==================== DOM REFS ====================
             const $ = id => document.getElementById(id);
             const DOM = {
-                productsBody: $('productsTableBody'),
-                searchInput: $('searchInput'),
-                categoryFilter: $('categoryFilter'),
-                stockFilter: $('stockFilter'),
-                modal: $('productModal'),
-                modalTitle: $('modalTitle'),
-                productId: $('productId'),
-                prodNome: $('prodNome'),
-                prodCodigo: $('prodCodigo'),
-                prodCategoria: $('prodCategoria'),
-                prodUnidade: $('prodUnidade'),
-                prodPreco: $('prodPreco'),
-                prodCusto: $('prodCusto'),
-                prodStock: $('prodStock'),
-                prodStockMin: $('prodStockMin'),
-                prodDescricao: $('prodDescricao'),
-                prodImagem: $('prodImagem'),
-                prodAtivo: $('prodAtivo'),
-                saveBtn: $('saveBtn'),
-                paginationInfo: $('paginationInfo'),
-                pageInfo: $('pageInfo'),
-                prevBtn: $('prevBtn'),
-                nextBtn: $('nextBtn'),
+                fileInput: $('fileInput'),
+                uploadZone: $('uploadZone'),
+                fileInfo: $('fileInfo'),
+                fileName: $('fileName'),
+                fileSize: $('fileSize'),
+                previewSection: $('previewSection'),
+                mappingGrid: $('mappingGrid'),
+                previewTable: $('previewTable'),
+                statsGrid: $('statsGrid'),
+                totalRows: $('totalRows'),
+                validRows: $('validRows'),
+                errorRows: $('errorRows'),
+                duplicateRows: $('duplicateRows'),
+                importBtn: $('importBtn'),
+                historyList: $('historyList'),
+                importModal: $('importModal'),
+                importStatus: $('importStatus'),
+                importProgress: $('importProgress'),
+                importProgressText: $('importProgressText'),
+                importResult: $('importResult'),
+                importResultContent: $('importResultContent'),
+                importModalCloseBtn: $('importModalCloseBtn'),
                 loading: $('loadingOverlay'),
                 toast: $('toastContainer')
             };
@@ -766,338 +827,498 @@
                     const { data, error } = await supabase.from('categorias').select('*').order('nome');
                     if (error) throw error;
                     state.categories = data || [];
-                    
-                    const selects = [DOM.prodCategoria, DOM.categoryFilter];
-                    selects.forEach(select => {
-                        const currentValue = select.value;
-                        select.innerHTML = '<option value="">' + (select === DOM.categoryFilter ? 'Todas categorias' : 'Selecione') + '</option>';
-                        state.categories.forEach(c => {
-                            const opt = document.createElement('option');
-                            opt.value = c.id;
-                            opt.textContent = c.nome;
-                            select.appendChild(opt);
-                        });
-                        if (currentValue) select.value = currentValue;
-                    });
                 } catch (e) {
                     console.warn('Erro ao carregar categorias:', e);
                 }
             }
 
-            // ==================== LOAD PRODUCTS ====================
-            async function loadProducts() {
+            // ==================== LOAD HISTORY ====================
+            function loadHistory() {
                 try {
-                    showLoading(true);
-                    const search = DOM.searchInput.value.trim();
-                    const category = DOM.categoryFilter.value;
-                    const stockFilter = DOM.stockFilter.value;
-                    
-                    let query = supabase.from('produtos').select('*', { count: 'exact' });
-                    
-                    if (search) {
-                        query = query.or(`nome.ilike.%${search}%,codigo.ilike.%${search}%`);
-                    }
-                    if (category) {
-                        query = query.eq('categoria_id', parseInt(category));
-                    }
-                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
-                    if (stockFilter === 'low') {
-                        query = query.lt('estoque', 5).gt('estoque', 0);
-                    } else if (stockFilter === 'out') {
-                        query = query.eq('estoque', 0);
-                    } else if (stockFilter === 'active') {
-                        query = query.eq('ativo', true);
-                    } else if (stockFilter === 'inactive') {
-                        query = query.eq('ativo', false);
-                    }
-                    
-                    const from = (state.currentPage - 1) * state.pageSize;
-                    const to = from + state.pageSize - 1;
-                    
-                    const { data, error, count } = await query
-                        .order('nome')
-                        .range(from, to);
-                    
-                    if (error) throw error;
-                    
-                    state.products = data || [];
-                    state.totalCount = count || 0;
-                    
-                    renderProducts();
-                    updatePagination();
-                } catch (error) {
-                    console.error('Erro ao carregar produtos:', error);
-                    showToast('Erro ao carregar produtos', 'error');
-                    state.products = [];
-                    renderProducts();
-                } finally {
-                    showLoading(false);
+                    const history = localStorage.getItem('import_history');
+                    state.importHistory = history ? JSON.parse(history) : [];
+                    renderHistory();
+                } catch (e) {
+                    state.importHistory = [];
                 }
             }
 
-            // ==================== RENDER PRODUCTS ====================
-            function renderProducts() {
-                const tbody = DOM.productsBody;
+            function renderHistory() {
+                const container = DOM.historyList;
+                if (state.importHistory.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-4 text-sm">Nenhuma importação realizada</div>';
+                    return;
+                }
+                container.innerHTML = state.importHistory.slice(0, 10).map(h => `
+                    <div class="flex items-center justify-between p-2 border-b border-gray-100 hover:bg-gray-50">
+                        <div>
+                            <p class="font-medium text-sm">${h.fileName}</p>
+                            <p class="text-xs text-gray-500">${new Date(h.date).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="text-green-600">${h.success} importados</span>
+                            <span class="text-red-500">${h.errors || 0} erros</span>
+                            <span class="text-gray-400">${h.total} total</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // ==================== DOWNLOAD TEMPLATE ====================
+            function downloadTemplate() {
+                const headers = ['codigo', 'nome', 'categoria', 'unidade', 'preco', 'custo', 'estoque', 'estoque_minimo', 'descricao'];
+                const sampleData = [
+                    ['P-001', 'Arroz Integral 1kg', 'Alimentos', 'kg', '2500', '1800', '10', '5', 'Arroz integral de alta qualidade'],
+                    ['P-002', 'Feijão Carioca 1kg', 'Alimentos', 'kg', '3500', '2800', '8', '5', 'Feijão carioca selecionado'],
+                    ['P-003', 'Óleo de Soja 900ml', 'Bebidas', 'ml', '1800', '1500', '5', '3', 'Óleo de soja refinado']
+                ];
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
                 
-                if (state.products.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="text-center py-8 text-gray-500">
-                                <i class="fas fa-boxes text-2xl mb-2 block opacity-30"></i>
-                                <p>Nenhum produto encontrado</p>
-                                <p class="text-sm">Clique em "Novo Produto" para adicionar</p>
-                            </td>
-                        </tr>
-                    `;
+                // Definir largura das colunas
+                ws['!cols'] = headers.map(() => ({ wch: 18 }));
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
+                XLSX.writeFile(wb, 'modelo_produtos.xlsx');
+                
+                showToast('📥 Modelo baixado com sucesso!', 'success');
+            }
+
+            // ==================== HANDLE FILE ====================
+            function handleFile(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel',
+                    'text/csv'
+                ];
+
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    showToast('Formato de arquivo não suportado. Use .xlsx, .xls ou .csv', 'error');
                     return;
                 }
 
-                tbody.innerHTML = state.products.map(p => {
-                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
-                    const stock = p.estoque || 0;
-                    let stockClass = stock > 5 ? 'active' : 'low-stock';
-                    let stockLabel = stock > 5 ? 'Em stock' : 'Baixo stock';
-                    if (stock === 0) { stockClass = 'out-stock'; stockLabel = 'Sem stock'; }
-                    
-                    const statusClass = p.ativo !== false ? 'active' : 'inactive';
-                    const statusLabel = p.ativo !== false ? 'Ativo' : 'Inativo';
-                    
-                    const categoria = state.categories.find(c => c.id === p.categoria_id);
-                    
-                    return `
-                        <tr>
-                            <td><span class="font-mono text-sm">${p.codigo || 'N/A'}</span></td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <img src="${p.imagem || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23e5e7eb'/%3E%3Ctext x='16' y='20' text-anchor='middle' font-size='12' fill='%236b7280'%3E${encodeURIComponent(p.nome?.substring(0,2) || '??')}%3C/text%3E%3C/svg%3E`}" 
-                                         alt="${p.nome}" class="w-8 h-8 rounded object-cover">
-                                    <div>
-                                        <div class="font-medium text-gray-800">${p.nome}</div>
-                                        <div class="text-xs text-gray-500">${p.codigo || 'N/A'}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${categoria?.nome || '-'}</td>
-                            <td class="text-right font-medium text-green-700">AOA ${(p.preco || 0).toLocaleString('pt-BR')}</td>
-                            <td class="text-center">
-                                <span class="status-badge ${stockClass}">${stockLabel} (${stock})</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="status-badge ${statusClass}">${statusLabel}</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button onclick="editProduct('${p.id}')" class="btn btn-outline btn-sm" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="toggleProductStatus('${p.id}')" class="btn ${p.ativo !== false ? 'btn-warning' : 'btn-success'} btn-sm" title="${p.ativo !== false ? 'Desativar' : 'Ativar'}">
-                                        <i class="fas ${p.ativo !== false ? 'fa-pause' : 'fa-play'}"></i>
-                                    </button>
-                                    <button onclick="deleteProduct('${p.id}')" class="btn btn-danger btn-sm" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-            // ==================== PAGINATION ====================
-            function updatePagination() {
-                const totalPages = Math.ceil(state.totalCount / state.pageSize);
-                DOM.paginationInfo.textContent = `Mostrando ${state.products.length} de ${state.totalCount} produtos`;
-                DOM.pageInfo.textContent = `Página ${state.currentPage} de ${totalPages || 1}`;
-                DOM.prevBtn.disabled = state.currentPage <= 1;
-                DOM.nextBtn.disabled = state.currentPage >= totalPages;
-            }
+                        if (jsonData.length < 2) {
+                            showToast('O arquivo está vazio ou não contém dados válidos', 'error');
+                            return;
+                        }
 
-            function prevPage() {
-                if (state.currentPage > 1) {
-                    state.currentPage--;
-                    loadProducts();
-                }
-            }
+                        // Extrair headers (primeira linha)
+                        state.headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
+                        
+                        // Extrair dados (linhas seguintes)
+                        state.rows = jsonData.slice(1).filter(row => row.some(cell => cell !== undefined && cell !== null && cell !== ''));
+                        
+                        if (state.rows.length === 0) {
+                            showToast('Nenhuma linha de dados encontrada', 'error');
+                            return;
+                        }
 
-            function nextPage() {
-                const totalPages = Math.ceil(state.totalCount / state.pageSize);
-                if (state.currentPage < totalPages) {
-                    state.currentPage++;
-                    loadProducts();
-                }
-            }
+                        // Mostrar informações do arquivo
+                        DOM.fileName.textContent = file.name;
+                        DOM.fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                        DOM.fileInfo.classList.remove('hidden');
+                        DOM.uploadZone.classList.add('hidden');
 
-            // ==================== OPEN/CLOSE MODAL ====================
-            function openModal(productId = null) {
-                DOM.modal.classList.add('active');
-                if (productId) {
-                    editProduct(productId);
-                } else {
-                    DOM.modalTitle.textContent = 'Novo Produto';
-                    DOM.productId.value = '';
-                    DOM.saveBtn.innerHTML = '<i class="fas fa-save"></i> Salvar';
-                    document.getElementById('productForm').reset();
-                    DOM.prodAtivo.checked = true;
-                    DOM.prodStock.value = 0;
-                    DOM.prodStockMin.value = 5;
-                }
-            }
+                        // Configurar mapeamento
+                        setupMapping();
+                        
+                        // Mostrar pré-visualização
+                        DOM.previewSection.classList.remove('hidden');
+                        
+                        // Atualizar estatísticas
+                        updateStats();
+                        
+                        showToast(`📄 ${state.rows.length} linhas carregadas`, 'success');
 
-            function closeModal() {
-                DOM.modal.classList.remove('active');
-                DOM.productId.value = '';
-                document.getElementById('productForm').reset();
-            }
-
-            // ==================== SAVE PRODUCT ====================
-            async function saveProduct() {
-                const id = DOM.productId.value;
-                // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
-                const data = {
-                    nome: DOM.prodNome.value.trim(),
-                    codigo: DOM.prodCodigo.value.trim(),
-                    categoria_id: DOM.prodCategoria.value || null,
-                    unidade: DOM.prodUnidade.value,
-                    preco: parseFloat(DOM.prodPreco.value) || 0,
-                    custo: parseFloat(DOM.prodCusto.value) || 0,
-                    estoque: parseInt(DOM.prodStock.value) || 0,
-                    estoque_minimo: parseInt(DOM.prodStockMin.value) || 5,
-                    descricao: DOM.prodDescricao.value.trim(),
-                    imagem: DOM.prodImagem.value.trim() || null,
-                    ativo: DOM.prodAtivo.checked
+                    } catch (error) {
+                        console.error('Erro ao ler arquivo:', error);
+                        showToast('Erro ao ler arquivo: ' + error.message, 'error');
+                    }
                 };
 
-                // Validação
-                if (!data.nome) { showToast('Informe o nome do produto', 'error'); DOM.prodNome.focus(); return; }
-                if (!data.codigo) { showToast('Informe o código do produto', 'error'); DOM.prodCodigo.focus(); return; }
-                if (data.preco <= 0) { showToast('Informe um preço válido', 'error'); DOM.prodPreco.focus(); return; }
+                reader.readAsArrayBuffer(file);
+            }
 
-                try {
-                    showLoading(true);
+            // ==================== SETUP MAPPING ====================
+            function setupMapping() {
+                const fields = [
+                    { key: 'codigo', label: 'Código', required: true },
+                    { key: 'nome', label: 'Nome do Produto', required: true },
+                    { key: 'categoria', label: 'Categoria', required: false },
+                    { key: 'unidade', label: 'Unidade', required: false },
+                    { key: 'preco', label: 'Preço de Venda', required: true },
+                    { key: 'custo', label: 'Preço de Custo', required: false },
+                    { key: 'estoque', label: 'Estoque', required: false },
+                    { key: 'estoque_minimo', label: 'Estoque Mínimo', required: false },
+                    { key: 'descricao', label: 'Descrição', required: false }
+                ];
+
+                const grid = DOM.mappingGrid;
+                grid.innerHTML = '';
+
+                fields.forEach(field => {
+                    const div = document.createElement('div');
+                    div.className = 'mapping-item';
+                    div.innerHTML = `
+                        <span class="font-medium text-gray-700 min-w-[100px]">${field.label}${field.required ? ' <span class="text-red-500">*</span>' : ''}</span>
+                        <select class="mapping-select" data-field="${field.key}" ${field.required ? 'required' : ''}>
+                            <option value="">Selecione...</option>
+                            ${state.headers.map(h => `<option value="${h}" ${h === field.key ? 'selected' : ''}>${h}</option>`).join('')}
+                        </select>
+                    `;
+                    grid.appendChild(div);
+                });
+
+                // Auto-mapeamento inteligente
+                const selects = grid.querySelectorAll('.mapping-select');
+                selects.forEach(select => {
+                    const field = select.dataset.field;
+                    const headerLower = field.toLowerCase();
                     
-                    if (id) {
-                        // Update
-                        const { error } = await supabase
-                            .from('produtos')
-                            .update(data)
-                            .eq('id', id);
-                        if (error) throw error;
-                        showToast('Produto atualizado com sucesso!', 'success');
-                    } else {
-                        // Insert
-                        const { error } = await supabase
-                            .from('produtos')
-                            .insert([data]);
-                        if (error) throw error;
-                        showToast('Produto criado com sucesso!', 'success');
+                    // Tenta encontrar correspondência automática
+                    const matched = state.headers.find(h => {
+                        const hLower = h.toLowerCase();
+                        return hLower === headerLower || 
+                               hLower.includes(headerLower) || 
+                               headerLower.includes(hLower);
+                    });
+                    
+                    if (matched) {
+                        select.value = matched;
+                    }
+                });
+            }
+
+            // ==================== UPDATE STATS ====================
+            function updateStats() {
+                const mapping = getMapping();
+                const errors = [];
+                const duplicates = [];
+                const codes = new Set();
+
+                state.rows.forEach((row, index) => {
+                    const obj = mapRow(row, mapping);
+                    
+                    // Verificar campos obrigatórios
+                    if (!obj.codigo || !obj.nome || !obj.preco) {
+                        errors.push(index);
                     }
                     
-                    closeModal();
-                    await loadProducts();
-                } catch (error) {
-                    console.error('Erro ao salvar produto:', error);
-                    showToast('Erro ao salvar produto: ' + (error.message || 'Tente novamente'), 'error');
-                } finally {
-                    showLoading(false);
-                }
+                    // Verificar duplicados
+                    if (obj.codigo && codes.has(obj.codigo)) {
+                        duplicates.push(index);
+                    }
+                    if (obj.codigo) codes.add(obj.codigo);
+                });
+
+                DOM.totalRows.textContent = state.rows.length;
+                DOM.validRows.textContent = state.rows.length - errors.length;
+                DOM.errorRows.textContent = errors.length;
+                DOM.duplicateRows.textContent = duplicates.length;
+
+                renderPreview(mapping, errors, duplicates);
             }
 
-            // ==================== EDIT PRODUCT ====================
-            async function editProduct(id) {
-                try {
-                    showLoading(true);
-                    const { data, error } = await supabase
-                        .from('produtos')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
-                    
-                    if (error) throw error;
-                    
-                    DOM.modalTitle.textContent = 'Editar Produto';
-                    DOM.productId.value = data.id;
-                    DOM.prodNome.value = data.nome || '';
-                    DOM.prodCodigo.value = data.codigo || '';
-                    DOM.prodCategoria.value = data.categoria_id || '';
-                    DOM.prodUnidade.value = data.unidade || 'un';
-                    DOM.prodPreco.value = data.preco || '';
-                    DOM.prodCusto.value = data.custo || '';
-                    // CORRIGIDO: Usando 'estoque' em vez de 'current_stock'
-                    DOM.prodStock.value = data.estoque || 0;
-                    DOM.prodStockMin.value = data.estoque_minimo || 5;
-                    DOM.prodDescricao.value = data.descricao || '';
-                    DOM.prodImagem.value = data.imagem || '';
-                    DOM.prodAtivo.checked = data.ativo !== false;
-                    DOM.saveBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar';
-                    
-                    DOM.modal.classList.add('active');
-                } catch (error) {
-                    console.error('Erro ao carregar produto:', error);
-                    showToast('Erro ao carregar produto', 'error');
-                } finally {
-                    showLoading(false);
-                }
+            // ==================== GET MAPPING ====================
+            function getMapping() {
+                const selects = DOM.mappingGrid.querySelectorAll('.mapping-select');
+                const mapping = {};
+                selects.forEach(select => {
+                    mapping[select.dataset.field] = select.value;
+                });
+                return mapping;
             }
 
-            // ==================== TOGGLE STATUS ====================
-            async function toggleProductStatus(id) {
-                try {
-                    const product = state.products.find(p => p.id === id);
-                    if (!product) return;
-                    
-                    const newStatus = product.ativo !== false ? false : true;
-                    const { error } = await supabase
-                        .from('produtos')
-                        .update({ ativo: newStatus })
-                        .eq('id', id);
-                    
-                    if (error) throw error;
-                    
-                    showToast(`Produto ${newStatus ? 'ativado' : 'desativado'} com sucesso!`, 'success');
-                    await loadProducts();
-                } catch (error) {
-                    console.error('Erro ao alterar status:', error);
-                    showToast('Erro ao alterar status', 'error');
-                }
-            }
-
-            // ==================== DELETE PRODUCT ====================
-            async function deleteProduct(id) {
-                if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+            // ==================== MAP ROW ====================
+            function mapRow(row, mapping) {
+                const obj = {};
+                const headers = state.headers;
                 
+                Object.keys(mapping).forEach(field => {
+                    const header = mapping[field];
+                    if (header) {
+                        const index = headers.indexOf(header);
+                        if (index !== -1 && row[index] !== undefined && row[index] !== null && row[index] !== '') {
+                            obj[field] = row[index];
+                        } else {
+                            obj[field] = '';
+                        }
+                    } else {
+                        obj[field] = '';
+                    }
+                });
+                
+                return obj;
+            }
+
+            // ==================== RENDER PREVIEW ====================
+            function renderPreview(mapping, errors, duplicates) {
+                const container = DOM.previewTable;
+                
+                // Cabeçalhos
+                const displayHeaders = ['#', 'Código', 'Nome', 'Categoria', 'Preço', 'Estoque', 'Status'];
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                ${displayHeaders.map(h => `<th>${h}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                const maxRows = Math.min(state.rows.length, 20);
+                const codes = new Set();
+
+                for (let i = 0; i < maxRows; i++) {
+                    const row = state.rows[i];
+                    const obj = mapRow(row, mapping);
+                    
+                    const isError = !obj.codigo || !obj.nome || !obj.preco;
+                    const isDuplicate = obj.codigo && codes.has(obj.codigo);
+                    if (obj.codigo) codes.add(obj.codigo);
+                    
+                    let status = '✅ Válido';
+                    let statusClass = 'success';
+                    if (isError) { status = '⚠️ Erro'; statusClass = 'error'; }
+                    if (isDuplicate) { status = '📋 Duplicado'; statusClass = 'warning'; }
+
+                    html += `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td><span class="font-mono">${obj.codigo || '-'}</span></td>
+                            <td>${obj.nome || '-'}</td>
+                            <td>${obj.categoria || '-'}</td>
+                            <td>${obj.preco ? 'AOA ' + Number(obj.preco).toLocaleString() : '-'}</td>
+                            <td>${obj.estoque || '0'}</td>
+                            <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        </tr>
+                    `;
+                }
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                if (state.rows.length > 20) {
+                    html += `<p class="text-xs text-gray-500 mt-2">Mostrando 20 de ${state.rows.length} linhas</p>`;
+                }
+
+                container.innerHTML = html;
+            }
+
+            // ==================== CLEAR FILE ====================
+            function clearFile() {
+                state.fileData = null;
+                state.rows = [];
+                state.headers = [];
+                DOM.fileInput.value = '';
+                DOM.fileInfo.classList.add('hidden');
+                DOM.uploadZone.classList.remove('hidden');
+                DOM.previewSection.classList.add('hidden');
+            }
+
+            // ==================== IMPORT PRODUCTS ====================
+            async function importProducts() {
+                const mapping = getMapping();
+                
+                // Validar mapeamento obrigatório
+                const required = ['codigo', 'nome', 'preco'];
+                const missing = required.filter(f => !mapping[f]);
+                if (missing.length > 0) {
+                    showToast(`Mapeie os campos obrigatórios: ${missing.join(', ')}`, 'error');
+                    return;
+                }
+
+                // Validar dados
+                const products = [];
+                const errors = [];
+                const codes = new Set();
+                const categoriesMap = {};
+
+                // Criar mapa de categorias
+                state.categories.forEach(c => {
+                    categoriesMap[c.nome.toLowerCase()] = c.id;
+                });
+
+                state.rows.forEach((row, index) => {
+                    const obj = mapRow(row, mapping);
+                    
+                    // Validar campos obrigatórios
+                    if (!obj.codigo || !obj.nome || !obj.preco) {
+                        errors.push({ row: index + 2, message: 'Campos obrigatórios faltando' });
+                        return;
+                    }
+
+                    // Validar duplicados
+                    if (codes.has(obj.codigo)) {
+                        errors.push({ row: index + 2, message: 'Código duplicado' });
+                        return;
+                    }
+                    codes.add(obj.codigo);
+
+                    // Buscar categoria
+                    let categoria_id = null;
+                    if (obj.categoria) {
+                        const catName = obj.categoria.trim();
+                        const found = state.categories.find(c => 
+                            c.nome.toLowerCase() === catName.toLowerCase()
+                        );
+                        if (found) {
+                            categoria_id = found.id;
+                        } else {
+                            errors.push({ row: index + 2, message: `Categoria "${obj.categoria}" não encontrada` });
+                            return;
+                        }
+                    }
+
+                    const product = {
+                        codigo: obj.codigo,
+                        nome: obj.nome,
+                        categoria_id: categoria_id,
+                        unidade: obj.unidade || 'un',
+                        preco: parseFloat(obj.preco) || 0,
+                        custo: parseFloat(obj.custo) || 0,
+                        estoque: parseInt(obj.estoque) || 0,
+                        estoque_minimo: parseInt(obj.estoque_minimo) || 5,
+                        descricao: obj.descricao || '',
+                        ativo: true
+                    };
+
+                    products.push(product);
+                });
+
+                if (errors.length > 0) {
+                    showToast(`⚠️ ${errors.length} erro(s) encontrados. Verifique os dados.`, 'error');
+                    console.error('Erros:', errors);
+                    return;
+                }
+
+                if (products.length === 0) {
+                    showToast('Nenhum produto válido para importar', 'warning');
+                    return;
+                }
+
+                // Confirmar importação
+                if (!confirm(`Importar ${products.length} produtos?`)) return;
+
+                // Abrir modal de progresso
+                DOM.importModal.classList.add('active');
+                DOM.importResult.classList.add('hidden');
+                DOM.importStatus.textContent = 'Iniciando importação...';
+                DOM.importProgress.style.width = '0%';
+                DOM.importProgressText.textContent = '0%';
+                DOM.importModalCloseBtn.disabled = true;
+
+                let success = 0;
+                let failed = 0;
+
                 try {
                     showLoading(true);
-                    const { error } = await supabase
-                        .from('produtos')
-                        .delete()
-                        .eq('id', id);
-                    
-                    if (error) throw error;
-                    
-                    showToast('Produto excluído com sucesso!', 'success');
-                    await loadProducts();
+
+                    // Importar em lotes de 50
+                    const batchSize = 50;
+                    for (let i = 0; i < products.length; i += batchSize) {
+                        const batch = products.slice(i, i + batchSize);
+                        const progress = Math.round((i / products.length) * 100);
+                        
+                        DOM.importStatus.textContent = `Importando lote ${Math.floor(i / batchSize) + 1}...`;
+                        DOM.importProgress.style.width = `${progress}%`;
+                        DOM.importProgressText.textContent = `${progress}%`;
+
+                        if (supabaseReady) {
+                            const { error } = await supabase
+                                .from('produtos')
+                                .insert(batch);
+                            
+                            if (error) {
+                                console.error('Erro no lote:', error);
+                                failed += batch.length;
+                            } else {
+                                success += batch.length;
+                            }
+                        } else {
+                            // Modo offline - salvar localmente
+                            const localProducts = JSON.parse(localStorage.getItem('produtos_local') || '[]');
+                            batch.forEach(p => {
+                                p.id = Date.now() + Math.random().toString(36).substr(2, 9);
+                                p.created_at = new Date().toISOString();
+                                localProducts.push(p);
+                            });
+                            localStorage.setItem('produtos_local', JSON.stringify(localProducts));
+                            success += batch.length;
+                        }
+                    }
+
+                    // Finalizar
+                    DOM.importProgress.style.width = '100%';
+                    DOM.importProgressText.textContent = '100%';
+                    DOM.importStatus.textContent = '✅ Importação concluída!';
+                    DOM.importResult.classList.remove('hidden');
+
+                    // Mostrar resultado
+                    DOM.importResultContent.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600">${success}</div>
+                                <div class="text-xs text-gray-500">Importados</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-red-500">${failed}</div>
+                                <div class="text-xs text-gray-500">Falhas</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600">${products.length}</div>
+                                <div class="text-xs text-gray-500">Total</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Salvar histórico
+                    const history = {
+                        fileName: DOM.fileName.textContent || 'importacao',
+                        date: new Date().toISOString(),
+                        total: products.length,
+                        success: success,
+                        errors: failed
+                    };
+                    state.importHistory.unshift(history);
+                    if (state.importHistory.length > 50) state.importHistory.pop();
+                    localStorage.setItem('import_history', JSON.stringify(state.importHistory));
+                    renderHistory();
+
+                    showToast(`✅ ${success} produtos importados com sucesso!`, 'success');
+
                 } catch (error) {
-                    console.error('Erro ao excluir produto:', error);
-                    showToast('Erro ao excluir produto', 'error');
+                    console.error('Erro na importação:', error);
+                    showToast('Erro durante a importação: ' + error.message, 'error');
+                    DOM.importStatus.textContent = '❌ Erro na importação';
                 } finally {
                     showLoading(false);
+                    DOM.importModalCloseBtn.disabled = false;
                 }
             }
 
-            // ==================== FILTERS ====================
-            function clearFilters() {
-                DOM.searchInput.value = '';
-                DOM.categoryFilter.value = '';
-                DOM.stockFilter.value = '';
-                state.currentPage = 1;
-                loadProducts();
-            }
-
-            // ==================== SYNC ====================
-            async function syncData() {
-                showToast('Sincronizando dados...', 'info');
-                await loadProducts();
-                showToast('Dados sincronizados!', 'success');
+            // ==================== CLOSE IMPORT MODAL ====================
+            function closeImportModal() {
+                DOM.importModal.classList.remove('active');
+                if (DOM.importBtn.disabled) {
+                    DOM.importBtn.disabled = false;
+                }
             }
 
             // ==================== SIDEBAR ====================
@@ -1116,65 +1337,61 @@
                 }
             }
 
-            // ==================== EVENT LISTENERS ====================
-            function setupEventListeners() {
-                DOM.searchInput.addEventListener('input', debounce(() => {
-                    state.currentPage = 1;
-                    loadProducts();
-                }, 300));
-                
-                DOM.categoryFilter.addEventListener('change', () => {
-                    state.currentPage = 1;
-                    loadProducts();
-                });
-                
-                DOM.stockFilter.addEventListener('change', () => {
-                    state.currentPage = 1;
-                    loadProducts();
+            // ==================== DRAG AND DROP ====================
+            function setupDragAndDrop() {
+                const zone = DOM.uploadZone;
+
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
                 });
 
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') closeModal();
-                    if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openModal(); }
+                zone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
                 });
 
-                document.querySelectorAll('.modal-overlay').forEach(modal => {
-                    modal.addEventListener('click', function(e) {
-                        if (e.target === this) this.classList.remove('active');
-                    });
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        DOM.fileInput.files = files;
+                        handleFile({ target: { files: files } });
+                    }
                 });
             }
 
-            // ==================== DEBOUNCE ====================
-            function debounce(fn, delay) {
-                let timer;
-                return function(...args) {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => fn.apply(this, args), delay);
-                };
+            // ==================== EVENT LISTENERS ====================
+            function setupEventListeners() {
+                DOM.fileInput.addEventListener('change', handleFile);
+                
+                // Atualizar preview quando o mapeamento mudar
+                DOM.mappingGrid.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('mapping-select')) {
+                        updateStats();
+                    }
+                });
             }
 
             // ==================== INIT ====================
             async function init() {
                 await loadUser();
                 await loadCategories();
-                await loadProducts();
+                loadHistory();
+                setupDragAndDrop();
                 setupEventListeners();
                 document.getElementById('systemVersion').textContent = 'v1.0';
-                console.log('✅ Página de Produtos inicializada');
+                console.log('✅ Página de Importação inicializada');
             }
 
             // ==================== EXPORT ====================
-            window.openModal = openModal;
-            window.closeModal = closeModal;
-            window.saveProduct = saveProduct;
-            window.editProduct = editProduct;
-            window.deleteProduct = deleteProduct;
-            window.toggleProductStatus = toggleProductStatus;
-            window.clearFilters = clearFilters;
-            window.syncData = syncData;
-            window.prevPage = prevPage;
-            window.nextPage = nextPage;
+            window.handleFile = handleFile;
+            window.clearFile = clearFile;
+            window.importProducts = importProducts;
+            window.closeImportModal = closeImportModal;
+            window.downloadTemplate = downloadTemplate;
             window.toggleMobileSidebar = toggleMobileSidebar;
             window.logout = logout;
             window.showToast = showToast;
