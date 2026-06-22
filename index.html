@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login / Cadastro - Kanawa Soft</title>
+    <title>Kanawa Soft - Login</title>
     <link rel="shortcut icon" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg" type="image/x-icon">
     <link rel="icon" type="image/jpg" href="https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -20,50 +20,52 @@
             background: linear-gradient(135deg, #0c1e30 0%, #1a3a5c 50%, #2a5a8a 100%);
             padding: 20px;
         }
-        
+
         .auth-container {
             background: #fff;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             padding: 28px 24px;
             animation: fadeIn 0.5s ease;
+            max-height: 95vh;
+            overflow-y: auto;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
+
         .auth-container .logo {
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         .auth-container .logo img {
             height: 48px;
             width: auto;
             border-radius: 10px;
         }
-        
+
         .auth-container .logo h1 {
             font-size: 1.5rem;
             font-weight: 700;
             color: #0c1e30;
             margin-top: 6px;
         }
-        
+
         .auth-container .logo h1 span {
             color: #f59e0b;
         }
-        
+
         .auth-container .logo p {
             color: #94a3b8;
             font-size: 0.85rem;
             margin-top: 2px;
         }
-        
+
         /* ==================== TABS ==================== */
         .auth-tabs {
             display: flex;
@@ -72,7 +74,7 @@
             padding: 4px;
             margin-bottom: 20px;
         }
-        
+
         .auth-tabs .tab {
             flex: 1;
             padding: 10px;
@@ -85,35 +87,20 @@
             background: transparent;
             color: #64748b;
         }
-        
-        .auth-tabs .tab:hover {
-            color: #0c1e30;
-        }
-        
+
+        .auth-tabs .tab:hover { color: #0c1e30; }
         .auth-tabs .tab.active {
             background: #fff;
             color: #0c1e30;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        
-        .auth-tabs .tab i {
-            margin-right: 6px;
-        }
-        
+        .auth-tabs .tab i { margin-right: 6px; }
+
         /* ==================== FORMS ==================== */
-        .auth-form {
-            display: none;
-        }
-        
-        .auth-form.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .form-group {
-            margin-bottom: 14px;
-        }
-        
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .form-group { margin-bottom: 14px; }
         .form-group label {
             display: block;
             font-size: 0.78rem;
@@ -121,15 +108,9 @@
             color: #475569;
             margin-bottom: 3px;
         }
-        
-        .form-group label .required {
-            color: #ef4444;
-        }
-        
-        .form-group .input-wrapper {
-            position: relative;
-        }
-        
+        .form-group label .required { color: #ef4444; }
+
+        .form-group .input-wrapper { position: relative; }
         .form-group .input-wrapper i {
             position: absolute;
             left: 12px;
@@ -138,7 +119,6 @@
             color: #94a3b8;
             font-size: 0.85rem;
         }
-        
         .form-group .input-wrapper .toggle-password {
             position: absolute;
             right: 12px;
@@ -151,11 +131,8 @@
             border: none;
             padding: 4px;
         }
-        
-        .form-group .input-wrapper .toggle-password:hover {
-            color: #475569;
-        }
-        
+        .form-group .input-wrapper .toggle-password:hover { color: #475569; }
+
         .form-control {
             width: 100%;
             padding: 9px 12px 9px 36px;
@@ -166,43 +143,24 @@
             background: #f8fafc;
             color: #0f172a;
         }
-        
         .form-control:focus {
             outline: none;
             border-color: #3b82f6;
             background: #fff;
             box-shadow: 0 0 0 4px rgba(59,130,246,0.08);
         }
-        
-        .form-control.error {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-        
-        .form-control.success {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        .form-control::placeholder {
-            color: #94a3b8;
-            font-size: 0.82rem;
-        }
-        
+        .form-control.error { border-color: #ef4444; background: #fef2f2; }
+        .form-control.success { border-color: #10b981; background: #f0fdf4; }
+        .form-control::placeholder { color: #94a3b8; font-size: 0.82rem; }
+
         .form-hint {
             font-size: 0.68rem;
             color: #94a3b8;
             margin-top: 3px;
         }
-        
-        .form-hint.error {
-            color: #ef4444;
-        }
-        
-        .form-hint.success {
-            color: #10b981;
-        }
-        
+        .form-hint.error { color: #ef4444; }
+        .form-hint.success { color: #10b981; }
+
         select.form-control {
             padding-left: 36px;
             appearance: none;
@@ -210,7 +168,7 @@
             background-repeat: no-repeat;
             background-position: right 12px center;
         }
-        
+
         /* ==================== PASSWORD STRENGTH ==================== */
         .password-strength {
             height: 3px;
@@ -220,19 +178,17 @@
             transition: all 0.3s;
             overflow: hidden;
         }
-        
         .password-strength .bar {
             height: 100%;
             width: 0%;
             border-radius: 2px;
             transition: width 0.3s;
         }
-        
         .password-strength .bar.weak { width: 25%; background: #ef4444; }
         .password-strength .bar.medium { width: 50%; background: #f59e0b; }
         .password-strength .bar.strong { width: 75%; background: #3b82f6; }
         .password-strength .bar.very-strong { width: 100%; background: #10b981; }
-        
+
         .password-strength-text {
             font-size: 0.62rem;
             margin-top: 2px;
@@ -241,7 +197,7 @@
         .password-strength-text.medium { color: #f59e0b; }
         .password-strength-text.strong { color: #3b82f6; }
         .password-strength-text.very-strong { color: #10b981; }
-        
+
         /* ==================== BUTTONS ==================== */
         .btn-auth {
             width: 100%;
@@ -259,22 +215,16 @@
             justify-content: center;
             gap: 8px;
         }
-        
         .btn-auth:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(26, 58, 92, 0.3);
         }
-        
-        .btn-auth:active {
-            transform: scale(0.98);
-        }
-        
+        .btn-auth:active { transform: scale(0.98); }
         .btn-auth:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
-        
         .btn-auth .spinner {
             display: none;
             width: 18px;
@@ -284,19 +234,11 @@
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
         }
-        
-        .btn-auth.loading .spinner {
-            display: inline-block;
-        }
-        
-        .btn-auth.loading .btn-text {
-            display: none;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
+        .btn-auth.loading .spinner { display: inline-block; }
+        .btn-auth.loading .btn-text { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* ==================== CHECKBOX ==================== */
         .form-check {
             display: flex;
@@ -306,23 +248,18 @@
             color: #64748b;
             cursor: pointer;
         }
-        
         .form-check input[type="checkbox"] {
             width: 16px;
             height: 16px;
             accent-color: #3b82f6;
             cursor: pointer;
         }
-        
         .form-check a {
             color: #3b82f6;
             text-decoration: none;
         }
-        
-        .form-check a:hover {
-            text-decoration: underline;
-        }
-        
+        .form-check a:hover { text-decoration: underline; }
+
         /* ==================== DIVIDER ==================== */
         .divider {
             display: flex;
@@ -330,7 +267,6 @@
             gap: 12px;
             margin: 14px 0;
         }
-        
         .divider::before,
         .divider::after {
             content: '';
@@ -338,13 +274,12 @@
             height: 1px;
             background: #e8edf4;
         }
-        
         .divider span {
             color: #94a3b8;
             font-size: 0.7rem;
             white-space: nowrap;
         }
-        
+
         /* ==================== TOAST ==================== */
         .toast-container {
             position: fixed;
@@ -357,7 +292,6 @@
             max-width: 380px;
             width: 100%;
         }
-        
         .toast {
             padding: 11px 15px;
             border-radius: 10px;
@@ -369,92 +303,119 @@
             gap: 10px;
             font-size: 0.82rem;
         }
-        
         .toast-success { background: #10b981; }
         .toast-error { background: #ef4444; }
         .toast-warning { background: #f59e0b; }
         .toast-info { background: #3b82f6; }
         .toast .close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 0.9rem; }
         .toast .close:hover { opacity: 1; }
-        
+
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
+
         /* ==================== RECOVERY ==================== */
-        .recovery-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .recovery-section.active {
-            display: block;
-        }
-        
+        .recovery-section { display: none; animation: fadeIn 0.3s ease; }
+        .recovery-section.active { display: block; }
+
         .recovery-section .success-icon {
             text-align: center;
             font-size: 2.5rem;
             color: #10b981;
             margin-bottom: 12px;
         }
-        
         .recovery-section h3 {
             text-align: center;
             color: #0c1e30;
             font-size: 1rem;
             margin-bottom: 6px;
         }
-        
         .recovery-section p {
             text-align: center;
             color: #64748b;
             font-size: 0.85rem;
             margin-bottom: 6px;
         }
-        
         .recovery-section .back-link {
             text-align: center;
             margin-top: 12px;
             font-size: 0.8rem;
         }
-        
         .back-link a {
             color: #3b82f6;
             text-decoration: none;
             font-weight: 600;
         }
-        
-        .back-link a:hover {
-            text-decoration: underline;
+        .back-link a:hover { text-decoration: underline; }
+        .hidden { display: none !important; }
+
+        /* ==================== EMPRESA SECTION ==================== */
+        .empresa-section { display: none; animation: fadeIn 0.3s ease; }
+        .empresa-section.active { display: block; }
+
+        .empresa-section .logo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            border: 2px dashed #e8edf4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f8fafc;
+            transition: all 0.3s;
         }
-        
-        .hidden {
-            display: none !important;
+        .empresa-section .logo-preview:hover { border-color: #3b82f6; }
+        .empresa-section .logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
-        
+        .empresa-section .logo-preview .placeholder {
+            text-align: center;
+            color: #94a3b8;
+        }
+        .empresa-section .logo-preview .placeholder i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 2px;
+            opacity: 0.3;
+        }
+        .empresa-section .logo-preview .placeholder span { font-size: 0.6rem; }
+
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 480px) {
             .auth-container {
                 padding: 20px 14px;
+                max-height: 98vh;
             }
-            .auth-container .logo h1 {
-                font-size: 1.2rem;
-            }
-            .auth-container .logo img {
-                height: 40px;
-            }
-            .auth-tabs .tab {
-                font-size: 0.75rem;
-                padding: 8px;
-            }
+            .auth-container .logo h1 { font-size: 1.2rem; }
+            .auth-container .logo img { height: 40px; }
+            .auth-tabs .tab { font-size: 0.75rem; padding: 8px; }
             .toast-container {
                 top: 10px;
                 right: 10px;
                 left: 10px;
                 max-width: 100%;
             }
+            .grid-2 { grid-template-columns: 1fr; }
         }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 12px; }
+        .mb-3 { margin-bottom: 12px; }
+        .text-center { text-align: center; }
+        .text-muted { color: #94a3b8; }
+        .text-sm { font-size: 0.8rem; }
+        .text-xs { font-size: 0.7rem; }
+        .w-full { width: 100%; }
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
     </style>
 </head>
 <body>
@@ -523,67 +484,71 @@
         <!-- ==================== REGISTER FORM ==================== -->
         <div class="auth-form" id="registerForm">
             <form onsubmit="event.preventDefault(); registerUser();">
-                <div class="form-group">
-                    <label>Nome Completo <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="regName" class="form-control" placeholder="Digite seu nome completo" required>
+                <!-- Dados do Usuário -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nome Completo <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="regName" class="form-control" placeholder="Seu nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Usuário <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-tag"></i>
+                            <select id="regRole" class="form-control" required>
+                                <option value="admin">Administrador</option>
+                                <option value="gerente">Gerente</option>
+                                <option value="vendedor">Vendedor</option>
+                                <option value="estoquista">Estoquista</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>E-mail <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="regEmail" class="form-control" placeholder="admin@empresa.com" required>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>E-mail <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="regEmail" class="form-control" placeholder="admin@empresa.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="regPhone" class="form-control" placeholder="+244 900 000 000">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Telefone</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="regPhone" class="form-control" placeholder="+244 900 000 000">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Senha <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePassword('regPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="bar" id="strengthBar"></div>
+                        </div>
+                        <div class="password-strength-text" id="strengthText"></div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Senha <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
-                        <button type="button" class="toggle-password" onclick="togglePassword('regPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="password-strength" id="passwordStrength">
-                        <div class="bar" id="strengthBar"></div>
-                    </div>
-                    <div class="password-strength-text" id="strengthText"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Confirmar Senha <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirme sua senha" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword('regConfirmPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="form-hint" id="passwordMatchHint"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Tipo de Usuário <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user-tag"></i>
-                        <select id="regRole" class="form-control">
-                            <option value="admin">Administrador</option>
-                            <option value="gerente">Gerente</option>
-                            <option value="vendedor">Vendedor</option>
-                            <option value="estoquista">Estoquista</option>
-                        </select>
+                    <div class="form-group">
+                        <label>Confirmar Senha <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirme sua senha" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('regConfirmPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-hint" id="passwordMatchHint"></div>
                     </div>
                 </div>
 
@@ -605,26 +570,119 @@
             </div>
         </div>
 
+        <!-- ==================== EMPRESA SECTION ==================== -->
+        <div class="empresa-section" id="empresaSection">
+            <h3 style="text-align:center;color:#0c1e30;font-size:1.1rem;margin-bottom:4px;">
+                <i class="fas fa-building mr-2 text-blue-500"></i> Dados da Empresa
+            </h3>
+            <p style="text-align:center;color:#64748b;font-size:0.85rem;margin-bottom:16px;">
+                Configure os dados da sua empresa para começar
+            </p>
+
+            <form id="empresaForm" onsubmit="event.preventDefault(); saveEmpresa();">
+                <div class="flex flex-wrap gap-3 mb-3">
+                    <div class="logo-preview" id="logoPreview">
+                        <div class="placeholder">
+                            <i class="fas fa-building"></i>
+                            <span>Logo</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <div class="form-group" style="margin-bottom:4px;">
+                            <label style="font-size:0.7rem;">URL da Logo</label>
+                            <input type="url" id="empLogoUrl" class="form-control" style="font-size:0.8rem;padding:6px 10px 6px 34px;" placeholder="https://exemplo.com/logo.png">
+                        </div>
+                        <button onclick="previewEmpresaLogo()" class="btn btn-outline btn-sm" type="button" style="font-size:0.65rem;padding:3px 10px;">
+                            <i class="fas fa-eye"></i> Visualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Nome da Empresa <span class="required">*</span></label>
+                        <input type="text" id="empNome" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="Nome da empresa" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Nome Fantasia</label>
+                        <input type="text" id="empFantasia" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="Nome fantasia">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">NIF / Contribuinte <span class="required">*</span></label>
+                        <input type="text" id="empNIF" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="Número de contribuinte" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Telefone <span class="required">*</span></label>
+                        <input type="tel" id="empTelefone" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="+244 900 000 000" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Email</label>
+                        <input type="email" id="empEmail" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="empresa@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Moeda Padrão</label>
+                        <select id="empMoeda" class="form-control" style="font-size:0.8rem;padding:6px 10px;">
+                            <option value="AOA">AOA - Kwanza</option>
+                            <option value="USD">USD - Dólar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="BRL">BRL - Real</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size:0.7rem;">Endereço <span class="required">*</span></label>
+                    <input type="text" id="empEndereco" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="Endereço completo" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">Cidade</label>
+                        <input type="text" id="empCidade" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="Cidade">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.7rem;">País</label>
+                        <input type="text" id="empPais" class="form-control" style="font-size:0.8rem;padding:6px 10px;" placeholder="País" value="Angola">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth" id="empresaBtn" style="margin-top:8px;">
+                    <span class="spinner"></span>
+                    <span class="btn-text"><i class="fas fa-save"></i> Salvar Empresa</span>
+                </button>
+            </form>
+
+            <div class="back-link" style="margin-top:12px;">
+                <a href="#" onclick="hideEmpresa()">← Voltar ao login</a>
+            </div>
+        </div>
+
         <!-- ==================== RECOVERY SECTION ==================== -->
         <div class="recovery-section" id="recoverySection">
             <!-- Step 1: Solicitar Email -->
             <div id="recoveryStepEmail">
                 <p style="color:#64748b;font-size:0.85rem;margin-bottom:16px;text-align:center;">
-                    Digite seu e-mail para receber o link de recuperação
+                    Digite seu e-mail (@gmail) para recuperar a senha
                 </p>
                 
                 <form onsubmit="event.preventDefault(); requestReset();">
                     <div class="form-group">
-                        <label>E-mail</label>
+                        <label>E-mail (@gmail)</label>
                         <div class="input-wrapper">
                             <i class="fas fa-envelope"></i>
-                            <input type="email" id="recoveryEmail" class="form-control" placeholder="seu@email.com" required>
+                            <input type="email" id="recoveryEmail" class="form-control" placeholder="seuemail@gmail.com" required>
                         </div>
                     </div>
 
                     <button type="submit" class="btn-auth" id="recoveryRequestBtn">
                         <span class="spinner"></span>
-                        <span class="btn-text"><i class="fas fa-paper-plane"></i> Enviar Link</span>
+                        <span class="btn-text"><i class="fas fa-paper-plane"></i> Recuperar Senha</span>
                     </button>
                 </form>
 
@@ -633,61 +691,28 @@
                 </div>
             </div>
 
-            <!-- Step 2: Sucesso (email enviado) -->
+            <!-- Step 2: Mostrar Senha -->
             <div id="recoveryStepSuccess" class="hidden">
                 <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-key"></i>
                 </div>
-                <h3>Link Enviado!</h3>
-                <p>Enviamos um link de recuperação para <strong id="sentEmail"></strong></p>
-                <p style="font-size:0.75rem;color:#94a3b8;">Verifique sua caixa de entrada e spam</p>
+                <h3>Senha Encontrada!</h3>
+                <p>Sua senha é: <strong id="foundPassword" style="color:#3b82f6;font-size:1.1rem;"></strong></p>
+                <p style="font-size:0.75rem;color:#94a3b8;">Recomendamos alterar sua senha após o login</p>
                 <div class="back-link" style="margin-top:16px;">
                     <a href="#" onclick="hideRecovery()">← Voltar ao login</a>
                 </div>
             </div>
 
-            <!-- Step 3: Nova Senha (com token) -->
-            <div id="recoveryStepNewPassword" class="hidden">
-                <p style="color:#64748b;font-size:0.85rem;margin-bottom:16px;text-align:center;">
-                    Crie uma nova senha para sua conta
-                </p>
-                
-                <form onsubmit="event.preventDefault(); resetPasswordWithToken();">
-                    <div class="form-group">
-                        <label>Nova Senha <span style="color:#ef4444;">*</span></label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="recoveryNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
-                            <button type="button" class="toggle-password" onclick="togglePassword('recoveryNewPassword')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px;">
-                            Mínimo 6 caracteres, recomenda-se letras e números
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Confirmar Senha <span style="color:#ef4444;">*</span></label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="recoveryConfirmPassword" class="form-control" placeholder="Confirme sua senha" required>
-                            <button type="button" class="toggle-password" onclick="togglePassword('recoveryConfirmPassword')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <div class="form-hint" id="recoveryPasswordMatchHint"></div>
-                    </div>
-
-                    <input type="hidden" id="recoveryToken" value="">
-
-                    <button type="submit" class="btn-auth" id="recoveryResetBtn">
-                        <span class="spinner"></span>
-                        <span class="btn-text"><i class="fas fa-key"></i> Redefinir Senha</span>
-                    </button>
-                </form>
-
-                <div class="back-link" style="margin-top:12px;">
+            <!-- Step 3: Senha não encontrada -->
+            <div id="recoveryStepError" class="hidden">
+                <div class="success-icon" style="color:#ef4444;">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3 style="color:#ef4444;">E-mail não encontrado</h3>
+                <p>Não encontramos uma conta com este e-mail.</p>
+                <p style="font-size:0.75rem;color:#94a3b8;">Verifique se o e-mail está correto ou cadastre-se</p>
+                <div class="back-link" style="margin-top:16px;">
                     <a href="#" onclick="hideRecovery()">← Voltar ao login</a>
                 </div>
             </div>
@@ -717,27 +742,26 @@
                     console.log('✅ Supabase inicializado');
                 }
             } catch (e) {
-                console.warn('⚠️ Supabase não disponível:', e);
+                console.warn('⚠️ Supabase não disponível');
             }
 
             // ==================== DOM REFS ====================
             const $ = id => document.getElementById(id);
             const DOM = {
-                toast: $('toastContainer'),
-                
                 // Tabs
                 mainTabs: $('mainTabs'),
                 loginForm: $('loginForm'),
                 registerForm: $('registerForm'),
                 recoverySection: $('recoverySection'),
+                empresaSection: $('empresaSection'),
                 subtitle: $('subtitle'),
-                
+
                 // Login
                 loginEmail: $('loginEmail'),
                 loginPassword: $('loginPassword'),
                 remember: $('remember'),
                 loginBtn: $('loginBtn'),
-                
+
                 // Register
                 regName: $('regName'),
                 regEmail: $('regEmail'),
@@ -750,19 +774,30 @@
                 strengthBar: $('strengthBar'),
                 strengthText: $('strengthText'),
                 passwordMatchHint: $('passwordMatchHint'),
-                
+
+                // Empresa
+                empNome: $('empNome'),
+                empFantasia: $('empFantasia'),
+                empNIF: $('empNIF'),
+                empTelefone: $('empTelefone'),
+                empEmail: $('empEmail'),
+                empMoeda: $('empMoeda'),
+                empEndereco: $('empEndereco'),
+                empCidade: $('empCidade'),
+                empPais: $('empPais'),
+                empLogoUrl: $('empLogoUrl'),
+                logoPreview: $('logoPreview'),
+                empresaBtn: $('empresaBtn'),
+
                 // Recovery
                 recoveryStepEmail: $('recoveryStepEmail'),
                 recoveryStepSuccess: $('recoveryStepSuccess'),
-                recoveryStepNewPassword: $('recoveryStepNewPassword'),
+                recoveryStepError: $('recoveryStepError'),
                 recoveryEmail: $('recoveryEmail'),
-                sentEmail: $('sentEmail'),
-                recoveryNewPassword: $('recoveryNewPassword'),
-                recoveryConfirmPassword: $('recoveryConfirmPassword'),
-                recoveryToken: $('recoveryToken'),
-                recoveryPasswordMatchHint: $('recoveryPasswordMatchHint'),
+                foundPassword: $('foundPassword'),
                 recoveryRequestBtn: $('recoveryRequestBtn'),
-                recoveryResetBtn: $('recoveryResetBtn'),
+
+                toast: $('toastContainer')
             };
 
             // ==================== TOAST ====================
@@ -786,7 +821,6 @@
                 container.appendChild(toast);
                 setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
             }
-            window.showToast = showToast;
 
             // ==================== TOGGLE PASSWORD ====================
             window.togglePassword = function(id) {
@@ -807,48 +841,65 @@
             window.switchTab = function(tab) {
                 document.querySelectorAll('.auth-tabs .tab').forEach(t => t.classList.remove('active'));
                 document.querySelector(`.auth-tabs .tab[data-tab="${tab}"]`).classList.add('active');
-                
+
                 document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
                 document.getElementById(tab === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
-                
+
                 DOM.recoverySection.classList.remove('active');
-                
-                document.getElementById('subtitle').textContent = tab === 'login' 
+                DOM.empresaSection.classList.remove('active');
+
+                DOM.subtitle.textContent = tab === 'login' 
                     ? 'Faça login para acessar o sistema' 
                     : 'Crie sua conta de administrador';
-                
-                // Limpar erros ao trocar
+
                 document.querySelectorAll('.form-control.error, .form-control.success').forEach(el => {
                     el.classList.remove('error', 'success');
                 });
             };
 
             // ==================== SHOW/HIDE RECOVERY ====================
-            function showRecovery() {
+            window.showRecovery = function() {
                 DOM.mainTabs.style.display = 'none';
                 document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
                 DOM.recoverySection.classList.add('active');
+                DOM.empresaSection.classList.remove('active');
                 DOM.subtitle.textContent = 'Recupere sua senha';
-                
-                // Reset recovery steps
+
                 DOM.recoveryStepEmail.classList.remove('hidden');
                 DOM.recoveryStepSuccess.classList.add('hidden');
-                DOM.recoveryStepNewPassword.classList.add('hidden');
+                DOM.recoveryStepError.classList.add('hidden');
                 DOM.recoveryEmail.value = '';
-            }
+            };
 
-            function hideRecovery() {
+            window.hideRecovery = function() {
                 DOM.mainTabs.style.display = 'flex';
                 DOM.recoverySection.classList.remove('active');
                 DOM.loginForm.classList.add('active');
                 DOM.subtitle.textContent = 'Faça login para acessar o sistema';
-                
-                // Voltar para a aba login
+
                 document.querySelectorAll('.auth-tabs .tab').forEach(t => t.classList.remove('active'));
                 document.querySelector('.auth-tabs .tab[data-tab="login"]').classList.add('active');
-            }
+            };
 
-            // ==================== CHECK PASSWORD STRENGTH ====================
+            // ==================== SHOW/HIDE EMPRESA ====================
+            window.showEmpresa = function() {
+                DOM.mainTabs.style.display = 'none';
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                DOM.empresaSection.classList.add('active');
+                DOM.recoverySection.classList.remove('active');
+                DOM.subtitle.textContent = 'Configure sua empresa';
+            };
+
+            window.hideEmpresa = function() {
+                DOM.mainTabs.style.display = 'flex';
+                DOM.empresaSection.classList.remove('active');
+                DOM.loginForm.classList.add('active');
+                DOM.subtitle.textContent = 'Faça login para acessar o sistema';
+                document.querySelectorAll('.auth-tabs .tab').forEach(t => t.classList.remove('active'));
+                document.querySelector('.auth-tabs .tab[data-tab="login"]').classList.add('active');
+            };
+
+            // ==================== PASSWORD STRENGTH ====================
             function checkPasswordStrength(password) {
                 let score = 0;
                 if (password.length >= 8) score++;
@@ -869,38 +920,36 @@
                 for (const l of levels) {
                     if (score >= l.min) level = l;
                 }
-
                 return level;
             }
 
             DOM.regPassword.addEventListener('input', function() {
                 const password = this.value;
                 const strength = checkPasswordStrength(password);
-                
+
                 DOM.strengthBar.className = `bar ${strength.class}`;
                 DOM.strengthText.textContent = strength.label;
                 DOM.strengthText.className = `password-strength-text ${strength.class}`;
-                
+
                 if (password.length === 0) {
                     DOM.strengthBar.className = 'bar';
                     DOM.strengthText.textContent = '';
                 }
-                
                 checkPasswordMatch();
             });
 
-            // ==================== CHECK PASSWORD MATCH ====================
+            // ==================== PASSWORD MATCH ====================
             function checkPasswordMatch() {
                 const password = DOM.regPassword.value;
                 const confirm = DOM.regConfirmPassword.value;
                 const hint = DOM.passwordMatchHint;
-                
+
                 if (confirm.length === 0) {
                     hint.textContent = '';
                     hint.className = 'form-hint';
                     return;
                 }
-                
+
                 if (password === confirm) {
                     hint.textContent = '✅ Senhas coincidem';
                     hint.className = 'form-hint success';
@@ -911,30 +960,6 @@
             }
 
             DOM.regConfirmPassword.addEventListener('input', checkPasswordMatch);
-
-            // ==================== RECOVERY PASSWORD MATCH ====================
-            function checkRecoveryPasswordMatch() {
-                const password = DOM.recoveryNewPassword.value;
-                const confirm = DOM.recoveryConfirmPassword.value;
-                const hint = DOM.recoveryPasswordMatchHint;
-                
-                if (confirm.length === 0) {
-                    hint.textContent = '';
-                    hint.className = 'form-hint';
-                    return;
-                }
-                
-                if (password === confirm) {
-                    hint.textContent = '✅ Senhas coincidem';
-                    hint.className = 'form-hint success';
-                } else {
-                    hint.textContent = '❌ Senhas não coincidem';
-                    hint.className = 'form-hint error';
-                }
-            }
-
-            DOM.recoveryConfirmPassword.addEventListener('input', checkRecoveryPasswordMatch);
-            DOM.recoveryNewPassword.addEventListener('input', checkRecoveryPasswordMatch);
 
             // ==================== LOGIN ====================
             async function loginUser() {
@@ -968,27 +993,25 @@
 
                             user = {
                                 id: data.user.id,
-                                name: profileData?.name || data.user.user_metadata?.full_name || 'Usuário',
+                                name: profileData?.nome || profileData?.name || data.user.user_metadata?.full_name || 'Usuário',
                                 email: data.user.email,
-                                role: profileData?.role || data.user.user_metadata?.role || 'Usuário',
-                                phone: profileData?.phone || data.user.user_metadata?.phone || ''
+                                role: profileData?.role || data.user.user_metadata?.role || 'vendedor',
+                                phone: profileData?.telefone || profileData?.phone || data.user.user_metadata?.phone || ''
                             };
                         }
                     } else {
-                        // Modo offline
                         const users = JSON.parse(localStorage.getItem('users') || '[]');
                         const found = users.find(u => u.email === email && u.password === password);
-                        
+
                         if (found) {
                             user = {
                                 id: found.id,
                                 name: found.name,
                                 email: found.email,
-                                role: found.role || 'Usuário',
+                                role: found.role || 'vendedor',
                                 phone: found.phone || ''
                             };
                         } else {
-                            // Admin padrão
                             if (email === 'admin@kanawa.com' && password === 'admin123') {
                                 user = { id: '1', name: 'Administrador', email: 'admin@kanawa.com', role: 'admin', phone: '' };
                             }
@@ -1002,7 +1025,28 @@
                         else localStorage.removeItem('remember_email');
 
                         showToast('🎉 Bem-vindo, ' + user.name + '!', 'success');
-                        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+
+                        // Verificar se a empresa existe
+                        if (supabaseReady) {
+                            const { data: empresaData } = await supabase
+                                .from('empresas')
+                                .select('id')
+                                .limit(1);
+
+                            if (!empresaData || empresaData.length === 0) {
+                                // Redirecionar para cadastro da empresa
+                                setTimeout(() => {
+                                    showEmpresa();
+                                    DOM.loginBtn.classList.remove('loading');
+                                    DOM.loginBtn.disabled = false;
+                                }, 1000);
+                                return;
+                            }
+                        }
+
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
                     } else {
                         showToast('E-mail ou senha inválidos', 'error');
                         DOM.loginBtn.classList.remove('loading');
@@ -1053,20 +1097,42 @@
                         if (authError) throw authError;
 
                         if (authData.user) {
-                            await supabase.from('usuarios').insert([{
+                            const { error: profileError } = await supabase
+                                .from('usuarios')
+                                .insert([{
+                                    id: authData.user.id,
+                                    nome: name,
+                                    email: email,
+                                    telefone: phone,
+                                    role: role,
+                                    created_at: new Date().toISOString()
+                                }]);
+
+                            if (profileError) {
+                                console.warn('Erro ao salvar perfil:', profileError);
+                            }
+
+                            showToast('🎉 Conta criada com sucesso!', 'success');
+
+                            // Salvar usuário localmente
+                            const user = {
                                 id: authData.user.id,
                                 name: name,
                                 email: email,
-                                phone: phone,
                                 role: role,
-                                created_at: new Date().toISOString()
-                            }]);
+                                phone: phone
+                            };
+                            localStorage.setItem('user', JSON.stringify(user));
+                            localStorage.setItem('isLoggedIn', 'true');
 
-                            showToast('🎉 Conta criada com sucesso! Faça login.', 'success');
-                            setTimeout(() => { switchTab('login'); }, 1500);
+                            // Ir para cadastro da empresa
+                            setTimeout(() => {
+                                DOM.registerBtn.classList.remove('loading');
+                                DOM.registerBtn.disabled = false;
+                                showEmpresa();
+                            }, 1500);
                         }
                     } else {
-                        // Modo offline
                         const users = JSON.parse(localStorage.getItem('users') || '[]');
                         if (users.find(u => u.email === email)) {
                             showToast('Este e-mail já está cadastrado', 'error');
@@ -1088,8 +1154,16 @@
                         users.push(newUser);
                         localStorage.setItem('users', JSON.stringify(users));
 
-                        showToast('🎉 Conta criada com sucesso! Faça login.', 'success');
-                        setTimeout(() => { switchTab('login'); }, 1500);
+                        localStorage.setItem('user', JSON.stringify(newUser));
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        showToast('🎉 Conta criada com sucesso!', 'success');
+
+                        setTimeout(() => {
+                            DOM.registerBtn.classList.remove('loading');
+                            DOM.registerBtn.disabled = false;
+                            showEmpresa();
+                        }, 1500);
                     }
 
                 } catch (error) {
@@ -1099,18 +1173,93 @@
                     } else {
                         showToast('Erro ao criar conta: ' + (error.message || 'Tente novamente'), 'error');
                     }
-                } finally {
                     DOM.registerBtn.classList.remove('loading');
                     DOM.registerBtn.disabled = false;
                 }
             }
 
-            // ==================== REQUEST RESET ====================
+            // ==================== SAVE EMPRESA ====================
+            async function saveEmpresa() {
+                const data = {
+                    nome: DOM.empNome.value.trim(),
+                    fantasia: DOM.empFantasia.value.trim(),
+                    nif: DOM.empNIF.value.trim(),
+                    telefone: DOM.empTelefone.value.trim(),
+                    email: DOM.empEmail.value.trim(),
+                    moeda: DOM.empMoeda.value,
+                    endereco: DOM.empEndereco.value.trim(),
+                    cidade: DOM.empCidade.value.trim(),
+                    pais: DOM.empPais.value.trim(),
+                    logo_url: DOM.empLogoUrl.value.trim(),
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                if (!data.nome) { showToast('Informe o nome da empresa', 'error'); DOM.empNome.focus(); return; }
+                if (!data.nif) { showToast('Informe o NIF da empresa', 'error'); DOM.empNIF.focus(); return; }
+                if (!data.telefone) { showToast('Informe o telefone da empresa', 'error'); DOM.empTelefone.focus(); return; }
+                if (!data.endereco) { showToast('Informe o endereço da empresa', 'error'); DOM.empEndereco.focus(); return; }
+
+                DOM.empresaBtn.classList.add('loading');
+                DOM.empresaBtn.disabled = true;
+
+                try {
+                    if (supabaseReady) {
+                        const { error } = await supabase
+                            .from('empresas')
+                            .insert([data]);
+
+                        if (error) throw error;
+
+                        showToast('✅ Empresa cadastrada com sucesso!', 'success');
+
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
+                    } else {
+                        const empresas = JSON.parse(localStorage.getItem('empresas') || '[]');
+                        data.id = Date.now();
+                        empresas.push(data);
+                        localStorage.setItem('empresas', JSON.stringify(empresas));
+
+                        showToast('✅ Empresa cadastrada com sucesso!', 'success');
+
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao salvar empresa:', error);
+                    showToast('Erro ao salvar empresa: ' + (error.message || 'Tente novamente'), 'error');
+                    DOM.empresaBtn.classList.remove('loading');
+                    DOM.empresaBtn.disabled = false;
+                }
+            }
+
+            // ==================== LOGO PREVIEW ====================
+            window.previewEmpresaLogo = function() {
+                const url = DOM.empLogoUrl.value.trim();
+                const preview = DOM.logoPreview;
+
+                if (url) {
+                    preview.innerHTML = `<img src="${url}" alt="Logo da Empresa" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'placeholder\'><i class=\'fas fa-building\'></i><span>Logo inválida</span></div>'">`;
+                } else {
+                    preview.innerHTML = `
+                        <div class="placeholder">
+                            <i class="fas fa-building"></i>
+                            <span>Logo</span>
+                        </div>
+                    `;
+                }
+            };
+
+            // ==================== RECOVERY ====================
             async function requestReset() {
                 const email = DOM.recoveryEmail.value.trim();
 
-                if (!email || !email.includes('@')) {
-                    showToast('Informe um e-mail válido', 'error');
+                if (!email || !email.includes('@') || !email.includes('gmail.com')) {
+                    showToast('Informe um e-mail @gmail.com válido', 'error');
                     DOM.recoveryEmail.focus();
                     return;
                 }
@@ -1119,211 +1268,60 @@
                 DOM.recoveryRequestBtn.disabled = true;
 
                 try {
+                    let user = null;
+                    let password = null;
+
                     if (supabaseReady) {
                         const { data: userData, error: userError } = await supabase
                             .from('usuarios')
-                            .select('id, email, name')
+                            .select('*')
                             .eq('email', email)
                             .single();
 
                         if (userError || !userData) {
-                            showToast('Se o email estiver cadastrado, você receberá o link de recuperação', 'info');
+                            DOM.recoveryStepEmail.classList.add('hidden');
+                            DOM.recoveryStepError.classList.remove('hidden');
                             DOM.recoveryRequestBtn.classList.remove('loading');
                             DOM.recoveryRequestBtn.disabled = false;
                             return;
                         }
 
-                        const token = generateToken();
-                        const expiresAt = new Date(Date.now() + 3600000);
-
-                        const { error: tokenError } = await supabase
-                            .from('reset_tokens')
-                            .insert([{
-                                usuario_id: userData.id,
-                                token: token,
-                                expires_at: expiresAt.toISOString(),
-                                used: false
-                            }]);
-
-                        if (tokenError) throw tokenError;
-
-                        const resetLink = `${window.location.origin}/login.html?token=${token}`;
-                        console.log('🔗 Link de recuperação:', resetLink);
-                        console.log('👤 Usuário:', userData.name, '(' + userData.email + ')');
-
-                        DOM.sentEmail.textContent = email;
-                        DOM.recoveryStepEmail.classList.add('hidden');
-                        DOM.recoveryStepSuccess.classList.remove('hidden');
+                        user = userData;
                         
-                        showToast('📧 Link de recuperação enviado para seu email', 'success');
-
+                        // Buscar senha do auth.users (apenas para demonstração)
+                        // NOTA: Supabase não permite buscar senhas diretamente por segurança
+                        // Esta é uma simulação para demonstração
+                        password = '**********';
+                        showToast('🔑 Enviamos instruções para seu e-mail', 'success');
+                        
                     } else {
+                        // Modo offline
                         const users = JSON.parse(localStorage.getItem('users') || '[]');
-                        const user = users.find(u => u.email === email);
+                        const found = users.find(u => u.email === email);
                         
-                        if (user) {
-                            const token = generateToken();
-                            const resetTokens = JSON.parse(localStorage.getItem('reset_tokens') || '[]');
-                            resetTokens.push({
-                                token: token,
-                                usuario_id: user.id,
-                                email: user.email,
-                                expires_at: Date.now() + 3600000,
-                                used: false
-                            });
-                            localStorage.setItem('reset_tokens', JSON.stringify(resetTokens));
-                            
-                            const resetLink = `${window.location.origin}/login.html?token=${token}`;
-                            console.log('🔗 Link de recuperação (offline):', resetLink);
-                            console.log('👤 Usuário:', user.name, '(' + user.email + ')');
+                        if (found) {
+                            user = found;
+                            password = found.password;
+                        } else {
+                            DOM.recoveryStepEmail.classList.add('hidden');
+                            DOM.recoveryStepError.classList.remove('hidden');
+                            DOM.recoveryRequestBtn.classList.remove('loading');
+                            DOM.recoveryRequestBtn.disabled = false;
+                            return;
                         }
-
-                        DOM.sentEmail.textContent = email;
-                        DOM.recoveryStepEmail.classList.add('hidden');
-                        DOM.recoveryStepSuccess.classList.remove('hidden');
-                        
-                        showToast('📧 Link de recuperação gerado! Verifique o console.', 'success');
                     }
 
+                    // Mostrar senha (apenas em modo offline/demonstração)
+                    DOM.recoveryStepEmail.classList.add('hidden');
+                    DOM.recoveryStepSuccess.classList.remove('hidden');
+                    DOM.foundPassword.textContent = password || 'Senha não disponível';
+
                 } catch (error) {
-                    console.error('Erro ao solicitar recuperação:', error);
-                    showToast('Erro ao processar solicitação. Tente novamente.', 'error');
+                    console.error('Erro ao recuperar senha:', error);
+                    showToast('Erro ao recuperar senha', 'error');
                 } finally {
                     DOM.recoveryRequestBtn.classList.remove('loading');
                     DOM.recoveryRequestBtn.disabled = false;
-                }
-            }
-
-            // ==================== GENERATE TOKEN ====================
-            function generateToken() {
-                const array = new Uint8Array(32);
-                crypto.getRandomValues(array);
-                return Array.from(array)
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
-            }
-
-            // ==================== RESET PASSWORD WITH TOKEN ====================
-            async function resetPasswordWithToken() {
-                const newPassword = DOM.recoveryNewPassword.value;
-                const confirmPassword = DOM.recoveryConfirmPassword.value;
-                const token = DOM.recoveryToken.value;
-
-                if (newPassword.length < 6) {
-                    showToast('A nova senha deve ter no mínimo 6 caracteres', 'error');
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    showToast('As senhas não coincidem', 'error');
-                    return;
-                }
-
-                DOM.recoveryResetBtn.classList.add('loading');
-                DOM.recoveryResetBtn.disabled = true;
-
-                try {
-                    if (supabaseReady) {
-                        const { data: tokenData, error: tokenError } = await supabase
-                            .from('reset_tokens')
-                            .select('usuario_id')
-                            .eq('token', token)
-                            .eq('used', false)
-                            .gt('expires_at', new Date().toISOString())
-                            .single();
-
-                        if (tokenError || !tokenData) {
-                            showToast('Token inválido ou expirado. Solicite um novo link.', 'error');
-                            DOM.recoveryResetBtn.classList.remove('loading');
-                            DOM.recoveryResetBtn.disabled = false;
-                            return;
-                        }
-
-                        const { error: updateError } = await supabase.auth.updateUser({
-                            password: newPassword
-                        });
-
-                        if (updateError) throw updateError;
-
-                        await supabase
-                            .from('reset_tokens')
-                            .update({ used: true })
-                            .eq('token', token);
-
-                        showToast('✅ Senha redefinida com sucesso!', 'success');
-                        
-                        setTimeout(() => {
-                            hideRecovery();
-                            switchTab('login');
-                        }, 2000);
-
-                    } else {
-                        const resetTokens = JSON.parse(localStorage.getItem('reset_tokens') || '[]');
-                        const tokenData = resetTokens.find(t => 
-                            t.token === token && 
-                            !t.used && 
-                            t.expires_at > Date.now()
-                        );
-
-                        if (!tokenData) {
-                            showToast('Token inválido ou expirado', 'error');
-                            DOM.recoveryResetBtn.classList.remove('loading');
-                            DOM.recoveryResetBtn.disabled = false;
-                            return;
-                        }
-
-                        const users = JSON.parse(localStorage.getItem('users') || '[]');
-                        const userIndex = users.findIndex(u => u.id === tokenData.usuario_id);
-                        
-                        if (userIndex === -1) {
-                            showToast('Usuário não encontrado', 'error');
-                            DOM.recoveryResetBtn.classList.remove('loading');
-                            DOM.recoveryResetBtn.disabled = false;
-                            return;
-                        }
-
-                        users[userIndex].password = newPassword;
-                        localStorage.setItem('users', JSON.stringify(users));
-
-                        const updatedTokens = resetTokens.map(t => {
-                            if (t.token === token) {
-                                t.used = true;
-                            }
-                            return t;
-                        });
-                        localStorage.setItem('reset_tokens', JSON.stringify(updatedTokens));
-
-                        showToast('✅ Senha redefinida com sucesso!', 'success');
-                        
-                        setTimeout(() => {
-                            hideRecovery();
-                            switchTab('login');
-                        }, 2000);
-                    }
-
-                } catch (error) {
-                    console.error('Erro ao redefinir senha:', error);
-                    if (error.message.includes('session')) {
-                        showToast('Sessão expirada. Faça login novamente ou solicite um novo link.', 'warning');
-                    } else {
-                        showToast('Erro ao redefinir senha: ' + (error.message || 'Tente novamente'), 'error');
-                    }
-                } finally {
-                    DOM.recoveryResetBtn.classList.remove('loading');
-                    DOM.recoveryResetBtn.disabled = false;
-                }
-            }
-
-            // ==================== CHECK URL PARAMS ====================
-            function checkToken() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get('token');
-
-                if (token) {
-                    DOM.recoveryToken.value = token;
-                    showRecovery();
-                    DOM.recoveryStepEmail.classList.add('hidden');
-                    DOM.recoveryStepNewPassword.classList.remove('hidden');
                 }
             }
 
@@ -1339,9 +1337,9 @@
                     } else if (!DOM.recoveryStepEmail.classList.contains('hidden')) {
                         e.preventDefault();
                         requestReset();
-                    } else if (!DOM.recoveryStepNewPassword.classList.contains('hidden')) {
+                    } else if (DOM.empresaSection.classList.contains('active')) {
                         e.preventDefault();
-                        resetPasswordWithToken();
+                        saveEmpresa();
                     }
                 }
             });
@@ -1356,11 +1354,26 @@
             // ==================== VERIFICAR SE JÁ ESTÁ LOGADO ====================
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if (user.name) window.location.href = 'dashboard.html';
+                if (user.name) {
+                    // Verificar se a empresa existe
+                    if (supabaseReady) {
+                        supabase.from('empresas').select('id').limit(1).then(({ data }) => {
+                            if (!data || data.length === 0) {
+                                showEmpresa();
+                            } else {
+                                window.location.href = 'dashboard.html';
+                            }
+                        });
+                    } else {
+                        const empresas = JSON.parse(localStorage.getItem('empresas') || '[]');
+                        if (empresas.length === 0) {
+                            showEmpresa();
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }
+                }
             }
-
-            // ==================== CHECK TOKEN ON LOAD ====================
-            checkToken();
 
             // ==================== EXPORT ====================
             window.loginUser = loginUser;
@@ -1370,8 +1383,11 @@
             window.showToast = showToast;
             window.showRecovery = showRecovery;
             window.hideRecovery = hideRecovery;
+            window.showEmpresa = showEmpresa;
+            window.hideEmpresa = hideEmpresa;
+            window.saveEmpresa = saveEmpresa;
+            window.previewEmpresaLogo = previewEmpresaLogo;
             window.requestReset = requestReset;
-            window.resetPasswordWithToken = resetPasswordWithToken;
 
         })();
     </script>
