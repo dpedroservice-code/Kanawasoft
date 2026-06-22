@@ -152,7 +152,22 @@
         }
         .sidebar .sidebar-user .user-info { flex: 1; min-width: 0; }
         .sidebar .sidebar-user .user-name { font-weight: 600; font-size: 0.85rem; }
-        .sidebar .sidebar-user .user-role { font-size: 0.65rem; opacity: 0.5; }
+        .sidebar .sidebar-user .user-role { 
+            font-size: 0.65rem; opacity: 0.5; 
+            display: flex; align-items: center; gap: 4px;
+        }
+        .sidebar .sidebar-user .user-role .role-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .sidebar .sidebar-user .user-role .role-badge.admin { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .sidebar .sidebar-user .user-role .role-badge.gerente { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+        .sidebar .sidebar-user .user-role .role-badge.vendedor { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+        .sidebar .sidebar-user .user-role .role-badge.estoquista { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
 
         .sidebar .sidebar-nav { padding: 8px 10px 16px; flex: 1; overflow-y: auto; }
         .sidebar .sidebar-nav .menu-label {
@@ -176,6 +191,7 @@
         .sidebar .sidebar-nav .menu-item i { width: 18px; text-align: center; font-size: 0.9rem; flex-shrink: 0; }
         .sidebar .sidebar-nav .menu-item .menu-arrow { margin-left: auto; font-size: 0.5rem; transition: var(--transition); opacity: 0.4; }
         .sidebar .sidebar-nav .menu-item .menu-arrow.open { transform: rotate(90deg); opacity: 0.8; }
+        .sidebar .sidebar-nav .menu-item.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
         .sidebar .sidebar-nav .submenu {
             overflow: hidden; max-height: 0;
             transition: max-height 0.35s ease, opacity 0.35s ease;
@@ -183,7 +199,6 @@
         }
         .sidebar .sidebar-nav .submenu.open { max-height: 600px; opacity: 1; }
         .sidebar .sidebar-nav .submenu .menu-item { padding: 6px 10px 6px 36px; font-size: 0.75rem; border-radius: 6px; }
-        .sidebar .sidebar-nav .submenu .menu-item i { font-size: 0.75rem; width: 16px; }
 
         .sidebar .sidebar-footer {
             padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.06);
@@ -568,7 +583,7 @@
         <nav class="sidebar-nav" id="mobileMenu"></nav>
         <div class="sidebar-footer">
             <div class="status"><span class="dot"></span><span id="mobileConnectionStatus">Online</span></div>
-            <div class="version" id="mobileVersion">Sistema v1.2</div>
+            <div class="version" id="mobileVersion">Sistema v1.3</div>
         </div>
     </div>
 
@@ -635,7 +650,7 @@
             <nav class="sidebar-nav" id="sidebarMenu"></nav>
             <div class="sidebar-footer">
                 <div class="status"><span class="dot"></span><span id="sidebarConnectionStatus">Online</span></div>
-                <div class="version" id="sidebarVersion">Sistema v1.2</div>
+                <div class="version" id="sidebarVersion">Sistema v1.3</div>
             </div>
         </aside>
 
@@ -652,6 +667,7 @@
                                     <span class="px-2 py-0.5 bg-white/10 rounded-full text-xs flex items-center gap-1"><i class="fas fa-circle text-green-400 text-[5px]"></i> Online</span>
                                     <span class="px-2 py-0.5 bg-white/10 rounded-full text-xs flex items-center gap-1"><i class="fas fa-chart-line"></i> Relatórios</span>
                                     <span class="px-2 py-0.5 bg-white/10 rounded-full text-xs flex items-center gap-1"><i class="fas fa-users"></i> Equipe</span>
+                                    <span class="px-2 py-0.5 bg-white/10 rounded-full text-xs flex items-center gap-1" id="userRoleBadge"><i class="fas fa-user-shield"></i> <span id="userRoleDisplay">Usuário</span></span>
                                 </div>
                             </div>
                             <div class="flex gap-2 mt-3 sm:mt-0">
@@ -769,6 +785,7 @@
                         <h4 class="font-bold text-gray-800 dark:text-gray-200" id="profileName">Carregando...</h4>
                         <p class="text-muted text-sm" id="profileRole">Usuário</p>
                         <p class="text-sm text-muted" id="profileEmail">📧 Carregando...</p>
+                        <p class="text-xs text-muted" id="profileRoleBadge"></p>
                     </div>
                 </div>
                 <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -782,6 +799,12 @@
                         <div class="form-group"><label>NIF</label><input class="form-control" id="profileNIF" placeholder="Número de contribuinte"></div>
                         <div class="form-group"><label>Endereço</label><input class="form-control" id="profileAddress" placeholder="Endereço completo"></div>
                     </div>
+                </div>
+                <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Tipo de usuário: <strong id="profileRoleType">Carregando...</strong>
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -815,10 +838,94 @@
                 console.warn('⚠️ Supabase não disponível:', e);
             }
 
+            // ==================== PERMISSIONS SYSTEM ====================
+            const ROLES = {
+                admin: {
+                    level: 100,
+                    label: 'Administrador',
+                    icon: 'fa-crown',
+                    color: '#fbbf24',
+                    modules: ['*'],
+                    permissions: ['*']
+                },
+                gerente: {
+                    level: 80,
+                    label: 'Gerente',
+                    icon: 'fa-user-tie',
+                    color: '#60a5fa',
+                    modules: ['dashboard', 'pdv', 'produtos', 'servicos', 'clientes', 'vendas', 'orcamentos', 
+                              'entrada-estoque', 'saida-estoque', 'transferencia', 'inventario', 'fornecedores', 
+                              'compras', 'categorias', 'movimentos-caixa', 'contas-bancarias', 'faturas', 
+                              'recibos', 'despesas', 'relatorios-financeiros', 'funcionarios', 'turnos', 
+                              'folha-pagamento', 'agenda', 'eventos', 'ferias', 'relatorios'],
+                    permissions: ['create', 'read', 'update']
+                },
+                vendedor: {
+                    level: 50,
+                    label: 'Vendedor',
+                    icon: 'fa-user',
+                    color: '#34d399',
+                    modules: ['dashboard', 'pdv', 'produtos', 'clientes', 'vendas', 'orcamentos', 'movimentos-caixa', 'faturas', 'recibos'],
+                    permissions: ['create', 'read']
+                },
+                estoquista: {
+                    level: 40,
+                    label: 'Estoquista',
+                    icon: 'fa-boxes',
+                    color: '#a78bfa',
+                    modules: ['dashboard', 'produtos', 'entrada-estoque', 'saida-estoque', 'transferencia', 
+                              'inventario', 'fornecedores', 'compras', 'categorias'],
+                    permissions: ['create', 'read', 'update']
+                }
+            };
+
+            // Módulos com suas permissões
+            const MODULES = {
+                dashboard: { label: 'Dashboard', icon: 'fa-tachometer-alt', requiredRole: 'vendedor' },
+                pdv: { label: 'Ponto de Venda', icon: 'fa-cash-register', requiredRole: 'vendedor' },
+                produtos: { label: 'Produtos', icon: 'fa-boxes', requiredRole: 'vendedor' },
+                servicos: { label: 'Serviços', icon: 'fa-concierge-bell', requiredRole: 'vendedor' },
+                clientes: { label: 'Clientes', icon: 'fa-users', requiredRole: 'vendedor' },
+                vendas: { label: 'Histórico de Vendas', icon: 'fa-chart-line', requiredRole: 'vendedor' },
+                orcamentos: { label: 'Orçamentos', icon: 'fa-file-invoice', requiredRole: 'vendedor' },
+                'entrada-estoque': { label: 'Entrada de Estoque', icon: 'fa-arrow-down', requiredRole: 'estoquista' },
+                'saida-estoque': { label: 'Saída de Estoque', icon: 'fa-arrow-up', requiredRole: 'estoquista' },
+                transferencia: { label: 'Transferência', icon: 'fa-exchange-alt', requiredRole: 'estoquista' },
+                inventario: { label: 'Inventário', icon: 'fa-clipboard-list', requiredRole: 'estoquista' },
+                fornecedores: { label: 'Fornecedores', icon: 'fa-truck', requiredRole: 'estoquista' },
+                compras: { label: 'Compras', icon: 'fa-shopping-cart', requiredRole: 'estoquista' },
+                categorias: { label: 'Categorias', icon: 'fa-tags', requiredRole: 'estoquista' },
+                'movimentos-caixa': { label: 'Movimentos de Caixa', icon: 'fa-cash-register', requiredRole: 'gerente' },
+                'contas-bancarias': { label: 'Contas Bancárias', icon: 'fa-university', requiredRole: 'gerente' },
+                faturas: { label: 'Faturas', icon: 'fa-file-invoice-dollar', requiredRole: 'gerente' },
+                recibos: { label: 'Recibos', icon: 'fa-receipt', requiredRole: 'gerente' },
+                despesas: { label: 'Despesas', icon: 'fa-receipt', requiredRole: 'gerente' },
+                'relatorios-financeiros': { label: 'Relatórios Financeiros', icon: 'fa-chart-pie', requiredRole: 'gerente' },
+                funcionarios: { label: 'Funcionários', icon: 'fa-user-plus', requiredRole: 'admin' },
+                turnos: { label: 'Turnos', icon: 'fa-user-clock', requiredRole: 'admin' },
+                'folha-pagamento': { label: 'Folha de Pagamento', icon: 'fa-money-check', requiredRole: 'admin' },
+                agenda: { label: 'Agenda', icon: 'fa-calendar-alt', requiredRole: 'vendedor' },
+                eventos: { label: 'Eventos', icon: 'fa-bullhorn', requiredRole: 'vendedor' },
+                ferias: { label: 'Férias', icon: 'fa-umbrella-beach', requiredRole: 'admin' },
+                hotelaria: { label: 'Hotelaria', icon: 'fa-hotel', requiredRole: 'gerente' },
+                restaurante: { label: 'Restaurante', icon: 'fa-utensils', requiredRole: 'gerente' },
+                'servicos-digitais': { label: 'Serviços Digitais', icon: 'fa-tools', requiredRole: 'gerente' },
+                cobrancas: { label: 'Cobranças', icon: 'fa-envelope', requiredRole: 'gerente' },
+                projetos: { label: 'Projetos', icon: 'fa-project-diagram', requiredRole: 'gerente' },
+                marketing: { label: 'Marketing', icon: 'fa-bullhorn', requiredRole: 'gerente' },
+                relatorios: { label: 'Relatórios Gerais', icon: 'fa-chart-bar', requiredRole: 'gerente' },
+                empresa: { label: 'Dados da Empresa', icon: 'fa-building', requiredRole: 'admin' },
+                usuarios: { label: 'Usuários', icon: 'fa-user-cog', requiredRole: 'admin' },
+                backup: { label: 'Backup', icon: 'fa-database', requiredRole: 'admin' },
+                sincronizacao: { label: 'Sincronização', icon: 'fa-sync', requiredRole: 'admin' },
+                logs: { label: 'Logs do Sistema', icon: 'fa-history', requiredRole: 'admin' },
+                configuracoes: { label: 'Configurações', icon: 'fa-sliders-h', requiredRole: 'admin' }
+            };
+
             // ==================== CONFIG ====================
             const SYSTEM_CONFIG = {
                 systemName: 'Kanawa Soft',
-                systemVersion: 'v1.2',
+                systemVersion: 'v1.3',
                 logoUrl: 'https://i.ibb.co/rf1prbJ0/KANAWASOFT.jpg',
                 modulePaths: {
                     dashboard: 'dashboard.html',
@@ -951,6 +1058,8 @@
             // ==================== ESTADO ====================
             const state = {
                 currentUser: null,
+                userRole: null,
+                userPermissions: [],
                 companyData: null,
                 produtos: [],
                 clientes: [],
@@ -972,7 +1081,10 @@
                 dashboardContent: document.getElementById('dashboardContent'),
                 calculator: document.getElementById('calculator'),
                 calcDisplay: document.getElementById('calcDisplay'),
-                profileModal: document.getElementById('profileModal')
+                profileModal: document.getElementById('profileModal'),
+                userRoleDisplay: document.getElementById('userRoleDisplay'),
+                userRoleBadge: document.getElementById('userRoleBadge'),
+                profileRoleType: document.getElementById('profileRoleType')
             };
 
             // ==================== UTILS ====================
@@ -997,6 +1109,41 @@
 
             function formatCurrency(value) {
                 return `AOA ${(value || 0).toLocaleString()}`;
+            }
+
+            function getRoleLabel(role) {
+                const roles = {
+                    admin: 'Administrador',
+                    gerente: 'Gerente',
+                    vendedor: 'Vendedor',
+                    estoquista: 'Estoquista'
+                };
+                return roles[role] || role || 'Usuário';
+            }
+
+            function getRoleColor(role) {
+                const colors = {
+                    admin: '#fbbf24',
+                    gerente: '#60a5fa',
+                    vendedor: '#34d399',
+                    estoquista: '#a78bfa'
+                };
+                return colors[role] || '#94a3b8';
+            }
+
+            function hasPermission(moduleId) {
+                if (!state.userRole) return false;
+                if (state.userRole === 'admin') return true;
+                
+                const roleConfig = ROLES[state.userRole];
+                if (!roleConfig) return false;
+                
+                // Verifica se o módulo está na lista de módulos permitidos
+                return roleConfig.modules.includes('*') || roleConfig.modules.includes(moduleId);
+            }
+
+            function canAccess(moduleId) {
+                return hasPermission(moduleId);
             }
 
             // ==================== TOAST ====================
@@ -1059,6 +1206,9 @@
                 modules.forEach(mod => {
                     const menuGroup = config.menu[mod.key];
                     if (menuGroup && menuGroup.items) {
+                        const hasAccessibleItems = menuGroup.items.some(item => canAccess(item.id));
+                        if (!hasAccessibleItems) return;
+
                         html += `<div class="menu-label">${mod.label}</div>`;
                         html += `<button class="menu-item" onclick="window.toggleSubmenu(this)">
                             <i class="fas ${menuGroup.icon}"></i><span>${menuGroup.label}</span>
@@ -1066,9 +1216,13 @@
                         </button>`;
                         html += `<div class="submenu">`;
                         menuGroup.items.forEach(item => {
+                            const accessible = canAccess(item.id);
                             const isActive = item.id === 'dashboard' ? 'active' : '';
-                            html += `<button class="menu-item ${isActive}" onclick="window.openModule('${item.id}')">
+                            const disabled = accessible ? '' : 'disabled';
+                            const onclick = accessible ? `window.openModule('${item.id}')` : '';
+                            html += `<button class="menu-item ${isActive} ${disabled}" onclick="${onclick}" ${!accessible ? 'title="Sem permissão"' : ''}>
                                 <i class="fas ${item.icon}"></i><span>${item.label}</span>
+                                ${!accessible ? '<i class="fas fa-lock text-[10px] opacity-50 ml-auto"></i>' : ''}
                             </button>`;
                         });
                         html += `</div>`;
@@ -1106,9 +1260,10 @@
                 config.quickActions.forEach(action => {
                     const colors = colorMap[action.color] || colorMap.blue;
                     const isSync = action.id === 'sync';
-                    const onclick = isSync ? `window.syncData()` : `window.openModule('${action.id}')`;
+                    const accessible = canAccess(action.id);
+                    const onclick = isSync ? `window.syncData()` : (accessible ? `window.openModule('${action.id}')` : '');
                     html += `
-                        <div class="quick-action" onclick="${onclick}">
+                        <div class="quick-action ${!accessible ? 'opacity-50 cursor-not-allowed' : ''}" onclick="${onclick}" ${!accessible ? 'title="Sem permissão"' : ''}>
                             <div class="icon" style="background:${colors.bg};color:${colors.color};">
                                 <i class="fas ${action.icon}"></i>
                             </div>
@@ -1122,6 +1277,10 @@
 
             // ==================== NAVEGAÇÃO ====================
             function openModule(moduleId) {
+                if (!canAccess(moduleId)) {
+                    showToast('Você não tem permissão para acessar este módulo', 'warning');
+                    return;
+                }
                 const config = SYSTEM_CONFIG;
                 if (moduleId === 'dashboard') {
                     window.location.href = 'dashboard.html';
@@ -1177,10 +1336,26 @@
                     const userStr = localStorage.getItem('user');
                     if (userStr) {
                         state.currentUser = JSON.parse(userStr);
+                        state.userRole = state.currentUser.role || 'vendedor';
+                        state.userPermissions = ROLES[state.userRole]?.permissions || [];
                     } else if (state.dbReady && state.isOnline) {
-                        const users = await fetchData('profiles');
-                        if (users && users.length > 0) {
-                            state.currentUser = users[0];
+                        // Buscar da tabela usuarios
+                        const { data: userData, error: userError } = await supabase
+                            .from('usuarios')
+                            .select('*')
+                            .eq('id', supabase.auth.user()?.id)
+                            .single();
+
+                        if (!userError && userData) {
+                            state.currentUser = {
+                                id: userData.id,
+                                name: userData.nome,
+                                email: userData.email,
+                                phone: userData.telefone,
+                                role: userData.role || 'vendedor'
+                            };
+                            state.userRole = state.currentUser.role;
+                            state.userPermissions = ROLES[state.userRole]?.permissions || [];
                             localStorage.setItem('user', JSON.stringify(state.currentUser));
                         }
                     }
@@ -1191,11 +1366,17 @@
                             name: 'Usuário',
                             email: 'usuario@email.com',
                             phone: '+244 900 000 000',
-                            role: 'Usuário'
+                            role: 'vendedor'
                         };
+                        state.userRole = 'vendedor';
+                        state.userPermissions = ROLES.vendedor.permissions;
                     }
 
+                    // Atualizar UI do usuário
                     const initial = getInitials(state.currentUser.name);
+                    const roleLabel = getRoleLabel(state.userRole);
+                    const roleColor = getRoleColor(state.userRole);
+
                     ['headerAvatar', 'mobileAvatar', 'sidebarAvatar', 'profileAvatar'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.textContent = initial;
@@ -1206,17 +1387,32 @@
                         if (el) el.textContent = state.currentUser.name;
                     });
 
+                    // Role display
+                    DOM.userRoleDisplay.textContent = roleLabel;
+                    DOM.userRoleDisplay.style.color = roleColor;
+                    DOM.userRoleBadge.style.display = 'inline-flex';
+
+                    // Sidebar role
                     ['mobileUserRole', 'sidebarUserRole'].forEach(id => {
                         const el = document.getElementById(id);
-                        if (el) el.textContent = state.currentUser.role || 'Usuário';
+                        if (el) {
+                            el.innerHTML = `
+                                <span class="role-badge ${state.userRole}">${roleLabel}</span>
+                            `;
+                        }
                     });
 
+                    // Profile
                     document.getElementById('profileName').textContent = state.currentUser.name;
-                    document.getElementById('profileRole').textContent = state.currentUser.role || 'Usuário';
+                    document.getElementById('profileRole').textContent = roleLabel;
                     document.getElementById('profileEmail').textContent = `📧 ${state.currentUser.email}`;
+                    document.getElementById('profileRoleType').textContent = roleLabel;
+                    document.getElementById('profileRoleType').style.color = roleColor;
                     document.getElementById('profileFullName').value = state.currentUser.name;
                     document.getElementById('profileEmailInput').value = state.currentUser.email;
                     document.getElementById('profilePhoneInput').value = state.currentUser.phone || '';
+
+                    console.log(`👤 Usuário: ${state.currentUser.name} (${roleLabel})`);
                 } catch (error) {
                     console.error('Erro ao carregar usuário:', error);
                 }
@@ -1264,7 +1460,7 @@
             }
 
             async function loadNotifications() {
-                state.notificacoes = await fetchData('notificacoes');
+                state.notificacoes = await fetchData('notificacoes', { usuario_id: state.currentUser?.id });
                 renderNotifications();
             }
 
@@ -1525,8 +1721,11 @@
                 if (DOM.dashboardContent) {
                     showLoading(true);
                     try {
+                        // Carregar dados do usuário primeiro para definir permissões
+                        await loadUserData();
+                        
+                        // Depois carregar o resto
                         await Promise.all([
-                            loadUserData(),
                             loadCompanyData(),
                             loadProducts(),
                             loadClients(),
@@ -1537,8 +1736,14 @@
                             loadActivities(),
                             loadEvents()
                         ]);
+                        
+                        // Gerar menu e ações com base nas permissões
+                        generateMenu();
+                        generateQuickActions();
                         renderCharts();
+                        
                         console.log('✅ Dashboard carregado com sucesso!');
+                        console.log(`📋 Permissões do usuário: ${state.userRole}`);
                     } catch (error) {
                         console.error('Erro ao carregar dashboard:', error);
                         showToast('Erro ao carregar dados', 'error');
@@ -1580,7 +1785,7 @@
                     localStorage.removeItem('user');
                     localStorage.removeItem('isLoggedIn');
                     showToast('Saindo do sistema...', 'info');
-                    setTimeout(() => window.location.href = 'logout.html', 800);
+                    setTimeout(() => window.location.href = 'login.html', 800);
                 }
             }
             window.logout = logout;
@@ -1604,7 +1809,11 @@
                 };
                 try {
                     if (state.dbReady && state.isOnline && state.currentUser) {
-                        await updateData('profiles', state.currentUser.id, data);
+                        await updateData('usuarios', state.currentUser.id, {
+                            nome: data.name,
+                            email: data.email,
+                            telefone: data.phone
+                        });
                     }
                     state.currentUser = { ...state.currentUser, ...data };
                     localStorage.setItem('user', JSON.stringify(state.currentUser));
@@ -1776,8 +1985,6 @@
                 document.getElementById('headerSystemName').innerHTML = `${config.systemName} <span>Soft</span>`;
                 document.getElementById('sidebarVersion').textContent = `${config.systemName} ${config.systemVersion}`;
                 document.getElementById('mobileVersion').textContent = `${config.systemName} ${config.systemVersion}`;
-                generateMenu();
-                generateQuickActions();
             }
 
             // ==================== EVENTOS ====================
@@ -1827,7 +2034,6 @@
                             if (data.session) {
                                 loadDashboard();
                             } else {
-                                // Verificar se está logado localmente
                                 if (localStorage.getItem('isLoggedIn') === 'true') {
                                     loadDashboard();
                                 } else {
@@ -1835,7 +2041,6 @@
                                 }
                             }
                         }).catch(() => {
-                            // Fallback: carregar dashboard mesmo sem sessão
                             loadDashboard();
                         });
                     } else {
@@ -1856,6 +2061,7 @@
 
             // ==================== EXPORT ====================
             window.SYSTEM_CONFIG = SYSTEM_CONFIG;
+            window.ROLES = ROLES;
             window.toggleSubmenu = toggleSubmenu;
             window.openModule = openModule;
             window.showDashboard = showDashboard;
@@ -1877,6 +2083,8 @@
             window.toggleNotifications = toggleNotifications;
             window.toggleUserMenu = toggleUserMenu;
             window.showToast = showToast;
+            window.hasPermission = hasPermission;
+            window.canAccess = canAccess;
 
             // ==================== START ====================
             if (document.readyState === 'loading') {
